@@ -26,11 +26,15 @@ export async function POST(request: NextRequest) {
       job_id,
     });
 
-    return NextResponse.json(result);
-  } catch (error) {
+    return NextResponse.json({ success: true, result });
+  } catch (error: any) {
     console.error('Company research error:', error);
     return NextResponse.json(
-      { error: 'Failed to trigger company research' },
+      { 
+        error: 'Failed to trigger company research',
+        details: error.message,
+        hint: 'Check Vercel logs for [n8n] prefix.'
+      },
       { status: 500 }
     );
   }

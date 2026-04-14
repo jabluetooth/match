@@ -4,104 +4,149 @@
  */
 
 const N8N_BASE_URL = process.env.N8N_BASE_URL || 'http://localhost:5678';
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 export class N8NClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = N8N_BASE_URL;
+    this.baseUrl = N8N_BASE_URL.replace(/\/$/, ''); // Remove trailing slash
+  }
+
+  /**
+   * Helper to get the correct webhook path based on environment
+   */
+  private getWebhookPath(path: string): string {
+    // If we are in production, use /webhook/, otherwise use /webhook-test/
+    // This can be overridden with N8N_FORCE_TEST_WEBHOOKS=true
+    const useTest = process.env.N8N_FORCE_TEST_WEBHOOKS === 'true' || !IS_PROD;
+    const prefix = useTest ? '/webhook-test/' : '/webhook/';
+    return `${this.baseUrl}${prefix}${path.replace(/^\//, '')}`;
   }
 
   /**
    * Trigger resume tailoring workflow
-   * @param userId - User ID
-   * @param jobId - Job ID
    */
   async tailorResume(params: {
     user_id: number;
     job_id: number;
   }) {
-    const response = await fetch(`${this.baseUrl}/webhook-test/tailor-resume`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    });
+    const url = this.getWebhookPath('tailor-resume');
+    console.log(`[n8n] Calling tailorResume: ${url}`);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to trigger resume tailor: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      console.error(`[n8n] Fetch error: ${error.message}`);
+      throw error;
     }
-
-    return response.json();
   }
 
   /**
    * Trigger company research workflow
-   * @param userId - User ID
-   * @param applicationId - Application ID (optional if jobId provided)
-   * @param jobId - Job ID (optional if applicationId provided)
    */
   async researchCompany(params: {
     user_id: number;
     application_id?: number;
     job_id?: number;
   }) {
-    const response = await fetch(`${this.baseUrl}/webhook-test/company-research`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    });
+    const url = this.getWebhookPath('company-research');
+    console.log(`[n8n] Calling researchCompany: ${url}`);
 
-    if (!response.ok) {
-      throw new Error(`Failed to trigger company research: ${response.statusText}`);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      console.error(`[n8n] Fetch error: ${error.message}`);
+      throw error;
     }
-
-    return response.json();
   }
 
   /**
    * Trigger job matching workflow
    */
   async matchJobs(userId?: number) {
-    const response = await fetch(`${this.baseUrl}/webhook-test/match-jobs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId, trigger: 'manual' }),
-    });
+    const url = this.getWebhookPath('match-jobs');
+    console.log(`[n8n] Calling matchJobs: ${url}`);
 
-    if (!response.ok) {
-      throw new Error(`Failed to trigger job matching: ${response.statusText}`);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, trigger: 'manual' }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      console.error(`[n8n] Fetch error: ${error.message}`);
+      throw error;
     }
-
-    return response.json();
   }
 
   /**
    * Manually trigger job scraper
    */
   async scrapeJobs() {
-    const response = await fetch(`${this.baseUrl}/webhook/scrape-jobs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ trigger: 'manual' }),
-    });
+    // Scraper often uses a fixed production webhook in many setups, 
+    // but let's use the helper for consistency.
+    const url = this.getWebhookPath('scrape-jobs');
+    console.log(`[n8n] Calling scrapeJobs: ${url}`);
 
-    if (!response.ok) {
-      throw new Error(`Failed to trigger job scraper: ${response.statusText}`);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ trigger: 'manual' }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      console.error(`[n8n] Fetch error: ${error.message}`);
+      throw error;
     }
-
-    return response.json();
   }
 
   /**
-   * Get workflow execution status (if n8n API is enabled)
+   * Get workflow execution status
    */
   async getExecutionStatus(executionId: string) {
     const apiKey = process.env.N8N_API_KEY;
@@ -109,17 +154,25 @@ export class N8NClient {
       throw new Error('N8N_API_KEY not configured');
     }
 
-    const response = await fetch(`${this.baseUrl}/api/v1/executions/${executionId}`, {
-      headers: {
-        'X-N8N-API-KEY': apiKey,
-      },
-    });
+    const url = `${this.baseUrl}/api/v1/executions/${executionId}`;
+    console.log(`[n8n] Calling getExecutionStatus: ${url}`);
 
-    if (!response.ok) {
-      throw new Error(`Failed to get execution status: ${response.statusText}`);
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'X-N8N-API-KEY': apiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`n8n API error: ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+       console.error(`[n8n] Fetch error: ${error.message}`);
+       throw error;
     }
-
-    return response.json();
   }
 }
 

@@ -8,11 +8,15 @@ export async function POST(request: NextRequest) {
 
     const result = await n8nClient.matchJobs(user_id);
 
-    return NextResponse.json(result);
-  } catch (error) {
+    return NextResponse.json({ success: true, result });
+  } catch (error: any) {
     console.error('Job matching error:', error);
     return NextResponse.json(
-      { error: 'Failed to trigger job matching' },
+      { 
+        error: 'Failed to trigger job matching',
+        details: error.message,
+        hint: 'Check Vercel logs for [n8n] prefix to see the exact URL called.'
+      },
       { status: 500 }
     );
   }
