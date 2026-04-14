@@ -1,0 +1,208 @@
+    "Get All Active Users": {
+      "main": [
+        [
+          {
+            "node": "Loop Each User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Each User": {
+      "main": [
+        [
+          {
+            "node": "Get Match Stats",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare User Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare User Profile": {
+      "main": [
+        [
+          {
+            "node": "Get Unmatched Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Unmatched Jobs": {
+      "main": [
+        [
+          {
+            "node": "Combine User + Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine User + Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Each Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Each Job": {
+      "main": [
+        [
+          {
+            "node": "Loop Each User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Match Score": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Match Score > 70?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Score > 70?": {
+      "main": [
+        [
+          {
+            "node": "Insert High Match",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Low Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert High Match": {
+      "main": [
+        [
+          {
+            "node": "Log Match Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Match Activity": {
+      "main": [
+        [
+          {
+            "node": "Send Match Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Match Email": {
+      "main": [
+        [
+          {
+            "node": "Continue to Next Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue to Next Job": {
+      "main": [
+        [
+          {
+            "node": "Loop Each Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Low Match": {
+      "main": [
+        [
+          {
+            "node": "Continue to Next Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip - No Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Each User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Match Stats": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }

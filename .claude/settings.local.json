@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(git commit --amend -m \"$(cat <<''EOF''\nInitial commit: Match Dashboard with n8n integration\n\nFeatures:\n- Job matching dashboard with AI-powered recommendations\n- Application tracking with kanban board view\n- Interview scheduling and follow-up management\n- Company research integration via n8n workflow\n- Resume tailoring integration via n8n workflow\n- Neon PostgreSQL database with Prisma ORM\n- Next.js 14 with TypeScript and Tailwind CSS\n- Activity logging and analytics\n\nDatabase:\n- User profiles with skills and preferences\n- Job matches with AI reasoning and skill analysis\n- Application tracking with status management\n- Interview scheduling\n- Document management for resumes and cover letters\n- Company research with AI-generated insights\n- Tailored resumes generated per job\n\nn8n Integrations:\n- Company Research workflow (/api/research/company)\n- Resume Tailor workflow (/api/tailor/resume)\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git fetch:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

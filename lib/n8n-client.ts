@@ -66,7 +66,7 @@ export class N8NClient {
    * Trigger job matching workflow
    */
   async matchJobs(userId?: number) {
-    const response = await fetch(`${this.baseUrl}/webhook/match-jobs`, {
+    const response = await fetch(`${this.baseUrl}/webhook-test/match-jobs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
