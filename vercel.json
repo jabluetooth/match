@@ -1,7 +1,3 @@
 {
-  "buildCommand": "prisma generate && next build",
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "N8N_BASE_URL": "@n8n_base_url"
-  }
+  "buildCommand": "prisma generate && next build"
 }
