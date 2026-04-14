@@ -1,0 +1,13 @@
+node_modules
+.next
+.env
+.env.local
+*.log
+.DS_Store
+.vscode
+.idea
+coverage
+.claude
+setup.sh
+setup.bat
+setup.ps1
