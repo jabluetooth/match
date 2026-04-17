@@ -9,7 +9,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(vercel env add:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(npx tsx scripts/seed-test-application.ts)",
+      "Bash(timeout 10 sh:*)"
     ],
     "deny": [],
     "ask": []
