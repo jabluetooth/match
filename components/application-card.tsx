@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from 'react';
 import { formatRelativeTime } from '@/lib/utils';
-import { Building2, Calendar, FileText, ExternalLink } from 'lucide-react';
+import { Building2, Calendar, FileText, ExternalLink, Search } from 'lucide-react';
 
 interface ApplicationCardProps {
   application: {
     id: number;
+    userId: number;
     status: string;
     appliedDate: Date | null;
     tailoredResumeUrl: string | null;
@@ -29,7 +31,37 @@ interface ApplicationCardProps {
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
+  const [researching, setResearching] = useState(false);
   const nextInterview = application.interviews[0];
+
+  const handleResearchCompany = async () => {
+    setResearching(true);
+    try {
+      const response = await fetch('/api/research/company', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: application.userId,
+          application_id: application.id,
+          job_id: application.jobMatch.job.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || 'Failed to start company research');
+      }
+
+      alert('Company research started! Check back soon for insights.');
+    } catch (error: any) {
+      console.error('Failed to research company:', error);
+      alert(error.message || 'Failed to start company research. Please try again.');
+    } finally {
+      setResearching(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
@@ -97,6 +129,16 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
           </a>
         )}
       </div>
+
+      {/* Research Company Button */}
+      <button
+        onClick={handleResearchCompany}
+        disabled={researching}
+        className="w-full mt-2 px-3 py-1.5 bg-purple-600 text-white text-xs font-medium rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+      >
+        <Search className="h-3 w-3" />
+        {researching ? 'Researching...' : 'Research Company'}
+      </button>
 
       {/* Notes Preview */}
       {application.notes && (

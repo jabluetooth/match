@@ -5,6 +5,7 @@ import { getStatusColor } from '@/lib/utils';
 
 interface Application {
   id: number;
+  userId: number;
   status: string;
   appliedDate: Date | null;
   tailoredResumeUrl: string | null;
