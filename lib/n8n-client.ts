@@ -48,7 +48,12 @@ export class N8NClient {
         throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
       }
 
-      return response.json();
+      // Handle empty responses from n8n webhooks
+      const text = await response.text();
+      if (!text) {
+        return { success: true, message: 'Workflow triggered successfully' };
+      }
+      return JSON.parse(text);
     } catch (error: any) {
       console.error(`[n8n] Fetch error: ${error.message}`);
       throw error;
@@ -80,7 +85,12 @@ export class N8NClient {
         throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
       }
 
-      return response.json();
+      // Handle empty responses from n8n webhooks
+      const text = await response.text();
+      if (!text) {
+        return { success: true, message: 'Workflow triggered successfully' };
+      }
+      return JSON.parse(text);
     } catch (error: any) {
       console.error(`[n8n] Fetch error: ${error.message}`);
       throw error;
@@ -108,7 +118,12 @@ export class N8NClient {
         throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
       }
 
-      return response.json();
+      // Handle empty responses from n8n webhooks
+      const text = await response.text();
+      if (!text) {
+        return { success: true, message: 'Workflow triggered successfully' };
+      }
+      return JSON.parse(text);
     } catch (error: any) {
       console.error(`[n8n] Fetch error: ${error.message}`);
       throw error;
@@ -138,7 +153,12 @@ export class N8NClient {
         throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
       }
 
-      return response.json();
+      // Handle empty responses from n8n webhooks
+      const text = await response.text();
+      if (!text) {
+        return { success: true, message: 'Workflow triggered successfully' };
+      }
+      return JSON.parse(text);
     } catch (error: any) {
       console.error(`[n8n] Fetch error: ${error.message}`);
       throw error;
