@@ -80,8 +80,8 @@ await fetch('/api/track/application', {
     action: 'update_status',
     user_id: 1,
     application_id: 4,
-    status: 'submitted', // 'draft' | 'submitted' | 'interview' | 'rejected' | 'offer'
-    notes: 'Application submitted!',
+    status: 'applied', // 'draft' | 'applied' | 'interview' | 'rejected' | 'offer'
+    notes: 'Application applied!',
     trigger_n8n: true,
   }),
 });

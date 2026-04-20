@@ -48,6 +48,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   const [researching, setResearching] = useState(false);
   const [companyResearch, setCompanyResearch] = useState<CompanyResearch | null>(null);
   const [showResearch, setShowResearch] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const nextInterview = application.interviews[0];
 
   const fetchCompanyResearch = async () => {
@@ -105,6 +106,44 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       alert(error.message || 'Failed to start company research. Please try again.');
     } finally {
       setResearching(false);
+    }
+  };
+
+  const handleSubmitApplication = async () => {
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/track/application', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update_status',
+          user_id: application.userId,
+          application_id: application.id,
+          status: 'applied',
+          notes: 'Application applied via dashboard',
+          trigger_n8n: true, // ← This triggers the n8n webhook!
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || 'Failed to apply to job');
+      }
+
+      const result = await response.json();
+      console.log('[Application] Applied:', result);
+
+      alert(`Application applied! ${result.email_sent ? 'Confirmation email sent.' : ''}`);
+
+      // Refresh the page to show updated status
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Failed to apply to job:', error);
+      alert(error.message || 'Failed to apply to job. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -174,6 +213,17 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
           </a>
         )}
       </div>
+
+      {/* Apply Button (only show if status is draft) */}
+      {application.status === 'draft' && (
+        <button
+          onClick={handleSubmitApplication}
+          disabled={submitting}
+          className="w-full mt-2 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        >
+          {submitting ? 'Applying...' : 'Mark as Applied'}
+        </button>
+      )}
 
       {/* Research Company Section */}
       <div className="mt-2 space-y-2">

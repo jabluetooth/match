@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         data: {
           status,
           ...(notes && { notes }),
-          ...(status === 'submitted' && !currentApp?.appliedDate && { appliedDate: new Date() }),
+          ...((status === 'submitted' || status === 'applied') && !currentApp?.appliedDate && { appliedDate: new Date() }),
         },
         include: {
           jobMatch: {
