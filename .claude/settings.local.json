@@ -19,7 +19,8 @@
       "Bash(echo $env:PATH)",
       "Bash(npx tsx:*)",
       "Bash(dir \"C:\\Users\\frelatorre\\Desktop\\Projects\\n8n\\match\\app\\api\\research\\company\" /s)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

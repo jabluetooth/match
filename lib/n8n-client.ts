@@ -166,6 +166,51 @@ export class N8NClient {
   }
 
   /**
+   * Trigger application tracker workflow
+   */
+  async trackApplication(params: {
+    action: 'create' | 'update_status' | 'schedule_interview';
+    user_id: number;
+    job_id?: number;
+    application_id?: number;
+    status?: string;
+    interview_date?: string;
+    interview_type?: string;
+    interview_location?: string;
+    interviewer_name?: string;
+    interviewer_role?: string;
+    notes?: string;
+  }) {
+    const url = this.getWebhookPath('application-tracker');
+    console.log(`[n8n] Calling trackApplication: ${url}`, params);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      // Handle empty responses from n8n webhooks
+      const text = await response.text();
+      if (!text) {
+        return { success: true, message: 'Workflow triggered successfully' };
+      }
+      return JSON.parse(text);
+    } catch (error: any) {
+      console.error(`[n8n] Fetch error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Get workflow execution status
    */
   async getExecutionStatus(executionId: string) {
