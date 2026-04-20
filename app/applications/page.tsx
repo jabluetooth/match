@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { ApplicationBoard } from '@/components/application-board';
 
 async function getApplications(userId: number = 1) {
-  return prisma.application.findMany({
+  const applications = await prisma.application.findMany({
     where: { userId },
     include: {
       jobMatch: {
@@ -16,6 +16,15 @@ async function getApplications(userId: number = 1) {
     },
     orderBy: { updatedAt: 'desc' },
   });
+
+  // Convert Decimal to number for client components
+  return applications.map(app => ({
+    ...app,
+    jobMatch: {
+      ...app.jobMatch,
+      matchScore: Number(app.jobMatch.matchScore),
+    },
+  }));
 }
 
 export default async function ApplicationsPage() {

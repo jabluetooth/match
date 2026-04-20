@@ -13,7 +13,13 @@
       "Bash(tasklist:*)",
       "Bash(findstr:*)",
       "Bash(npx tsx scripts/seed-test-application.ts)",
-      "Bash(timeout 10 sh:*)"
+      "Bash(timeout 10 sh:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(echo $env:PATH)",
+      "Bash(npx tsx:*)",
+      "Bash(dir \"C:\\Users\\frelatorre\\Desktop\\Projects\\n8n\\match\\app\\api\\research\\company\" /s)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
