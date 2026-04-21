@@ -1,41 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { n8nClient } from '@/lib/n8n-client';
-
-const prisma = new PrismaClient();
+import { requireAuth, verifyOwnership } from '@/lib/auth';
+import { ApplicationTrackerSchema, validateAndSanitize } from '@/lib/validation';
 
 // This endpoint handles application tracking and optionally triggers n8n workflow
 export async function POST(request: NextRequest) {
   try {
+    // 1. Authenticate user
+    const userId = await requireAuth();
+
     const body = await request.json();
-    const { action, user_id, job_id, application_id, status, interview_date, interview_location, interview_type, interviewer_name, interviewer_role, notes, trigger_n8n = false } = body;
 
-    console.log('[Application Tracker] Received:', { action, user_id, job_id, application_id, status });
+    // 2. Validate and sanitize input
+    const validated = validateAndSanitize(ApplicationTrackerSchema, {
+      ...body,
+      user_id: userId, // Override with authenticated user ID
+    });
 
-    // Validate action
-    const validActions = ['create', 'update_status', 'schedule_interview'];
-    if (!validActions.includes(action)) {
-      return NextResponse.json(
-        { error: `Invalid action. Must be one of: ${validActions.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    const { action, job_id, application_id, status, interview_date, interview_location, interview_type, interviewer_name, interviewer_role, notes } = validated;
+    const trigger_n8n = body.trigger_n8n !== undefined ? body.trigger_n8n : false;
 
-    if (!user_id) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
-    }
+    console.log('[Application Tracker] Received:', { action, user_id: userId, job_id, application_id, status });
 
     let result;
 
     if (action === 'create') {
-      // Create new application
+      // 3. Create new application
       if (!job_id) {
         return NextResponse.json({ error: 'job_id is required for create action' }, { status: 400 });
       }
 
-      // Check if application already exists
+      // Check if application already exists for this user
       const existingApp = await prisma.application.findFirst({
-        where: { userId: user_id, jobId: job_id }
+        where: { userId, jobId: job_id }
       });
 
       if (existingApp) {
@@ -45,10 +43,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Create application directly with job
+      // Create application with authenticated user ID
       result = await prisma.application.create({
         data: {
-          userId: user_id,
+          userId, // Use authenticated user ID
           jobId: job_id,
           status: status || 'interested',
           notes,
@@ -60,7 +58,7 @@ export async function POST(request: NextRequest) {
       });
 
     } else if (action === 'update_status') {
-      // Update application status
+      // 4. Update application status
       if (!application_id) {
         return NextResponse.json({ error: 'application_id is required for update_status action' }, { status: 400 });
       }
@@ -69,17 +67,28 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'status is required for update_status action' }, { status: 400 });
       }
 
-      // First, get the current application to check appliedAt
+      // Verify ownership before updating
       const currentApp = await prisma.application.findUnique({
-        where: { id: application_id }
+        where: { id: application_id },
+        select: { userId: true, appliedAt: true }
       });
 
+      if (!currentApp) {
+        return NextResponse.json(
+          { error: 'Application not found' },
+          { status: 404 }
+        );
+      }
+
+      await verifyOwnership(currentApp.userId);
+
+      // Update application
       result = await prisma.application.update({
         where: { id: application_id },
         data: {
           status,
           ...(notes && { notes }),
-          ...((status === 'applied') && !currentApp?.appliedAt && { appliedAt: new Date() }),
+          ...((status === 'applied') && !currentApp.appliedAt && { appliedAt: new Date() }),
         },
         include: {
           job: true,
@@ -88,7 +97,7 @@ export async function POST(request: NextRequest) {
       });
 
     } else if (action === 'schedule_interview') {
-      // Schedule interview
+      // 5. Schedule interview
       if (!application_id) {
         return NextResponse.json({ error: 'application_id is required for schedule_interview action' }, { status: 400 });
       }
@@ -96,6 +105,21 @@ export async function POST(request: NextRequest) {
       if (!interview_date) {
         return NextResponse.json({ error: 'interview_date is required for schedule_interview action' }, { status: 400 });
       }
+
+      // Verify ownership before updating
+      const application = await prisma.application.findUnique({
+        where: { id: application_id },
+        select: { userId: true }
+      });
+
+      if (!application) {
+        return NextResponse.json(
+          { error: 'Application not found' },
+          { status: 404 }
+        );
+      }
+
+      await verifyOwnership(application.userId);
 
       // Update application with interview details
       result = await prisma.application.update({
@@ -119,13 +143,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Action failed' }, { status: 500 });
     }
 
-    // Optionally trigger n8n workflow for email notifications and additional processing
+    // 6. Optionally trigger n8n workflow for email notifications and additional processing
     if (trigger_n8n) {
       try {
         console.log('[Application Tracker] Triggering n8n workflow...');
         await n8nClient.trackApplication({
           action,
-          user_id,
+          user_id: userId, // Use authenticated user ID
           job_id,
           application_id: result.id,
           status: result.status,
@@ -143,7 +167,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build response compatible with n8n workflow
+    // 7. Build response compatible with n8n workflow
     const response = {
       status: 'success',
       action,
@@ -160,6 +184,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error: any) {
+    // Handle authentication/authorization errors
+    if (error.message?.includes('Unauthorized') || error.message?.includes('Forbidden')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.message.includes('Unauthorized') ? 401 : 403 }
+      );
+    }
+
     console.error('[Application Tracker] Error:', error);
     return NextResponse.json(
       { error: 'Failed to process application action', details: error.message },

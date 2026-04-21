@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
+    // 1. Authenticate user
+    const userId = await requireAuth();
+
+    // 2. Parse and validate jobId
     const { jobId: jobIdParam } = await params;
     const jobId = parseInt(jobIdParam);
 
@@ -18,21 +21,12 @@ export async function GET(
       );
     }
 
-    // Get user_id from query params (in a real app, this would come from auth)
-    const userId = request.nextUrl.searchParams.get('user_id');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'user_id is required' },
-        { status: 400 }
-      );
-    }
-
+    // 3. Fetch company research for authenticated user
     const companyResearch = await prisma.companyResearch.findUnique({
       where: {
         jobId_userId: {
           jobId,
-          userId: parseInt(userId),
+          userId, // Use authenticated user ID (string)
         },
       },
     });
@@ -46,6 +40,14 @@ export async function GET(
 
     return NextResponse.json(companyResearch);
   } catch (error: any) {
+    // Handle authentication errors
+    if (error.message?.includes('Unauthorized')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 401 }
+      );
+    }
+
     console.error('Failed to fetch company research:', error);
     return NextResponse.json(
       { error: 'Failed to fetch company research', details: error.message },

@@ -1,28 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n-client';
+import { requireAuth } from '@/lib/auth';
+import { TailorResumeSchema, validateAndSanitize } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Authenticate user
+    const userId = await requireAuth();
+
     const body = await request.json();
-    const { user_id, job_id } = body;
 
-    if (!user_id || !job_id) {
-      return NextResponse.json(
-        { error: 'user_id and job_id are required' },
-        { status: 400 }
-      );
-    }
+    // 2. Validate and sanitize input
+    const validated = validateAndSanitize(TailorResumeSchema, {
+      ...body,
+      user_id: userId, // Override with authenticated user ID
+    });
 
+    // 3. Call n8n workflow
     const result = await n8nClient.tailorResume({
-      user_id,
-      job_id,
+      user_id: userId,
+      job_id: validated.job_id,
     });
 
     return NextResponse.json({ success: true, result });
   } catch (error: any) {
+    // Handle authentication errors
+    if (error.message?.includes('Unauthorized')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 401 }
+      );
+    }
+
     console.error('Resume tailor error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to trigger resume tailoring',
         details: error.message,
         hint: 'Check Vercel logs for [n8n] prefix.'

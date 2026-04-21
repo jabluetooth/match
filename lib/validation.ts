@@ -45,6 +45,10 @@ export const TailorResumeSchema = z.object({
   job_id: z.number().int().positive(),
 });
 
+export const MatchJobsSchema = z.object({
+  user_id: z.string().min(1),
+});
+
 /**
  * Sanitize string input to prevent XSS
  */
