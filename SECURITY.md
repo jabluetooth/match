@@ -12,25 +12,12 @@ This document outlines the security measures implemented in the Match applicatio
    CLERK_SECRET_KEY=sk_test_your_secret_here
    ```
 
-3. **Configure Clerk Webhook** (REQUIRED for user database sync):
-   - Go to Clerk Dashboard > Webhooks > Add Endpoint
-   - **Endpoint URL**: `https://your-domain.com/api/webhooks/clerk`
-     - For local development with ngrok: `https://your-ngrok-url.ngrok.io/api/webhooks/clerk`
-   - **Subscribe to events**:
-     - `user.created` - Creates user in database when they sign up
-     - `user.updated` - Updates user data when they change their profile
-     - `user.deleted` - Removes user from database when deleted
-   - **Copy the Signing Secret** and add to `.env`:
-     ```bash
-     CLERK_WEBHOOK_SECRET=whsec_your_webhook_secret_here
-     ```
-   - **Why this is required**: n8n workflows need to look up users in the database before they first visit the app
-
 ### Implementation
 - ✅ **ClerkProvider** wraps the entire application (app/layout.tsx)
 - ✅ **Middleware** protects all routes except public ones (middleware.ts)
 - ✅ **Sidebar** shows sign-in/sign-out buttons with user profile
 - ✅ **Database Schema** uses Clerk user IDs (VARCHAR instead of INT)
+- ✅ **Auto User Sync** - Users are automatically created in the database on first visit via `requireUserWithSync()`
 
 ## 🛡️ Authorization
 

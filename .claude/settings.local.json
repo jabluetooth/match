@@ -32,7 +32,9 @@
       "Bash(npm install:*)",
       "mcp__Neon__run_sql_transaction",
       "Bash(cmd //c taskkill //PID 23860 //F)",
-      "Bash(timeout 5 cmd //c \"\")"
+      "Bash(timeout 5 cmd //c \"\")",
+      "Bash(del appapiwebhooksclerkroute.ts)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []
