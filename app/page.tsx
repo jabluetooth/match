@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma';
+import { requireUserWithSync } from '@/lib/auth';
 import { StatsGrid } from '@/components/stats-grid';
 import { RecentMatches } from '@/components/recent-matches';
 import { ApplicationFunnel } from '@/components/application-funnel';
 import { ActivityFeed } from '@/components/activity-feed';
 
-async function getDashboardData(userId: number = 1) {
+async function getDashboardData(userId: string) {
   // Get stats
   const [totalApplications, activeApplications, interviews, offers] = await Promise.all([
     prisma.application.count({
@@ -70,7 +71,9 @@ async function getDashboardData(userId: number = 1) {
 }
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  // Authenticate and get user
+  const user = await requireUserWithSync();
+  const data = await getDashboardData(user.id);
 
   return (
     <div className="p-8">

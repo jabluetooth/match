@@ -5,7 +5,6 @@ import { useInterviewPrep } from "@/hooks/useInterviewPrep";
 import { FileText, Sparkles } from "lucide-react";
 
 interface InterviewPrepButtonProps {
-  userId: number;
   applicationId: number;
   jobTitle: string;
   companyName: string;
@@ -14,7 +13,6 @@ interface InterviewPrepButtonProps {
 }
 
 export function InterviewPrepButton({
-  userId,
   applicationId,
   jobTitle,
   companyName,
@@ -27,7 +25,6 @@ export function InterviewPrepButton({
 
   const handleGenerate = async () => {
     await generate({
-      user_id: userId,
       application_id: applicationId,
       interviewer_name: interviewerName || undefined,
       interviewer_role: interviewerRole || undefined,

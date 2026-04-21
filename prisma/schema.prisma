@@ -8,13 +8,13 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String   @id // Clerk user ID (e.g., user_xyz123)
   email     String   @unique @db.VarChar(255)
   fullName  String?  @map("full_name") @db.VarChar(255)
   phone     String?  @db.VarChar(50)
   location  String?  @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
 
   applications      Application[]
   applicationEvents ApplicationEvent[]
@@ -51,7 +51,7 @@ model Job {
 
 model Application {
   id                Int       @id @default(autoincrement())
-  userId            Int       @map("user_id")
+  userId            String    @map("user_id") // Clerk user ID
   jobId             Int       @map("job_id")
   status            String    @default("interested") @db.VarChar(50)
   appliedAt         DateTime? @map("applied_at") @db.Timestamptz(6)
@@ -64,7 +64,7 @@ model Application {
   interviewerRole   String?   @map("interviewer_role") @db.VarChar(255)
   notes             String?
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
 
   user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   job               Job                  @relation(fields: [jobId], references: [id], onDelete: Cascade)
@@ -82,7 +82,7 @@ model Application {
 model ApplicationEvent {
   id            Int       @id @default(autoincrement())
   applicationId Int       @map("application_id")
-  userId        Int       @map("user_id")
+  userId        String    @map("user_id") // Clerk user ID
   action        String    @db.VarChar(100)
   fromStatus    String?   @map("from_status") @db.VarChar(50)
   toStatus      String?   @map("to_status") @db.VarChar(50)
@@ -101,7 +101,7 @@ model ApplicationEvent {
 model FollowUpLog {
   id             Int       @id @default(autoincrement())
   applicationId  Int       @map("application_id")
-  userId         Int       @map("user_id")
+  userId         String    @map("user_id") // Clerk user ID
   followupType   String    @map("followup_type") @db.VarChar(50)
   followupNumber Int       @default(1) @map("followup_number")
   draftSubject   String?   @map("draft_subject")
@@ -111,7 +111,7 @@ model FollowUpLog {
   respondedAt    DateTime? @map("responded_at") @db.Timestamptz(6)
   responseStatus String    @default("pending") @map("response_status") @db.VarChar(50)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -123,11 +123,40 @@ model FollowUpLog {
   @@map("follow_up_log")
 }
 
+model InterviewPrep {
+  id                     Int       @id @default(autoincrement())
+  applicationId          Int       @unique @map("application_id")
+  userId                 String    @map("user_id") // Clerk user ID
+  jobId                  Int       @map("job_id")
+  interviewerName        String?   @map("interviewer_name") @db.VarChar(255)
+  interviewerRole        String?   @map("interviewer_role") @db.VarChar(255)
+  interviewerLinkedinUrl String?   @map("interviewer_linkedin_url")
+  linkedinScraped        Boolean   @default(false) @map("linkedin_scraped")
+  roleAnalysis           String?   @map("role_analysis")
+  questions              Json      @default("{}") @db.JsonB
+  starAnswers            Json      @default("[]") @map("star_answers") @db.JsonB
+  questionsToAsk         Json      @default("[]") @map("questions_to_ask") @db.JsonB
+  dosAndDonts            Json      @default("{}") @map("dos_and_donts") @db.JsonB
+  salaryGuidance         String?   @map("salary_guidance")
+  interviewerInsights    String?   @map("interviewer_insights")
+  prepNotes              String?   @map("prep_notes")
+  htmlContent            String?   @map("html_content")
+  pdfBinary              Bytes?    @map("pdf_binary")
+  pdfGenerated           Boolean   @default(false) @map("pdf_generated")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6) @updatedAt
+
+  @@index([userId])
+  @@index([applicationId])
+  @@index([createdAt(sort: Desc)])
+  @@map("interview_prep")
+}
+
 model CompanyResearch {
   id                 Int       @id @default(autoincrement())
   applicationId      Int?      @map("application_id")
   jobId              Int       @map("job_id")
-  userId             Int       @map("user_id")
+  userId             String    @map("user_id") // Clerk user ID
   companyName        String    @map("company_name")
   companyUrl         String?   @map("company_url")
   companyOverview    String?   @map("company_overview")
@@ -144,7 +173,7 @@ model CompanyResearch {
   websiteScraped     Boolean   @default(false) @map("website_scraped")
   newsCount          Int       @default(0) @map("news_count")
   createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @default(now()) @map("updated_at")
+  updatedAt          DateTime  @default(now()) @map("updated_at") @updatedAt
 
   @@unique([jobId, userId])
   @@map("company_research")
@@ -152,7 +181,7 @@ model CompanyResearch {
 
 model TailoredResume {
   id                  Int       @id @default(autoincrement())
-  userId              Int       @map("user_id")
+  userId              String    @map("user_id") // Clerk user ID
   jobId               Int       @map("job_id")
   jobMatchId          Int?      @map("job_match_id")
   resumeUrl           String    @map("resume_url")
@@ -164,14 +193,14 @@ model TailoredResume {
   tailoringNotes      String?   @map("tailoring_notes")
   version             Int       @default(1)
   createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @default(now()) @map("updated_at")
+  updatedAt           DateTime  @default(now()) @map("updated_at") @updatedAt
 
   @@map("tailored_resumes")
 }
 
 model UserProfile {
   id                 Int       @id @default(autoincrement())
-  userId             Int?      @map("user_id")
+  userId             String?   @map("user_id") // Clerk user ID
   baseResumeUrl      String?   @map("base_resume_url")
   skills             String[]
   experienceYears    Int?      @map("experience_years")
@@ -183,14 +212,14 @@ model UserProfile {
   workType           String?   @map("work_type") @db.VarChar(50)
   status             String    @default("active") @db.VarChar(50)
   createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @default(now()) @map("updated_at")
+  updatedAt          DateTime  @default(now()) @map("updated_at") @updatedAt
 
   @@map("user_profiles")
 }
 
 model ActivityLog {
   id          Int       @id @default(autoincrement())
-  userId      Int       @map("user_id")
+  userId      String    @map("user_id") // Clerk user ID
   action      String    @db.VarChar(100)
   entityType  String?   @map("entity_type") @db.VarChar(50)
   entityId    Int?      @map("entity_id")
@@ -203,7 +232,7 @@ model ActivityLog {
 // Legacy tables - keeping for reference but not actively used
 model JobMatch {
   id            Int       @id @default(autoincrement())
-  userId        Int?      @map("user_id")
+  userId        String?   @map("user_id") // Clerk user ID
   jobId         Int?      @map("job_id")
   matchScore    Decimal?  @map("match_score") @db.Decimal(5, 2)
   aiReasoning   String?   @map("ai_reasoning")
@@ -211,7 +240,7 @@ model JobMatch {
   skillsMissing String[]  @map("skills_missing")
   status        String    @default("pending") @db.VarChar(50)
   createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @default(now()) @map("updated_at")
+  updatedAt     DateTime  @default(now()) @map("updated_at") @updatedAt
 
   @@unique([userId, jobId])
   @@map("job_matches")
@@ -251,7 +280,7 @@ model FollowUp {
 
 model Document {
   id           Int       @id @default(autoincrement())
-  userId       Int?      @map("user_id")
+  userId       String?   @map("user_id") // Clerk user ID
   documentType String?   @map("document_type") @db.VarChar(50)
   jobMatchId   Int?      @map("job_match_id")
   fileUrl      String    @map("file_url")

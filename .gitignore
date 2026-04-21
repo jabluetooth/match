@@ -38,3 +38,6 @@ prisma/migrations
 
 .vercel
 nul
+
+# clerk configuration (can include secrets)
+/.clerk/

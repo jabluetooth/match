@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 interface InterviewPrepInput {
-  user_id: number;
   application_id: number;
   interviewer_name?: string;
   interviewer_role?: string;

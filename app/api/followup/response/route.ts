@@ -1,49 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { n8nClient } from '@/lib/n8n-client';
-
-const prisma = new PrismaClient();
+import { requireAuth, verifyOwnership } from '@/lib/auth';
+import { FollowUpResponseSchema, validateAndSanitize } from '@/lib/validation';
 
 /**
  * Follow-up Response Tracking API
  * Handles when a candidate receives a reply or marks a follow-up as unanswered
+ *
+ * SECURITY: Requires authentication, validates ownership
  */
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const userId = await requireAuth();
+
     const body = await request.json();
-    const { followup_id, application_id, user_id, response_status, trigger_n8n = true } = body;
 
-    console.log('[Follow-up Response] Received:', { followup_id, application_id, user_id, response_status });
+    // Validate and sanitize input
+    const validated = validateAndSanitize(FollowUpResponseSchema, {
+      ...body,
+      user_id: userId, // Override with authenticated user ID
+    });
 
-    // Validate required fields
-    if (!followup_id) {
-      return NextResponse.json({ errorMessage: 'Missing followup_id' }, { status: 500 });
-    }
+    console.log('[Follow-up Response] Received:', {
+      userId,
+      followupId: validated.followup_id,
+      responseStatus: validated.response_status
+    });
 
-    if (!application_id) {
-      return NextResponse.json({ errorMessage: 'Missing application_id' }, { status: 500 });
-    }
+    // Verify user owns the follow-up
+    const followUpCheck = await prisma.followUpLog.findUnique({
+      where: { id: validated.followup_id },
+      select: { userId: true }
+    });
 
-    if (!user_id) {
-      return NextResponse.json({ errorMessage: 'Missing user_id' }, { status: 500 });
-    }
-
-    // Validate response_status
-    const validStatuses = ['replied', 'no_response', 'bounced'];
-    if (!response_status || !validStatuses.includes(response_status)) {
+    if (!followUpCheck) {
       return NextResponse.json(
-        { errorMessage: `response_status must be one of: ${validStatuses.join(', ')}` },
-        { status: 500 }
+        { errorMessage: 'Follow-up not found' },
+        { status: 404 }
       );
     }
 
+    await verifyOwnership(followUpCheck.userId);
+
     // Update follow-up record
     const followUp = await prisma.followUpLog.update({
-      where: { id: followup_id },
+      where: { id: validated.followup_id },
       data: {
-        responseStatus: response_status,
-        // Set respondedAt when replied
-        ...(response_status === 'replied' && { respondedAt: new Date() }),
+        responseStatus: validated.response_status,
+        ...(validated.response_status === 'replied' && { respondedAt: new Date() }),
       },
     });
 
@@ -51,16 +57,15 @@ export async function POST(request: NextRequest) {
 
     // If replied, advance application status from "applied" to "phone_screen"
     let application = null;
-    if (response_status === 'replied') {
+    if (validated.response_status === 'replied') {
       const currentApp = await prisma.application.findUnique({
-        where: { id: application_id },
+        where: { id: validated.application_id },
         include: { job: true }
       });
 
-      // Only advance if still at "applied" status
       if (currentApp?.status === 'applied') {
         application = await prisma.application.update({
-          where: { id: application_id },
+          where: { id: validated.application_id },
           data: { status: 'phone_screen' },
           include: { job: true }
         });
@@ -73,14 +78,14 @@ export async function POST(request: NextRequest) {
     // Calculate response rate statistics
     const totalFollowUps = await prisma.followUpLog.count({
       where: {
-        userId: user_id,
-        sentAt: { not: null }, // Only count sent follow-ups
+        userId,
+        sentAt: { not: null },
       }
     });
 
     const repliedFollowUps = await prisma.followUpLog.count({
       where: {
-        userId: user_id,
+        userId,
         responseStatus: 'replied',
       }
     });
@@ -90,39 +95,45 @@ export async function POST(request: NextRequest) {
       : 0;
 
     // Optionally trigger n8n workflow
-    if (trigger_n8n) {
+    if (validated.trigger_n8n) {
       try {
         console.log('[Follow-up Response] Triggering n8n workflow...');
         await n8nClient.trackFollowUpResponse({
-          followup_id,
-          application_id,
-          user_id,
-          response_status,
+          followup_id: validated.followup_id,
+          application_id: validated.application_id,
+          user_id: userId,
+          response_status: validated.response_status,
         });
         console.log('[Follow-up Response] n8n workflow triggered successfully');
       } catch (n8nError: any) {
         console.error('[Follow-up Response] n8n trigger failed:', n8nError.message);
-        // Don't fail the request if n8n fails - database update already succeeded
       }
     }
 
-    // Build response matching the workflow spec
     const response = {
       status: 'success',
-      followup_id,
-      application_id,
-      response_status,
+      followup_id: validated.followup_id,
+      application_id: validated.application_id,
+      response_status: validated.response_status,
       response_rate_pct: responseRatePct,
       total_sent: totalFollowUps,
       total_replied: repliedFollowUps,
     };
 
-    console.log('[Follow-up Response] Success:', response);
+    console.log('[Follow-up Response] Success');
 
     return NextResponse.json(response);
 
   } catch (error: any) {
     console.error('[Follow-up Response] Error:', error);
+
+    if (error.message?.includes('Unauthorized') || error.message?.includes('Forbidden')) {
+      return NextResponse.json(
+        { errorMessage: error.message },
+        { status: error.message.includes('Unauthorized') ? 401 : 403 }
+      );
+    }
+
     return NextResponse.json(
       { errorMessage: error.message || 'Failed to process follow-up response' },
       { status: 500 }

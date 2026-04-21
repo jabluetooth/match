@@ -1,10 +1,13 @@
 import { prisma } from '@/lib/prisma';
+import { requireUserWithSync } from '@/lib/auth';
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, User, ArrowLeft, ExternalLink } from 'lucide-react';
 import { InterviewPrepButton } from '@/components/interview-prep-button';
 
 export default async function InterviewsPage() {
-  const userId = 1; // Default user
+  // Authenticate and get user
+  const user = await requireUserWithSync();
+  const userId = user.id;
 
   // Get applications with interview dates
   const applications = await prisma.application.findMany({
@@ -132,7 +135,6 @@ export default async function InterviewsPage() {
                   {/* Interview Prep Button */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <InterviewPrepButton
-                      userId={userId}
                       applicationId={app.id}
                       jobTitle={app.job.title}
                       companyName={app.job.companyName}
