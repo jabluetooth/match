@@ -1,6 +1,3 @@
-// This is your Prisma schema file
-// Learn more: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,222 +9,255 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
-  fullName  String?  @map("full_name")
-  phone     String?
-  location  String?
+  email     String   @unique @db.VarChar(255)
+  fullName  String?  @map("full_name") @db.VarChar(255)
+  phone     String?  @db.VarChar(50)
+  location  String?  @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
 
-  profile         UserProfile?
-  jobMatches      JobMatch[]
-  applications    Application[]
-  documents       Document[]
-  activityLogs    ActivityLog[]
-  tailoredResumes TailoredResume[]
+  applications      Application[]
+  applicationEvents ApplicationEvent[]
+  followUpLog       FollowUpLog[]
 
   @@map("users")
 }
 
-model UserProfile {
-  id                 Int      @id @default(autoincrement())
-  userId             Int      @unique @map("user_id")
-  baseResumeUrl      String?  @map("base_resume_url")
-  skills             String[]
-  experienceYears    Int?     @map("experience_years")
-  jobTitles          String[] @map("job_titles")
-  industries         String[]
-  minSalary          Int?     @map("min_salary")
-  maxSalary          Int?     @map("max_salary")
-  preferredLocations String[] @map("preferred_locations")
-  workType           String?  @map("work_type")
-  status             String   @default("active")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("user_profiles")
-}
-
 model Job {
   id             Int       @id @default(autoincrement())
-  externalId     String    @unique @map("external_id")
-  source         String
+  externalId     String?   @unique @map("external_id") @db.VarChar(255)
+  source         String?   @db.VarChar(100)
   sourceUrl      String    @map("source_url")
-  title          String
-  companyName    String    @map("company_name")
+  title          String    @db.VarChar(500)
+  companyName    String    @map("company_name") @db.VarChar(255)
   companyUrl     String?   @map("company_url")
-  location       String?
-  workType       String?   @map("work_type")
-  employmentType String?   @map("employment_type")
+  location       String?   @db.VarChar(255)
+  workType       String?   @map("work_type") @db.VarChar(50)
+  employmentType String?   @map("employment_type") @db.VarChar(50)
   salaryMin      Int?      @map("salary_min")
   salaryMax      Int?      @map("salary_max")
   description    String?
   requirements   String?
   postedDate     DateTime? @map("posted_date")
   scrapedAt      DateTime  @default(now()) @map("scraped_at")
-  status         String    @default("active")
+  status         String    @default("active") @db.VarChar(50)
   createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @map("updated_at")
 
-  jobMatches JobMatch[]
-
-  @@index([companyName])
-  @@index([postedDate])
-  @@map("jobs")
-}
-
-model JobMatch {
-  id            Int      @id @default(autoincrement())
-  userId        Int      @map("user_id")
-  jobId         Int      @map("job_id")
-  matchScore    Decimal  @map("match_score") @db.Decimal(5, 2)
-  aiReasoning   String?  @map("ai_reasoning")
-  skillsMatched String[] @map("skills_matched")
-  skillsMissing String[] @map("skills_missing")
-  status        String   @default("pending")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job          Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
   applications Application[]
 
-  @@unique([userId, jobId])
-  @@index([userId])
-  @@index([matchScore])
-  @@map("job_matches")
+  @@map("jobs")
 }
 
 model Application {
   id                Int       @id @default(autoincrement())
   userId            Int       @map("user_id")
-  jobMatchId        Int       @map("job_match_id")
-  status            String    @default("draft")
-  appliedDate       DateTime? @map("applied_date")
-  tailoredResumeUrl String?   @map("tailored_resume_url")
-  coverLetterUrl    String?   @map("cover_letter_url")
+  jobId             Int       @map("job_id")
+  status            String    @default("interested") @db.VarChar(50)
+  appliedAt         DateTime? @map("applied_at") @db.Timestamptz(6)
+  lastActivity      DateTime  @default(now()) @map("last_activity") @db.Timestamptz(6)
+  reminderSentAt    DateTime? @map("reminder_sent_at") @db.Timestamptz(6)
+  interviewDate     DateTime? @map("interview_date") @db.Timestamptz(6)
+  interviewLocation String?   @map("interview_location")
+  interviewType     String    @default("video") @map("interview_type") @db.VarChar(50)
+  interviewerName   String?   @map("interviewer_name") @db.VarChar(255)
+  interviewerRole   String?   @map("interviewer_role") @db.VarChar(255)
   notes             String?
-  rejectionDate     DateTime? @map("rejection_date")
-  rejectionReason   String?   @map("rejection_reason")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
 
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobMatch   JobMatch    @relation(fields: [jobMatchId], references: [id], onDelete: Cascade)
-  interviews Interview[]
-  followUps  FollowUp[]
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job               Job                  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicationEvents ApplicationEvent[]
+  followUpLog       FollowUpLog[]
 
-  @@index([status])
+  @@unique([userId, jobId])
   @@index([userId])
+  @@index([status])
+  @@index([lastActivity])
+  @@index([interviewDate])
   @@map("applications")
 }
 
-model Interview {
-  id               Int       @id @default(autoincrement())
-  applicationId    Int       @map("application_id")
-  interviewType    String?   @map("interview_type")
-  scheduledDate    DateTime? @map("scheduled_date")
-  durationMinutes  Int?      @map("duration_minutes")
-  interviewerName  String?   @map("interviewer_name")
-  interviewerTitle String?   @map("interviewer_title")
-  location         String?
-  status           String    @default("scheduled")
-  prepNotesUrl     String?   @map("prep_notes_url")
-  feedback         String?
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+model ApplicationEvent {
+  id            Int       @id @default(autoincrement())
+  applicationId Int       @map("application_id")
+  userId        Int       @map("user_id")
+  action        String    @db.VarChar(100)
+  fromStatus    String?   @map("from_status") @db.VarChar(50)
+  toStatus      String?   @map("to_status") @db.VarChar(50)
+  metadata      Json      @default("{}")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("interviews")
+  @@index([applicationId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("application_events")
 }
 
-model Document {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
-  documentType String   @map("document_type")
-  jobMatchId   Int?     @map("job_match_id")
-  fileUrl      String   @map("file_url")
-  fileName     String?  @map("file_name")
-  version      Int      @default(1)
-  createdAt    DateTime @default(now()) @map("created_at")
+model FollowUpLog {
+  id             Int       @id @default(autoincrement())
+  applicationId  Int       @map("application_id")
+  userId         Int       @map("user_id")
+  followupType   String    @map("followup_type") @db.VarChar(50)
+  followupNumber Int       @default(1) @map("followup_number")
+  draftSubject   String?   @map("draft_subject")
+  draftBody      String?   @map("draft_body")
+  tone           String    @default("professional") @map("tone") @db.VarChar(50)
+  sentAt         DateTime  @default(now()) @map("sent_at") @db.Timestamptz(6)
+  respondedAt    DateTime? @map("responded_at") @db.Timestamptz(6)
+  responseStatus String    @default("pending") @map("response_status") @db.VarChar(50)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("documents")
+  @@index([applicationId])
+  @@index([userId])
+  @@index([sentAt(sort: Desc)])
+  @@index([responseStatus])
+  @@map("follow_up_log")
 }
 
 model CompanyResearch {
-  id                 Int      @id @default(autoincrement())
-  applicationId      Int?     @map("application_id")
-  jobId              Int      @map("job_id")
-  userId             Int      @map("user_id")
-  companyName        String   @map("company_name")
-  companyUrl         String?  @map("company_url")
-  companyOverview    String?  @map("company_overview")
-  missionAndValues   String?  @map("mission_and_values")
-  recentDevelopments Json?    @map("recent_developments")
-  whyTheyAreHiring   String?  @map("why_they_are_hiring")
-  talkingPoints      Json?    @map("talking_points")
-  questionsToAsk     Json?    @map("questions_to_ask")
-  redFlags           Json?    @map("red_flags")
-  researchNotes      String?  @map("research_notes")
-  confidenceScore    Int?     @map("confidence_score")
-  htmlContent        String?  @map("html_content")
-  pdfBinary          Bytes?   @map("pdf_binary")
-  websiteScraped     Boolean  @default(false) @map("website_scraped")
-  newsCount          Int      @default(0) @map("news_count")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id                 Int       @id @default(autoincrement())
+  applicationId      Int?      @map("application_id")
+  jobId              Int       @map("job_id")
+  userId             Int       @map("user_id")
+  companyName        String    @map("company_name")
+  companyUrl         String?   @map("company_url")
+  companyOverview    String?   @map("company_overview")
+  missionAndValues   String?   @map("mission_and_values")
+  recentDevelopments Json?     @map("recent_developments")
+  whyTheyAreHiring   String?   @map("why_they_are_hiring")
+  talkingPoints      Json?     @map("talking_points")
+  questionsToAsk     Json?     @map("questions_to_ask")
+  redFlags           Json?     @map("red_flags")
+  researchNotes      String?   @map("research_notes")
+  confidenceScore    Int?      @map("confidence_score")
+  htmlContent        String?   @map("html_content")
+  pdfBinary          Bytes?    @map("pdf_binary")
+  websiteScraped     Boolean   @default(false) @map("website_scraped")
+  newsCount          Int       @default(0) @map("news_count")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @default(now()) @map("updated_at")
 
   @@unique([jobId, userId])
   @@map("company_research")
 }
 
+model TailoredResume {
+  id                  Int       @id @default(autoincrement())
+  userId              Int       @map("user_id")
+  jobId               Int       @map("job_id")
+  jobMatchId          Int?      @map("job_match_id")
+  resumeUrl           String    @map("resume_url")
+  storagePath         String    @map("storage_path")
+  pdfFilename         String?   @map("pdf_filename") @db.VarChar(255)
+  professionalSummary String?   @map("professional_summary")
+  coreSkills          String[]  @map("core_skills")
+  keywords            String[]
+  tailoringNotes      String?   @map("tailoring_notes")
+  version             Int       @default(1)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @default(now()) @map("updated_at")
+
+  @@map("tailored_resumes")
+}
+
+model UserProfile {
+  id                 Int       @id @default(autoincrement())
+  userId             Int?      @map("user_id")
+  baseResumeUrl      String?   @map("base_resume_url")
+  skills             String[]
+  experienceYears    Int?      @map("experience_years")
+  jobTitles          String[]  @map("job_titles")
+  industries         String[]
+  minSalary          Int?      @map("min_salary")
+  maxSalary          Int?      @map("max_salary")
+  preferredLocations String[]  @map("preferred_locations")
+  workType           String?   @map("work_type") @db.VarChar(50)
+  status             String    @default("active") @db.VarChar(50)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @default(now()) @map("updated_at")
+
+  @@map("user_profiles")
+}
+
+model ActivityLog {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  action      String    @db.VarChar(100)
+  entityType  String?   @map("entity_type") @db.VarChar(50)
+  entityId    Int?      @map("entity_id")
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("activity_log")
+}
+
+// Legacy tables - keeping for reference but not actively used
+model JobMatch {
+  id            Int       @id @default(autoincrement())
+  userId        Int?      @map("user_id")
+  jobId         Int?      @map("job_id")
+  matchScore    Decimal?  @map("match_score") @db.Decimal(5, 2)
+  aiReasoning   String?   @map("ai_reasoning")
+  skillsMatched String[]  @map("skills_matched")
+  skillsMissing String[]  @map("skills_missing")
+  status        String    @default("pending") @db.VarChar(50)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @map("updated_at")
+
+  @@unique([userId, jobId])
+  @@map("job_matches")
+}
+
+model Interview {
+  id               Int       @id @default(autoincrement())
+  applicationId    Int?      @map("application_id")
+  interviewType    String?   @map("interview_type") @db.VarChar(100)
+  scheduledDate    DateTime? @map("scheduled_date")
+  durationMinutes  Int?      @map("duration_minutes")
+  interviewerName  String?   @map("interviewer_name") @db.VarChar(255)
+  interviewerTitle String?   @map("interviewer_title") @db.VarChar(255)
+  location         String?   @db.VarChar(255)
+  status           String    @default("scheduled") @db.VarChar(50)
+  prepNotesUrl     String?   @map("prep_notes_url")
+  feedback         String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @map("updated_at")
+
+  @@map("interviews")
+}
+
 model FollowUp {
   id            Int       @id @default(autoincrement())
-  applicationId Int       @map("application_id")
-  followUpType  String    @map("follow_up_type")
+  applicationId Int?      @map("application_id")
+  followUpType  String?   @map("follow_up_type") @db.VarChar(50)
   scheduledDate DateTime  @map("scheduled_date")
   sentDate      DateTime? @map("sent_date")
   emailTemplate String?   @map("email_template")
-  status        String    @default("pending")
+  status        String    @default("pending") @db.VarChar(50)
   createdAt     DateTime  @default(now()) @map("created_at")
-
-  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([scheduledDate])
   @@map("follow_ups")
 }
 
-model ActivityLog {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
-  activityType String   @map("activity_type")
-  entityType   String?  @map("entity_type")
-  entityId     Int?     @map("entity_id")
-  metadata     Json?
-  createdAt    DateTime @default(now()) @map("created_at")
+model Document {
+  id           Int       @id @default(autoincrement())
+  userId       Int?      @map("user_id")
+  documentType String?   @map("document_type") @db.VarChar(50)
+  jobMatchId   Int?      @map("job_match_id")
+  fileUrl      String    @map("file_url")
+  fileName     String?   @map("file_name") @db.VarChar(255)
+  version      Int       @default(1)
+  createdAt    DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("activity_logs")
-}
-
-model TailoredResume {
-  id                  Int      @id @default(autoincrement())
-  userId              Int      @map("user_id")
-  jobId               Int      @map("job_id")
-  resumeUrl           String   @map("resume_url")
-  storagePath         String   @map("storage_path")
-  pdfFilename         String   @map("pdf_filename")
-  professionalSummary String?  @map("professional_summary")
-  tailoringNotes      String?  @map("tailoring_notes")
-  version             Int      @default(1)
-  createdAt           DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("tailored_resumes")
+  @@map("documents")
 }

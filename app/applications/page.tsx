@@ -5,26 +5,12 @@ async function getApplications(userId: number = 1) {
   const applications = await prisma.application.findMany({
     where: { userId },
     include: {
-      jobMatch: {
-        include: {
-          job: true,
-        },
-      },
-      interviews: {
-        orderBy: { scheduledDate: 'asc' },
-      },
+      job: true,
     },
     orderBy: { updatedAt: 'desc' },
   });
 
-  // Convert Decimal to number for client components
-  return applications.map(app => ({
-    ...app,
-    jobMatch: {
-      ...app.jobMatch,
-      matchScore: Number(app.jobMatch.matchScore),
-    },
-  }));
+  return applications;
 }
 
 export default async function ApplicationsPage() {

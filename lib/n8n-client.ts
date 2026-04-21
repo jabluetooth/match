@@ -211,6 +211,44 @@ export class N8NClient {
   }
 
   /**
+   * Trigger follow-up response tracking workflow
+   */
+  async trackFollowUpResponse(params: {
+    followup_id: number;
+    application_id: number;
+    user_id: number;
+    response_status: 'replied' | 'no_response' | 'bounced';
+  }) {
+    const url = this.getWebhookPath('followup-response');
+    console.log(`[n8n] Calling trackFollowUpResponse: ${url}`, params);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`n8n error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      // Handle empty responses from n8n webhooks
+      const text = await response.text();
+      if (!text) {
+        return { success: true, message: 'Workflow triggered successfully' };
+      }
+      return JSON.parse(text);
+    } catch (error: any) {
+      console.error(`[n8n] Fetch error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Get workflow execution status
    */
   async getExecutionStatus(executionId: string) {

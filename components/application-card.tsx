@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatRelativeTime } from '@/lib/utils';
-import { Building2, Calendar, FileText, ExternalLink, Search, CheckCircle } from 'lucide-react';
+import { Building2, ExternalLink, Search, CheckCircle } from 'lucide-react';
 
 interface CompanyResearch {
   id: number;
@@ -23,24 +23,15 @@ interface ApplicationCardProps {
     id: number;
     userId: number;
     status: string;
-    appliedDate: Date | null;
-    tailoredResumeUrl: string | null;
-    coverLetterUrl: string | null;
+    appliedAt: Date | null;
     notes: string | null;
-    jobMatch: {
-      job: {
-        id: number;
-        title: string;
-        companyName: string;
-        location: string | null;
-        sourceUrl: string;
-      };
-    };
-    interviews: Array<{
+    job: {
       id: number;
-      scheduledDate: Date | null;
-      interviewType: string | null;
-    }>;
+      title: string;
+      companyName: string;
+      location: string | null;
+      sourceUrl: string;
+    };
   };
 }
 
@@ -49,20 +40,19 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   const [companyResearch, setCompanyResearch] = useState<CompanyResearch | null>(null);
   const [showResearch, setShowResearch] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const nextInterview = application.interviews[0];
 
   const fetchCompanyResearch = async () => {
     try {
       const response = await fetch(
-        `/api/research/company/${application.jobMatch.job.id}?user_id=${application.userId}`
+        `/api/research/company/${application.job.id}?user_id=${application.userId}`
       );
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`[Research] Loaded for Job ID ${application.jobMatch.job.id}:`, data.companyName);
+        console.log(`[Research] Loaded for Job ID ${application.job.id}:`, data.companyName);
         setCompanyResearch(data);
       } else {
-        console.log(`[Research] Not found for Job ID ${application.jobMatch.job.id}`);
+        console.log(`[Research] Not found for Job ID ${application.job.id}`);
       }
     } catch (error) {
       console.error('Failed to fetch company research:', error);
@@ -73,7 +63,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   useEffect(() => {
     fetchCompanyResearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application.jobMatch.job.id, application.userId]);
+  }, [application.job.id, application.userId]);
 
   const handleResearchCompany = async () => {
     setResearching(true);
@@ -86,7 +76,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         body: JSON.stringify({
           user_id: application.userId,
           application_id: application.id,
-          job_id: application.jobMatch.job.id,
+          job_id: application.job.id,
         }),
       });
 
@@ -152,10 +142,10 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       {/* Job Title */}
       <div className="flex items-start justify-between mb-2">
         <h4 className="text-sm font-semibold text-gray-900 line-clamp-2">
-          {application.jobMatch.job.title}
+          {application.job.title}
         </h4>
         <a
-          href={application.jobMatch.job.sourceUrl}
+          href={application.job.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-gray-400 hover:text-blue-600 ml-1"
@@ -167,52 +157,16 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       {/* Company */}
       <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
         <Building2 className="h-3 w-3" />
-        <span className="truncate">{application.jobMatch.job.companyName}</span>
+        <span className="truncate">{application.job.companyName}</span>
       </div>
 
       {/* Applied Date */}
-      {application.appliedDate && (
+      {application.appliedAt && (
         <div className="text-xs text-gray-500 mb-2">
-          Applied {formatRelativeTime(application.appliedDate)}
+          Applied {formatRelativeTime(application.appliedAt)}
         </div>
       )}
 
-      {/* Next Interview */}
-      {nextInterview && nextInterview.scheduledDate && (
-        <div className="flex items-center gap-1 text-xs text-green-700 bg-green-50 rounded px-2 py-1 mb-2">
-          <Calendar className="h-3 w-3" />
-          <span>
-            {nextInterview.interviewType || 'Interview'} -{' '}
-            {new Date(nextInterview.scheduledDate).toLocaleDateString()}
-          </span>
-        </div>
-      )}
-
-      {/* Documents */}
-      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
-        {application.tailoredResumeUrl && (
-          <a
-            href={application.tailoredResumeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
-          >
-            <FileText className="h-3 w-3" />
-            Resume
-          </a>
-        )}
-        {application.coverLetterUrl && (
-          <a
-            href={application.coverLetterUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
-          >
-            <FileText className="h-3 w-3" />
-            Cover Letter
-          </a>
-        )}
-      </div>
 
       {/* Apply Button (only show if status is draft) */}
       {application.status === 'draft' && (
@@ -259,7 +213,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
                 )}
                 <div className="flex gap-2 pt-2">
                   <a
-                    href={`/research/${application.jobMatch.job.id}?user_id=${application.userId}`}
+                    href={`/research/${application.job.id}?user_id=${application.userId}`}
                     className="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
                   >
                     View Full Report
