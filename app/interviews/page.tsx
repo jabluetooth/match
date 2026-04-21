@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, User, ArrowLeft, ExternalLink } from 'lucide-react';
+import { InterviewPrepButton } from '@/components/interview-prep-button';
 
 export default async function InterviewsPage() {
   const userId = 1; // Default user
@@ -126,6 +127,18 @@ export default async function InterviewsPage() {
                     >
                       <ExternalLink className="h-5 w-5" />
                     </a>
+                  </div>
+
+                  {/* Interview Prep Button */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <InterviewPrepButton
+                      userId={userId}
+                      applicationId={app.id}
+                      jobTitle={app.job.title}
+                      companyName={app.job.companyName}
+                      interviewerName={app.interviewerName}
+                      interviewerRole={app.interviewerRole}
+                    />
                   </div>
                 </div>
               ))}
