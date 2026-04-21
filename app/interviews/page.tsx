@@ -5,34 +5,26 @@ import { Calendar, Clock, MapPin, User, ArrowLeft, ExternalLink } from 'lucide-r
 export default async function InterviewsPage() {
   const userId = 1; // Default user
 
-  const interviews = await prisma.interview.findMany({
+  // Get applications with interview dates
+  const applications = await prisma.application.findMany({
     where: {
-      application: {
-        userId
-      }
+      userId,
+      interviewDate: { not: null }
     },
     include: {
-      application: {
-        include: {
-          jobMatch: {
-            include: {
-              job: true
-            }
-          }
-        }
-      }
+      job: true
     },
     orderBy: {
-      scheduledDate: 'asc'
+      interviewDate: 'asc'
     }
   });
 
-  const upcoming = interviews.filter(i =>
-    i.scheduledDate && new Date(i.scheduledDate) > new Date() && i.status === 'scheduled'
+  const upcoming = applications.filter(app =>
+    app.interviewDate && new Date(app.interviewDate) > new Date()
   );
 
-  const past = interviews.filter(i =>
-    i.scheduledDate && new Date(i.scheduledDate) <= new Date() || i.status === 'completed'
+  const past = applications.filter(app =>
+    app.interviewDate && new Date(app.interviewDate) <= new Date()
   );
 
   return (
@@ -62,30 +54,30 @@ export default async function InterviewsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {upcoming.map(interview => (
-                <div key={interview.id} className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+              {upcoming.map(app => (
+                <div key={app.id} className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {interview.application.jobMatch.job.title}
+                        {app.job.title}
                       </h3>
                       <p className="text-gray-600 mt-1">
-                        {interview.application.jobMatch.job.companyName}
+                        {app.job.companyName}
                       </p>
 
                       <div className="mt-4 space-y-2">
-                        {interview.scheduledDate && (
+                        {app.interviewDate && (
                           <div className="flex items-center gap-2 text-gray-700">
                             <Calendar className="h-4 w-4" />
                             <span>
-                              {new Date(interview.scheduledDate).toLocaleDateString('en-US', {
+                              {new Date(app.interviewDate).toLocaleDateString('en-US', {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'
                               })}
                               {' at '}
-                              {new Date(interview.scheduledDate).toLocaleTimeString('en-US', {
+                              {new Date(app.interviewDate).toLocaleTimeString('en-US', {
                                 hour: 'numeric',
                                 minute: '2-digit'
                               })}
@@ -93,49 +85,41 @@ export default async function InterviewsPage() {
                           </div>
                         )}
 
-                        {interview.interviewType && (
+                        {app.interviewType && (
                           <div className="flex items-center gap-2 text-gray-700">
                             <Clock className="h-4 w-4" />
-                            <span className="capitalize">{interview.interviewType}</span>
-                            {interview.durationMinutes && (
-                              <span className="text-gray-500">({interview.durationMinutes} min)</span>
-                            )}
+                            <span className="capitalize">{app.interviewType}</span>
                           </div>
                         )}
 
-                        {interview.location && (
+                        {app.interviewLocation && (
                           <div className="flex items-center gap-2 text-gray-700">
                             <MapPin className="h-4 w-4" />
-                            <span>{interview.location}</span>
+                            <span>{app.interviewLocation}</span>
                           </div>
                         )}
 
-                        {interview.interviewerName && (
+                        {app.interviewerName && (
                           <div className="flex items-center gap-2 text-gray-700">
                             <User className="h-4 w-4" />
-                            <span>{interview.interviewerName}</span>
-                            {interview.interviewerTitle && (
-                              <span className="text-gray-500">- {interview.interviewerTitle}</span>
+                            <span>{app.interviewerName}</span>
+                            {app.interviewerRole && (
+                              <span className="text-gray-500">- {app.interviewerRole}</span>
                             )}
                           </div>
                         )}
                       </div>
 
-                      {interview.prepNotesUrl && (
-                        <a
-                          href={interview.prepNotesUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-4 text-blue-600 hover:text-blue-700"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                          Prep Notes
-                        </a>
+                      {app.notes && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded">
+                          <p className="text-sm font-semibold text-gray-700 mb-1">Notes:</p>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{app.notes}</p>
+                        </div>
                       )}
                     </div>
 
                     <a
-                      href={interview.application.jobMatch.job.sourceUrl}
+                      href={app.job.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-700 ml-4"
@@ -160,23 +144,23 @@ export default async function InterviewsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {past.map(interview => (
-                <div key={interview.id} className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-gray-300 opacity-75">
+              {past.map(app => (
+                <div key={app.id} className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-gray-300 opacity-75">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {interview.application.jobMatch.job.title}
+                        {app.job.title}
                       </h3>
                       <p className="text-gray-600 mt-1">
-                        {interview.application.jobMatch.job.companyName}
+                        {app.job.companyName}
                       </p>
 
                       <div className="mt-4 space-y-2">
-                        {interview.scheduledDate && (
+                        {app.interviewDate && (
                           <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="h-4 w-4" />
                             <span>
-                              {new Date(interview.scheduledDate).toLocaleDateString('en-US', {
+                              {new Date(app.interviewDate).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                                 year: 'numeric'
@@ -185,19 +169,19 @@ export default async function InterviewsPage() {
                           </div>
                         )}
 
-                        {interview.feedback && (
+                        {app.notes && (
                           <div className="mt-3 p-3 bg-gray-50 rounded">
-                            <p className="text-sm font-semibold text-gray-700 mb-1">Feedback:</p>
-                            <p className="text-sm text-gray-600 whitespace-pre-wrap">{interview.feedback}</p>
+                            <p className="text-sm font-semibold text-gray-700 mb-1">Notes:</p>
+                            <p className="text-sm text-gray-600 whitespace-pre-wrap">{app.notes}</p>
                           </div>
                         )}
                       </div>
                     </div>
 
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      interview.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                      app.status === 'interview' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {interview.status}
+                      {app.status}
                     </span>
                   </div>
                 </div>

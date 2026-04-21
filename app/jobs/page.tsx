@@ -3,23 +3,26 @@ import { JobMatchCard } from '@/components/job-match-card';
 import { JobMatchFilters } from '@/components/job-match-filters';
 
 async function getJobMatches(userId: number = 1) {
-  const matchesRaw = await prisma.jobMatch.findMany({
+  // Get all applications with their jobs
+  const applications = await prisma.application.findMany({
     where: {
       userId,
-      matchScore: { gte: 70 }
     },
     include: {
       job: true
     },
     orderBy: {
-      matchScore: 'desc'
+      createdAt: 'desc'
     },
   });
 
-  // Serialize Decimal to number for Client Components
-  return matchesRaw.map(match => ({
-    ...match,
-    matchScore: Number(match.matchScore),
+  // Map to match component interface with synthetic match scores
+  return applications.map(app => ({
+    ...app,
+    matchScore: app.status === 'offer' ? 100 :
+                app.status === 'interview' ? 90 :
+                app.status === 'phone_screen' ? 85 :
+                app.status === 'applied' ? 80 : 75,
   }));
 }
 

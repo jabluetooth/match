@@ -52,39 +52,28 @@ async function main() {
     console.log('✓ Using existing job:', job.title);
   }
 
-  // 3. Check or create a job match
-  let jobMatch = await prisma.jobMatch.findFirst({
+  // 3. Check if application already exists
+  let application = await prisma.application.findFirst({
     where: { userId: user.id, jobId: job.id },
   });
-  if (!jobMatch) {
-    jobMatch = await prisma.jobMatch.create({
+
+  if (application) {
+    console.log('✓ Application already exists with ID:', application.id);
+  } else {
+    // 4. Create an application directly
+    application = await prisma.application.create({
       data: {
         userId: user.id,
         jobId: job.id,
-        matchScore: 85.5,
-        aiReasoning: 'Strong match based on your React and TypeScript skills. This role aligns well with your full stack experience.',
-        skillsMatched: ['JavaScript', 'TypeScript', 'React', 'Node.js'],
-        skillsMissing: ['Docker', 'Kubernetes'],
+        status: 'applied',
+        appliedAt: new Date(),
+        notes: 'Excited about this opportunity! Company culture looks great.',
       },
     });
-    console.log('✓ Created job match with score:', jobMatch.matchScore);
-  } else {
-    console.log('✓ Using existing job match with score:', jobMatch.matchScore);
+    console.log('✓ Created test application with ID:', application.id);
   }
 
-  // 4. Create an application
-  const application = await prisma.application.create({
-    data: {
-      userId: user.id,
-      jobMatchId: jobMatch.id,
-      status: 'submitted',
-      appliedDate: new Date(),
-      notes: 'Excited about this opportunity! Company culture looks great.',
-    },
-  });
-
-  console.log('✓ Created test application with ID:', application.id);
-  console.log('\n✅ Test application created successfully!');
+  console.log('\n✅ Test application seeded successfully!');
   console.log('Visit /applications page to see the Research Company button');
 }
 

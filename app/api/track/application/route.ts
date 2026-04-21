@@ -33,37 +33,28 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'job_id is required for create action' }, { status: 400 });
       }
 
-      // First, find or create job match
-      let jobMatch = await prisma.jobMatch.findFirst({
-        where: { jobId: job_id, userId: user_id }
+      // Check if application already exists
+      const existingApp = await prisma.application.findFirst({
+        where: { userId: user_id, jobId: job_id }
       });
 
-      if (!jobMatch) {
-        jobMatch = await prisma.jobMatch.create({
-          data: {
-            userId: user_id,
-            jobId: job_id,
-            matchScore: 0,
-            aiReasoning: 'Manual application',
-            skillsMatched: [],
-            skillsMissing: [],
-            status: 'interested',
-          }
-        });
+      if (existingApp) {
+        return NextResponse.json(
+          { error: 'Application already exists for this job', application_id: existingApp.id },
+          { status: 409 }
+        );
       }
 
-      // Create application
+      // Create application directly with job
       result = await prisma.application.create({
         data: {
           userId: user_id,
-          jobMatchId: jobMatch.id,
-          status: status || 'draft',
+          jobId: job_id,
+          status: status || 'interested',
           notes,
         },
         include: {
-          jobMatch: {
-            include: { job: true }
-          },
+          job: true,
           user: true,
         }
       });
@@ -78,7 +69,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'status is required for update_status action' }, { status: 400 });
       }
 
-      // First, get the current application to check appliedDate
+      // First, get the current application to check appliedAt
       const currentApp = await prisma.application.findUnique({
         where: { id: application_id }
       });
@@ -88,12 +79,10 @@ export async function POST(request: NextRequest) {
         data: {
           status,
           ...(notes && { notes }),
-          ...((status === 'submitted' || status === 'applied') && !currentApp?.appliedDate && { appliedDate: new Date() }),
+          ...((status === 'applied') && !currentApp?.appliedAt && { appliedAt: new Date() }),
         },
         include: {
-          jobMatch: {
-            include: { job: true }
-          },
+          job: true,
           user: true,
         }
       });
@@ -108,35 +97,22 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'interview_date is required for schedule_interview action' }, { status: 400 });
       }
 
-      // Create interview record
-      const interview = await prisma.interview.create({
-        data: {
-          applicationId: application_id,
-          scheduledDate: new Date(interview_date),
-          interviewType: interview_type || 'video',
-          location: interview_location,
-          interviewerName: interviewer_name,
-          interviewerTitle: interviewer_role,
-          status: 'scheduled',
-        }
-      });
-
-      // Update application status to interview
+      // Update application with interview details
       result = await prisma.application.update({
         where: { id: application_id },
         data: {
           status: 'interview',
+          interviewDate: new Date(interview_date),
+          interviewType: interview_type || 'video',
+          interviewLocation: interview_location,
+          interviewerName: interviewer_name,
+          interviewerRole: interviewer_role,
         },
         include: {
-          jobMatch: {
-            include: { job: true }
-          },
+          job: true,
           user: true,
-          interviews: true,
         }
       });
-
-      result = { ...result, interview };
     }
 
     if (!result) {
@@ -173,9 +149,9 @@ export async function POST(request: NextRequest) {
       action,
       application_id: result.id,
       application_status: result.status,
-      job_title: result.jobMatch.job.title,
-      company: result.jobMatch.job.companyName,
-      interview_date: result.interviews?.[0]?.scheduledDate || null,
+      job_title: result.job.title,
+      company: result.job.companyName,
+      interview_date: result.interviewDate || null,
       email_sent: trigger_n8n, // Emails sent via n8n if triggered
     };
 
