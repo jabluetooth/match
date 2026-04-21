@@ -6,9 +6,9 @@ import { ActivityFeed } from '@/components/activity-feed';
 
 async function getDashboardData(userId: number = 1) {
   // Get stats
-  const [totalMatches, activeApplications, interviews, offers] = await Promise.all([
-    prisma.jobMatch.count({
-      where: { userId, matchScore: { gte: 70 } },
+  const [totalApplications, activeApplications, interviews, offers] = await Promise.all([
+    prisma.application.count({
+      where: { userId },
     }),
     prisma.application.count({
       where: { userId, status: { in: ['applied', 'phone_screen', 'interview'] } },
@@ -25,18 +25,18 @@ async function getDashboardData(userId: number = 1) {
     }),
   ]);
 
-  // Get recent matches
-  const recentMatchesRaw = await prisma.jobMatch.findMany({
-    where: { userId, matchScore: { gte: 70 } },
+  // Get recent applications
+  const recentApplications = await prisma.application.findMany({
+    where: { userId },
     include: { job: true },
     orderBy: { createdAt: 'desc' },
     take: 5,
   });
 
-  // Serialize Decimal to number for Client Components
-  const recentMatches = recentMatchesRaw.map(match => ({
-    ...match,
-    matchScore: Number(match.matchScore),
+  // Map to match component interface (add matchScore based on status)
+  const recentMatches = recentApplications.map(app => ({
+    ...app,
+    matchScore: app.status === 'offer' ? 100 : app.status === 'interview' ? 90 : app.status === 'phone_screen' ? 80 : 75,
   }));
 
   // Get application funnel data
@@ -55,7 +55,7 @@ async function getDashboardData(userId: number = 1) {
 
   return {
     stats: {
-      totalMatches,
+      totalMatches: totalApplications,
       activeApplications,
       interviews,
       offers,
