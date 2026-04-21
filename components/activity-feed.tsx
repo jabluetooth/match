@@ -12,9 +12,9 @@ import {
 
 interface Activity {
   id: number;
-  activityType: string;
-  entityType: string | null;
-  entityId: number | null;
+  action: string;
+  fromStatus: string | null;
+  toStatus: string | null;
   metadata: any;
   createdAt: Date;
 }
@@ -71,10 +71,10 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
           </div>
         ) : (
           activities.map((activity) => {
-            const config = ACTIVITY_CONFIG[activity.activityType as keyof typeof ACTIVITY_CONFIG] || {
+            const config = ACTIVITY_CONFIG[activity.action as keyof typeof ACTIVITY_CONFIG] || {
               icon: CheckCircle2,
               color: 'text-gray-600 bg-gray-100',
-              label: activity.activityType,
+              label: activity.action,
             };
 
             const Icon = config.icon;

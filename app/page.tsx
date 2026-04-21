@@ -11,12 +11,13 @@ async function getDashboardData(userId: number = 1) {
       where: { userId, matchScore: { gte: 70 } },
     }),
     prisma.application.count({
-      where: { userId, status: { in: ['submitted', 'screening', 'interview'] } },
+      where: { userId, status: { in: ['applied', 'phone_screen', 'interview'] } },
     }),
-    prisma.interview.count({
-      where: { 
-        application: { userId },
-        status: 'scheduled',
+    prisma.application.count({
+      where: {
+        userId,
+        interviewDate: { not: null },
+        interviewDate: { gte: new Date() },
       },
     }),
     prisma.application.count({
@@ -46,7 +47,7 @@ async function getDashboardData(userId: number = 1) {
   });
 
   // Get recent activity
-  const recentActivity = await prisma.activityLog.findMany({
+  const recentActivity = await prisma.applicationEvent.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
     take: 10,
