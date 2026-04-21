@@ -37,6 +37,9 @@ async function getDashboardData(userId: number = 1) {
   const recentMatches = recentApplications.map(app => ({
     ...app,
     matchScore: app.status === 'offer' ? 100 : app.status === 'interview' ? 90 : app.status === 'phone_screen' ? 80 : 75,
+    aiReasoning: null,
+    skillsMatched: [],
+    skillsMissing: [],
   }));
 
   // Get application funnel data

@@ -9,9 +9,9 @@ interface JobMatchCardProps {
     id: number;
     userId: number;
     matchScore: number;
-    aiReasoning: string | null;
-    skillsMatched: string[];
-    skillsMissing: string[];
+    aiReasoning?: string | null;
+    skillsMatched?: string[];
+    skillsMissing?: string[];
     createdAt: Date;
     job: {
       id: number;
@@ -136,39 +136,41 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         )}
 
         {/* Skills */}
-        <div className="mb-4">
-          {match.skillsMatched.length > 0 && (
-            <div className="mb-2">
-              <p className="text-xs font-medium text-gray-700 mb-1">Matching Skills:</p>
-              <div className="flex flex-wrap gap-1">
-                {match.skillsMatched.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs"
-                  >
-                    {skill}
-                  </span>
-                ))}
+        {(match.skillsMatched?.length || match.skillsMissing?.length) ? (
+          <div className="mb-4">
+            {match.skillsMatched && match.skillsMatched.length > 0 && (
+              <div className="mb-2">
+                <p className="text-xs font-medium text-gray-700 mb-1">Matching Skills:</p>
+                <div className="flex flex-wrap gap-1">
+                  {match.skillsMatched.map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          
-          {match.skillsMissing.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-700 mb-1">Skills to Learn:</p>
-              <div className="flex flex-wrap gap-1">
-                {match.skillsMissing.slice(0, 5).map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs"
-                  >
-                    {skill}
-                  </span>
-                ))}
+            )}
+
+            {match.skillsMissing && match.skillsMissing.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-gray-700 mb-1">Skills to Learn:</p>
+                <div className="flex flex-wrap gap-1">
+                  {match.skillsMissing.slice(0, 5).map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        ) : null}
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">

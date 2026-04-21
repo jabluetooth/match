@@ -20,7 +20,13 @@
       "Bash(npx tsx:*)",
       "Bash(dir \"C:\\Users\\frelatorre\\Desktop\\Projects\\n8n\\match\\app\\api\\research\\company\" /s)",
       "Bash(echo:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "mcp__Neon__list_projects",
+      "mcp__Neon__get_database_tables",
+      "mcp__Neon__describe_table_schema",
+      "Bash(del nul)",
+      "Bash(git rm:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

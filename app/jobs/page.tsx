@@ -23,6 +23,9 @@ async function getJobMatches(userId: number = 1) {
                 app.status === 'interview' ? 90 :
                 app.status === 'phone_screen' ? 85 :
                 app.status === 'applied' ? 80 : 75,
+    aiReasoning: null,
+    skillsMatched: [],
+    skillsMissing: [],
   }));
 }
 
