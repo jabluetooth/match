@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
+import { SignInButton } from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -25,6 +27,7 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { isSignedIn } = useAuth();
   const { user } = useUser();
 
   return (
@@ -35,8 +38,8 @@ export function Sidebar() {
         <span className="ml-2 text-xl font-bold text-gray-900">Match</span>
       </div>
 
-      {/* Navigation */}
-      <SignedIn>
+      {/* Navigation - Only shown when signed in */}
+      {isSignedIn ? (
         <nav className="flex-1 px-4 py-6 space-y-1">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
@@ -62,9 +65,7 @@ export function Sidebar() {
             );
           })}
         </nav>
-      </SignedIn>
-
-      <SignedOut>
+      ) : (
         <div className="flex-1 px-4 py-6 flex items-center justify-center">
           <div className="text-center">
             <p className="text-sm text-gray-500 mb-4">Sign in to access your dashboard</p>
@@ -75,11 +76,11 @@ export function Sidebar() {
             </SignInButton>
           </div>
         </div>
-      </SignedOut>
+      )}
 
-      {/* User profile */}
+      {/* User profile - Only shown when signed in */}
       <div className="p-4 border-t border-gray-200">
-        <SignedIn>
+        {isSignedIn && (
           <div className="flex items-center gap-3">
             <UserButton
               afterSignOutUrl="/"
@@ -98,7 +99,7 @@ export function Sidebar() {
               </p>
             </div>
           </div>
-        </SignedIn>
+        )}
       </div>
     </div>
   );
