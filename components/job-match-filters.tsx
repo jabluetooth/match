@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
-import { GooeyInput, GooeySelect } from "@/components/ui/gooey-input";
+import { GooeySelect } from "@/components/ui/gooey-select";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 interface JobMatchFiltersProps {
@@ -34,29 +34,22 @@ export function JobMatchFilters({ userId }: JobMatchFiltersProps) {
   };
 
   return (
-    <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-      <div className="flex items-center gap-3">
-        <GooeyInput
-          containerClassName="flex-1"
-          type="text"
-          placeholder="Search jobs by title or company..."
-        />
+    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <GooeySelect containerClassName="w-44">
+        <option value="">All Locations</option>
+        <option value="remote">Remote</option>
+        <option value="hybrid">Hybrid</option>
+        <option value="onsite">On-site</option>
+      </GooeySelect>
 
-        <GooeySelect containerClassName="w-44">
-          <option value="">All Locations</option>
-          <option value="remote">Remote</option>
-          <option value="hybrid">Hybrid</option>
-          <option value="onsite">On-site</option>
-        </GooeySelect>
+      <GooeySelect containerClassName="w-44">
+        <option value="">Sort by Match</option>
+        <option value="score">Highest Match</option>
+        <option value="date">Most Recent</option>
+      </GooeySelect>
 
-        <GooeySelect containerClassName="w-44">
-          <option value="">Sort by Match</option>
-          <option value="score">Highest Match</option>
-          <option value="date">Most Recent</option>
-        </GooeySelect>
-
+      <div className="ml-auto">
         <InteractiveHoverButton
-          text={matching ? "Finding..." : "Find New Matches"}
           disabled={matching}
           onClick={handleFindMatches}
           className={matching ? "opacity-60 cursor-not-allowed" : ""}
