@@ -1,31 +1,93 @@
 "use client";
 
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { Sparkles } from "lucide-react";
 import { GooeyInput } from "@/components/ui/gooey-input";
+import { GooeySelect } from "@/components/ui/gooey-select";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 export function Header() {
+  const pathname = usePathname();
+  const { userId } = useAuth();
+  const isJobs = pathname === "/jobs";
+  const [matching, setMatching] = useState(false);
+
+  const handleFindMatches = async () => {
+    if (!userId) return;
+    setMatching(true);
+    try {
+      const res = await fetch("/api/match/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      alert("Job matching started! New matches will appear shortly.");
+      window.location.reload();
+    } catch {
+      alert("Failed to start job matching. Please try again.");
+    } finally {
+      setMatching(false);
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-6 border-b border-gray-200/80 bg-white/80 px-6 backdrop-blur-md">
-      {/* Left — brand name (fixed width keeps search centred) */}
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-gray-200/80 bg-white/80 px-6 backdrop-blur-md">
+
+      {/* Left — brand */}
       <span
-        className="w-[130px] shrink-0 select-none text-2xl font-black text-gray-900"
+        className="shrink-0 select-none text-2xl font-black text-gray-900"
         style={{ fontFamily: "var(--font-outfit), 'Inter', sans-serif", letterSpacing: "-0.04em" }}
       >
         match
       </span>
 
-      {/* Centre — search expands freely, overflow visible so bubble isn't clipped */}
-      <div className="flex flex-1 items-center justify-center overflow-visible">
-        <GooeyInput
-          placeholder="Search jobs, companies..."
-          collapsedWidth={150}
-          expandedWidth={440}
-          expandedOffset={48.5}
-          gooeyBlur={5}
-        />
-      </div>
+      {isJobs ? (
+        <>
+          {/* Middle — search (jobs page only) */}
+          <div className="flex flex-1 items-center justify-center overflow-visible">
+            <GooeyInput
+              placeholder="Search jobs, companies..."
+              collapsedWidth={150}
+              expandedWidth={380}
+              expandedOffset={48}
+              gooeyBlur={5}
+            />
+          </div>
 
-      {/* Right spacer — mirrors the left brand width to keep search truly centred */}
-      <div className="w-[130px] shrink-0" />
+          {/* Right — filters + button (jobs page only) */}
+          <div className="flex shrink-0 items-center gap-2">
+            <GooeySelect containerClassName="w-36">
+              <option value="">All Locations</option>
+              <option value="remote">Remote</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="onsite">On-site</option>
+            </GooeySelect>
+
+            <GooeySelect containerClassName="w-36">
+              <option value="">Sort by Match</option>
+              <option value="score">Highest Match</option>
+              <option value="date">Most Recent</option>
+            </GooeySelect>
+
+            <InteractiveHoverButton
+              disabled={matching}
+              onClick={handleFindMatches}
+              className={matching ? "opacity-60 cursor-not-allowed" : ""}
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                {matching ? "Finding..." : "Find New Matches"}
+              </span>
+            </InteractiveHoverButton>
+          </div>
+        </>
+      ) : (
+        /* Non-jobs pages: empty flex spacer */
+        <div className="flex-1" />
+      )}
     </header>
   );
 }

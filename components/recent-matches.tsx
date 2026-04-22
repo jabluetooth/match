@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { formatRelativeTime, getMatchScoreLabel } from "@/lib/utils";
-import { ExternalLink, MapPin, Building2 } from "lucide-react";
+import { formatRelativeTime } from "@/lib/utils";
+import { ArrowUpRight, Briefcase } from "lucide-react";
 
 interface Match {
   id: number;
@@ -23,78 +23,73 @@ interface RecentMatchesProps {
 
 export function RecentMatches({ matches }: RecentMatchesProps) {
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Recent Matches</h2>
-        <p className="text-sm text-gray-600">Your latest high-scoring opportunities</p>
+    <div
+      className="rounded-2xl bg-white border shadow-sm overflow-hidden"
+      style={{ borderColor: '#e2e3e4' }}
+    >
+      <div
+        className="px-5 py-4 flex items-center justify-between border-b"
+        style={{ borderColor: '#e2e3e4' }}
+      >
+        <div>
+          <h2 className="text-sm font-bold" style={{ color: '#080101' }}>
+            My matches
+          </h2>
+        </div>
+        <Briefcase className="h-4 w-4" style={{ color: '#473e3b' }} />
       </div>
 
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y" style={{ borderColor: '#e2e3e4' }}>
         {matches.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <p className="text-gray-500">No matches yet. Check back soon!</p>
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm" style={{ color: '#473e3b' }}>
+              No matches yet. Check back soon!
+            </p>
           </div>
         ) : (
           matches.map((match) => (
             <div
               key={match.id}
-              className="px-6 py-4 hover:bg-gray-50 transition-colors"
+              className="px-5 py-3 flex items-center gap-3 group transition-colors hover:bg-[#fcfcff]"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-gray-900">
-                      {match.job.title}
-                    </h3>
-                    <a
-                      href={match.job.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-blue-600"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Building2 className="h-4 w-4" />
-                      {match.job.companyName}
+              {/* Date / time pill */}
+              <div className="shrink-0 w-14 text-right">
+                <p className="text-[10px] leading-tight font-medium" style={{ color: '#473e3b' }}>
+                  {formatRelativeTime(match.createdAt)}
+                </p>
+              </div>
+
+              {/* Job info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold truncate" style={{ color: '#080101' }}>
+                  {match.job.title}
+                </p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[10px] truncate" style={{ color: '#473e3b' }}>
+                    {match.job.companyName}
+                  </span>
+                  {match.job.location && (
+                    <span className="text-[10px] shrink-0" style={{ color: '#e2e3e4' }}>
+                      · {match.job.location}
                     </span>
-                    {match.job.location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {match.job.location}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatRelativeTime(match.createdAt)}
-                  </p>
-                </div>
-
-                <div className="ml-4">
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {Math.round(Number(match.matchScore))}%
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {getMatchScoreLabel(Number(match.matchScore))}
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
-              <div className="mt-3 flex gap-2">
-                <Link
-                  href={`/jobs/${match.id}`}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              {/* Match % + external link */}
+              <div className="shrink-0 flex items-center gap-1.5">
+                <span className="text-sm font-bold" style={{ color: '#1877f2' }}>
+                  {Math.round(Number(match.matchScore))}%
+                </span>
+                <a
+                  href={match.job.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Open job posting"
                 >
-                  View Details →
-                </Link>
+                  <ArrowUpRight className="h-3.5 w-3.5" style={{ color: '#1877f2' }} />
+                </a>
               </div>
             </div>
           ))
@@ -102,12 +97,16 @@ export function RecentMatches({ matches }: RecentMatchesProps) {
       </div>
 
       {matches.length > 0 && (
-        <div className="px-6 py-4 border-t border-gray-200">
+        <div
+          className="px-5 py-3 border-t"
+          style={{ borderColor: '#e2e3e4' }}
+        >
           <Link
             href="/jobs"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-xs font-semibold transition-opacity hover:opacity-70"
+            style={{ color: '#1877f2' }}
           >
-            View all matches →
+            See all matches →
           </Link>
         </div>
       )}

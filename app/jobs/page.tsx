@@ -2,7 +2,6 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { JobMatchCard } from '@/components/job-match-card';
-import { JobMatchFilters } from '@/components/job-match-filters';
 
 // Revalidate this page every 60 seconds
 export const revalidate = 60;
@@ -51,8 +50,6 @@ export default async function JobMatchesPage() {
           AI-curated opportunities that match your profile
         </p>
       </div>
-
-      <JobMatchFilters userId={userId} />
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {matches.length === 0 ? (

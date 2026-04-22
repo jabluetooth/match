@@ -1,6 +1,15 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 
 interface ApplicationFunnelProps {
   data: Array<{
@@ -9,56 +18,80 @@ interface ApplicationFunnelProps {
   }>;
 }
 
-const STATUS_CONFIG = {
-  draft: { label: 'Draft', color: '#9CA3AF' },
-  submitted: { label: 'Submitted', color: '#3B82F6' },
-  screening: { label: 'Screening', color: '#8B5CF6' },
-  interview: { label: 'Interview', color: '#06B6D4' },
-  offer: { label: 'Offer', color: '#10B981' },
-  rejected: { label: 'Rejected', color: '#EF4444' },
-  accepted: { label: 'Accepted', color: '#059669' },
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  draft: { label: 'Draft', color: '#9ca3af' },
+  applied: { label: 'Applied', color: '#1877f2' },
+  phone_screen: { label: 'Phone Screen', color: '#fdc901' },
+  interview: { label: 'Interview', color: '#06b6d4' },
+  offer: { label: 'Offer', color: '#22c55e' },
+  rejected: { label: 'Rejected', color: '#ef4444' },
+  accepted: { label: 'Accepted', color: '#16a34a' },
 };
 
 export function ApplicationFunnel({ data }: ApplicationFunnelProps) {
   const chartData = data.map(item => ({
-    status: STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG]?.label || item.status,
+    status: STATUS_CONFIG[item.status]?.label ?? item.status,
     count: item._count,
-    color: STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG]?.color || '#9CA3AF',
+    color: STATUS_CONFIG[item.status]?.color ?? '#9ca3af',
   }));
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Application Funnel</h2>
-        <p className="text-sm text-gray-600">Track your application progress</p>
+    <div
+      className="rounded-2xl bg-white border shadow-sm overflow-hidden"
+      style={{ borderColor: '#e2e3e4' }}
+    >
+      <div
+        className="px-6 py-4 flex items-center justify-between border-b"
+        style={{ borderColor: '#e2e3e4' }}
+      >
+        <div>
+          <h2 className="text-sm font-bold" style={{ color: '#080101' }}>
+            Application Funnel
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: '#473e3b' }}>
+            Track your application progress
+          </p>
+        </div>
+        {chartData.length > 0 && (
+          <p className="text-2xl font-black tabular-nums" style={{ color: '#080101' }}>
+            {data.reduce((s, i) => s + i._count, 0)}
+            <span className="text-xs font-normal ml-1" style={{ color: '#473e3b' }}>total</span>
+          </p>
+        )}
       </div>
 
       <div className="p-6">
         {chartData.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-gray-500">No applications yet</p>
+            <p className="text-sm" style={{ color: '#473e3b' }}>No applications yet</p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="status" 
-                tick={{ fontSize: 12 }}
-                stroke="#6B7280"
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={chartData} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e3e4" vertical={false} />
+              <XAxis
+                dataKey="status"
+                tick={{ fontSize: 11, fill: '#473e3b' }}
+                axisLine={false}
+                tickLine={false}
               />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                stroke="#6B7280"
+              <YAxis
+                tick={{ fontSize: 11, fill: '#473e3b' }}
+                axisLine={false}
+                tickLine={false}
+                width={24}
               />
-              <Tooltip 
+              <Tooltip
+                cursor={{ fill: '#fcfcff' }}
                 contentStyle={{
                   backgroundColor: '#fff',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '0.5rem',
+                  border: '1px solid #e2e3e4',
+                  borderRadius: '0.75rem',
+                  fontSize: 12,
+                  color: '#080101',
                 }}
               />
-              <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
@@ -67,19 +100,24 @@ export function ApplicationFunnel({ data }: ApplicationFunnelProps) {
           </ResponsiveContainer>
         )}
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {chartData.map((item) => (
-            <div key={item.status} className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="text-sm text-gray-600">
-                {item.status}: <span className="font-semibold">{item.count}</span>
-              </span>
-            </div>
-          ))}
-        </div>
+        {chartData.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
+            {chartData.map((item) => (
+              <div key={item.status} className="flex items-center gap-1.5">
+                <div
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="text-xs" style={{ color: '#473e3b' }}>
+                  {item.status}:{' '}
+                  <span className="font-semibold" style={{ color: '#080101' }}>
+                    {item.count}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

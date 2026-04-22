@@ -22,7 +22,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${inter.variable} ${outfit.variable} font-sans`}>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-background">
             <Header />
             <main className="pb-28">
               {children}
