@@ -34,7 +34,14 @@
       "Bash(cmd //c taskkill //PID 23860 //F)",
       "Bash(timeout 5 cmd //c \"\")",
       "Bash(del appapiwebhooksclerkroute.ts)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(npx tsc *)",
+      "WebFetch(domain:ui.aceternity.com)",
+      "WebFetch(domain:magicui.design)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:v3.magicui.design)"
     ],
     "deny": [],
     "ask": []

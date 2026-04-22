@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
-import { Sidebar } from "@/components/sidebar";
+import { NavDock } from "@/components/nav-dock";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,11 +20,11 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={inter.className}>
-          <div className="flex h-screen bg-gray-50">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto">
+          <div className="min-h-screen bg-gray-50">
+            <main className="pb-28">
               {children}
             </main>
+            <NavDock />
           </div>
         </body>
       </html>
