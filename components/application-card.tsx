@@ -21,7 +21,7 @@ interface CompanyResearch {
 interface ApplicationCardProps {
   application: {
     id: number;
-    userId: number;
+    userId: string;
     status: string;
     appliedAt: Date | null;
     notes: string | null;

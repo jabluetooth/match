@@ -7,7 +7,7 @@ import { ExternalLink, MapPin, Building2, DollarSign, Sparkles } from "lucide-re
 interface JobMatchCardProps {
   match: {
     id: number;
-    userId: number;
+    userId: string;
     matchScore: number;
     aiReasoning?: string | null;
     skillsMatched?: string[];

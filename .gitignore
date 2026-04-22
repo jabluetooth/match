@@ -41,3 +41,7 @@ nul
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Uploaded files
+/public/uploads/**/*
+!/public/uploads/**/.gitkeep

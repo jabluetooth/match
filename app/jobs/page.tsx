@@ -1,8 +1,13 @@
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { JobMatchCard } from '@/components/job-match-card';
 import { JobMatchFilters } from '@/components/job-match-filters';
 
-async function getJobMatches(userId: number = 1) {
+// Revalidate this page every 60 seconds
+export const revalidate = 60;
+
+async function getJobMatches(userId: string) {
   // Get all applications with their jobs
   const applications = await prisma.application.findMany({
     where: {
@@ -30,7 +35,13 @@ async function getJobMatches(userId: number = 1) {
 }
 
 export default async function JobMatchesPage() {
-  const matches = await getJobMatches();
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect('/sign-in');
+  }
+
+  const matches = await getJobMatches(userId);
 
   return (
     <div className="p-8">
@@ -41,7 +52,7 @@ export default async function JobMatchesPage() {
         </p>
       </div>
 
-      <JobMatchFilters />
+      <JobMatchFilters userId={userId} />
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {matches.length === 0 ? (

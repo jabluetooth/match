@@ -1,19 +1,25 @@
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { FollowUpCard } from '@/components/followup-card';
 
-export const dynamic = 'force-dynamic';
+// Cache for 30 seconds instead of force-dynamic
+export const revalidate = 30;
 
 export default async function FollowUpsPage() {
-  const userId = 1; // Default user
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect('/sign-in');
+  }
 
   // Fetch pending follow-ups
   const followUps = await prisma.followUpLog.findMany({
     where: {
       userId,
       responseStatus: 'pending',
-      sentAt: { not: null }, // Only show sent follow-ups
     },
     include: {
       application: {
@@ -31,7 +37,6 @@ export default async function FollowUpsPage() {
   const totalSent = await prisma.followUpLog.count({
     where: {
       userId,
-      sentAt: { not: null },
     }
   });
 

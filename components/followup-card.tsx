@@ -7,7 +7,7 @@ interface FollowUpCardProps {
   followUp: {
     id: number;
     applicationId: number;
-    userId: number;
+    userId: string;
     followupType: string;
     followupNumber: number;
     draftSubject: string | null;
@@ -16,7 +16,7 @@ interface FollowUpCardProps {
     sentAt: Date | null;
     responseStatus: string;
     application: {
-      userId: number;
+      userId: string;
       job: {
         title: string;
         companyName: string;

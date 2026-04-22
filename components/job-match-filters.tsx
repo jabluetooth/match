@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 
-export function JobMatchFilters() {
+interface JobMatchFiltersProps {
+  userId: string;
+}
+
+export function JobMatchFilters({ userId }: JobMatchFiltersProps) {
   const [matching, setMatching] = useState(false);
 
   const handleFindMatches = async () => {
@@ -14,7 +18,7 @@ export function JobMatchFilters() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: 1 }),
+        body: JSON.stringify({ user_id: userId }),
       });
 
       if (!response.ok) {

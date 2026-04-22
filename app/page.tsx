@@ -5,57 +5,51 @@ import { RecentMatches } from '@/components/recent-matches';
 import { ApplicationFunnel } from '@/components/application-funnel';
 import { ActivityFeed } from '@/components/activity-feed';
 
+// Cache dashboard for 30 seconds
+export const revalidate = 30;
+
 async function getDashboardData(userId: string) {
-  // Get stats
-  const [totalApplications, activeApplications, interviews, offers] = await Promise.all([
-    prisma.application.count({
+  // Optimize: Fetch all data in parallel with minimal queries
+  const [allApplications, applicationStats, recentActivity] = await Promise.all([
+    // Single query to get all applications with related data
+    prisma.application.findMany({
       where: { userId },
+      include: { job: true },
+      orderBy: { createdAt: 'desc' },
     }),
-    prisma.application.count({
-      where: { userId, status: { in: ['applied', 'phone_screen', 'interview'] } },
+    // Get status counts
+    prisma.application.groupBy({
+      by: ['status'],
+      where: { userId },
+      _count: true,
     }),
-    prisma.application.count({
-      where: {
-        userId,
-        interviewDate: { not: null },
-        interviewDate: { gte: new Date() },
-      },
-    }),
-    prisma.application.count({
-      where: { userId, status: 'offer' },
+    // Get recent activity
+    prisma.applicationEvent.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
     }),
   ]);
 
-  // Get recent applications
-  const recentApplications = await prisma.application.findMany({
-    where: { userId },
-    include: { job: true },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-  });
+  // Calculate stats from the fetched data (no extra queries)
+  const now = new Date();
+  const totalApplications = allApplications.length;
+  const activeApplications = allApplications.filter(
+    app => ['applied', 'phone_screen', 'interview'].includes(app.status)
+  ).length;
+  const interviews = allApplications.filter(
+    app => app.interviewDate && app.interviewDate >= now
+  ).length;
+  const offers = allApplications.filter(app => app.status === 'offer').length;
 
-  // Map to match component interface (add matchScore based on status)
-  const recentMatches = recentApplications.map(app => ({
+  // Get recent 5 for display
+  const recentMatches = allApplications.slice(0, 5).map(app => ({
     ...app,
     matchScore: app.status === 'offer' ? 100 : app.status === 'interview' ? 90 : app.status === 'phone_screen' ? 80 : 75,
     aiReasoning: null,
     skillsMatched: [],
     skillsMissing: [],
   }));
-
-  // Get application funnel data
-  const applicationStats = await prisma.application.groupBy({
-    by: ['status'],
-    where: { userId },
-    _count: true,
-  });
-
-  // Get recent activity
-  const recentActivity = await prisma.applicationEvent.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' },
-    take: 10,
-  });
 
   return {
     stats: {

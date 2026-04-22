@@ -1,7 +1,12 @@
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ApplicationBoard } from '@/components/application-board';
 
-async function getApplications(userId: number = 1) {
+// Revalidate this page every 30 seconds (more frequent for applications)
+export const revalidate = 30;
+
+async function getApplications(userId: string) {
   const applications = await prisma.application.findMany({
     where: { userId },
     include: {
@@ -14,7 +19,13 @@ async function getApplications(userId: number = 1) {
 }
 
 export default async function ApplicationsPage() {
-  const applications = await getApplications();
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect('/sign-in');
+  }
+
+  const applications = await getApplications(userId);
 
   // Group by status for Kanban view
   const groupedApplications = {

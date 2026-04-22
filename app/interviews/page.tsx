@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { Calendar, Clock, MapPin, User, ArrowLeft, ExternalLink } from 'lucide-react';
 import { InterviewPrepButton } from '@/components/interview-prep-button';
 
+// Cache for 60 seconds
+export const revalidate = 60;
+
 export default async function InterviewsPage() {
   // Authenticate and get user
   const user = await requireUserWithSync();

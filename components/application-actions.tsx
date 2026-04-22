@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FileText, Send, Calendar, Loader2 } from 'lucide-react';
 
 interface ApplicationActionsProps {
-  userId: number;
+  userId: string;
   jobId?: number;
   applicationId?: number;
   onSuccess?: () => void;
