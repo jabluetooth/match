@@ -2,15 +2,28 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
-import { GooeySelect } from "@/components/ui/gooey-select";
+import { GooeyInput } from "@/components/ui/gooey-input";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 interface JobMatchFiltersProps {
   userId: string;
 }
 
+const LOCATION_OPTIONS = [
+  { label: "Remote", value: "remote" },
+  { label: "Hybrid", value: "hybrid" },
+  { label: "On-site", value: "onsite" },
+];
+
+const SORT_OPTIONS = [
+  { label: "Highest Match", value: "score" },
+  { label: "Most Recent", value: "date" },
+];
+
 export function JobMatchFilters({ userId }: JobMatchFiltersProps) {
   const [matching, setMatching] = useState(false);
+  const [location, setLocation] = useState("");
+  const [sort, setSort] = useState("");
 
   const handleFindMatches = async () => {
     setMatching(true);
@@ -35,18 +48,25 @@ export function JobMatchFilters({ userId }: JobMatchFiltersProps) {
 
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-      <GooeySelect containerClassName="w-44">
-        <option value="">All Locations</option>
-        <option value="remote">Remote</option>
-        <option value="hybrid">Hybrid</option>
-        <option value="onsite">On-site</option>
-      </GooeySelect>
-
-      <GooeySelect containerClassName="w-44">
-        <option value="">Sort by Match</option>
-        <option value="score">Highest Match</option>
-        <option value="date">Most Recent</option>
-      </GooeySelect>
+      <GooeyInput
+        collapsedWidth={110}
+        expandedWidth={340}
+        expandedOffset={50}
+        filters={{
+          location: {
+            options: LOCATION_OPTIONS,
+            value: location,
+            onChange: setLocation,
+            placeholder: "All Locations",
+          },
+          sort: {
+            options: SORT_OPTIONS,
+            value: sort,
+            onChange: setSort,
+            placeholder: "Sort by Match",
+          },
+        }}
+      />
 
       <div className="ml-auto">
         <InteractiveHoverButton

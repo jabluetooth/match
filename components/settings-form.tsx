@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Upload, Save, Loader2 } from 'lucide-react';
+import { Upload, Save, Loader2, FileText, CheckCircle2 } from 'lucide-react';
 
 interface SettingsFormProps {
   profile: {
@@ -21,6 +21,9 @@ interface SettingsFormProps {
 
 export function SettingsForm({ profile, userId }: SettingsFormProps) {
   const [resumeUrl, setResumeUrl] = useState(profile.baseResumeUrl || '');
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(
+    profile.baseResumeUrl ? profile.baseResumeUrl.split('/').pop() ?? null : null
+  );
   const [skills, setSkills] = useState(profile.skills.join(', '));
   const [experienceYears, setExperienceYears] = useState(profile.experienceYears?.toString() || '');
   const [jobTitles, setJobTitles] = useState(profile.jobTitles.join(', '));
@@ -93,7 +96,7 @@ export function SettingsForm({ profile, userId }: SettingsFormProps) {
 
       const result = await response.json();
       setResumeUrl(result.resume_url);
-      alert('Resume uploaded successfully!');
+      setUploadedFileName(result.file_name);
     } catch (error: any) {
       console.error('Failed to upload resume:', error);
       alert(error.message || 'Failed to upload resume. Please try again.');
@@ -109,44 +112,50 @@ export function SettingsForm({ profile, userId }: SettingsFormProps) {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Base Resume</h2>
 
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Resume URL
-            </label>
-            <input
-              type="url"
-              value={resumeUrl}
-              onChange={(e) => setResumeUrl(e.target.value)}
-              placeholder="https://example.com/resume.pdf or paste Google Drive link"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              Paste a URL to your resume (Google Drive, Dropbox, etc.) or upload a file below
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Or Upload Resume
-            </label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer">
-                {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4" />
-                )}
-                {uploading ? 'Uploading...' : 'Choose File'}
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              </label>
-              <span className="text-sm text-gray-500">PDF, DOC, or DOCX</span>
+          {/* Current resume status */}
+          {uploadedFileName ? (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-md border border-green-200 bg-green-50">
+              <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-green-800">Resume uploaded</p>
+                <p className="text-xs text-green-600 truncate mt-0.5">{uploadedFileName}</p>
+              </div>
+              {resumeUrl && (
+                <a
+                  href={resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-green-700 underline shrink-0"
+                >
+                  View
+                </a>
+              )}
             </div>
+          ) : (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-md border border-gray-200 bg-gray-50">
+              <FileText className="h-5 w-5 text-gray-400 shrink-0" />
+              <p className="text-sm text-gray-500">No resume uploaded yet</p>
+            </div>
+          )}
+
+          {/* Upload button */}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              {uploading ? 'Uploading...' : uploadedFileName ? 'Replace Resume' : 'Upload Resume'}
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+            <span className="text-sm text-gray-500">PDF, DOC, or DOCX</span>
           </div>
         </div>
       </div>

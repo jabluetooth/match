@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Sparkles } from "lucide-react";
 import { GooeyInput } from "@/components/ui/gooey-input";
-import { GooeySelect } from "@/components/ui/gooey-select";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 export function Header() {
@@ -46,32 +45,36 @@ export function Header() {
 
       {isJobs ? (
         <>
-          {/* Middle — search (jobs page only) */}
+          {/* Middle — search + filters (jobs page only) */}
           <div className="flex flex-1 items-center justify-center overflow-visible">
             <GooeyInput
               placeholder="Search jobs, companies..."
               collapsedWidth={150}
-              expandedWidth={380}
+              expandedWidth={520}
               expandedOffset={48}
               gooeyBlur={5}
+              filters={{
+                location: {
+                  options: [
+                    { label: "Remote", value: "remote" },
+                    { label: "Hybrid", value: "hybrid" },
+                    { label: "On-site", value: "onsite" },
+                  ],
+                  placeholder: "All Locations",
+                },
+                sort: {
+                  options: [
+                    { label: "Highest Match", value: "score" },
+                    { label: "Most Recent", value: "date" },
+                  ],
+                  placeholder: "Sort by Match",
+                },
+              }}
             />
           </div>
 
-          {/* Right — filters + button (jobs page only) */}
+          {/* Right — button (jobs page only) */}
           <div className="flex shrink-0 items-center gap-2">
-            <GooeySelect containerClassName="w-36">
-              <option value="">All Locations</option>
-              <option value="remote">Remote</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="onsite">On-site</option>
-            </GooeySelect>
-
-            <GooeySelect containerClassName="w-36">
-              <option value="">Sort by Match</option>
-              <option value="score">Highest Match</option>
-              <option value="date">Most Recent</option>
-            </GooeySelect>
-
             <InteractiveHoverButton
               disabled={matching}
               onClick={handleFindMatches}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useId } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface GooeySelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
@@ -16,40 +16,37 @@ export function GooeySelect({
   children,
   ...props
 }: GooeySelectProps) {
-  const filterId = useId();
+  const safeId = useId().replace(/:/g, "");
+  const filterId = `gooey-select-filter-${safeId}`;
   const [focused, setFocused] = React.useState(false);
 
   return (
     <div className={cn("relative", containerClassName)}>
       <svg className="absolute h-0 w-0 overflow-hidden" aria-hidden="true">
         <defs>
-          <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
+          <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
             <feColorMatrix
               in="blur"
               type="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11"
-              result="gooey"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10"
+              result="goo"
             />
-            <feComposite in="SourceGraphic" in2="gooey" operator="atop" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>
       </svg>
 
       <motion.div
-        animate={{ scaleX: focused ? 1.05 : 1, scaleY: focused ? 1.10 : 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 24 }}
-        className="absolute inset-0 rounded-full bg-white shadow-sm ring-1 ring-gray-200"
+        animate={{ scaleX: focused ? 1.04 : 1, scaleY: focused ? 1.08 : 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 24, duration: 0.4, bounce: 0.25 }}
+        className="absolute inset-0 rounded-full bg-foreground shadow-sm ring-1 ring-border/60"
         style={{ filter: `url(#${filterId})`, transformOrigin: "center" }}
       />
 
-      {focused && (
-        <div className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-blue-500" />
-      )}
-
       <select
         className={cn(
-          "relative z-10 w-full appearance-none bg-transparent px-5 py-2.5 pr-10 text-sm text-gray-700 outline-none cursor-pointer",
+          "relative z-10 h-10 w-full appearance-none bg-transparent px-4 pr-9 text-sm font-medium text-background outline-none cursor-pointer",
           className,
         )}
         onFocus={(e) => { setFocused(true); onFocus?.(e); }}
@@ -59,7 +56,7 @@ export function GooeySelect({
         {children}
       </select>
 
-      <div className="pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-gray-400">
+      <div className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 text-background/70">
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path
             fillRule="evenodd"
