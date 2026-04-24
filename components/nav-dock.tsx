@@ -52,9 +52,10 @@ export function NavDock() {
                       className={cn(
                         "flex h-full w-full items-center justify-center rounded-full transition-colors",
                         isActive
-                          ? "bg-blue-100 text-blue-700"
+                          ? ""
                           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
                       )}
+                      style={isActive ? { background: 'var(--primary-soft)', color: 'var(--primary)' } : undefined}
                     >
                       <item.icon className="h-5 w-5" />
                     </Link>

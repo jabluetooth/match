@@ -1,12 +1,30 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import { NavDock } from "@/components/nav-dock";
 import { Header } from "@/components/header";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  weight: ['400', '500'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: "Match - AI-Powered Career Management",
@@ -20,15 +38,13 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={`${inter.variable} ${outfit.variable} font-sans`}>
-          <div className="min-h-screen bg-background">
-            <Header />
-            <main className="pb-28">
-              {children}
-            </main>
-            <NavDock />
-          </div>
+      <html lang="en" data-accent="peach" data-cardstyle="soft" data-density="regular" data-font="modern">
+        <body className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+          <Header />
+          <main className="pb-28">
+            {children}
+          </main>
+          <NavDock />
         </body>
       </html>
     </ClerkProvider>

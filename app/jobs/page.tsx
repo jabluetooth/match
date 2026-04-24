@@ -2,31 +2,24 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { JobMatchCard } from '@/components/job-match-card';
+import { Clock } from 'lucide-react';
 
-// Revalidate this page every 60 seconds
 export const revalidate = 60;
 
 async function getJobMatches(userId: string) {
-  // Get all applications with their jobs
   const applications = await prisma.application.findMany({
-    where: {
-      userId,
-    },
-    include: {
-      job: true
-    },
-    orderBy: {
-      createdAt: 'desc'
-    },
+    where: { userId },
+    include: { job: true },
+    orderBy: { createdAt: 'desc' },
   });
 
-  // Map to match component interface with synthetic match scores
   return applications.map(app => ({
     ...app,
-    matchScore: app.status === 'offer' ? 100 :
-                app.status === 'interview' ? 90 :
-                app.status === 'phone_screen' ? 85 :
-                app.status === 'applied' ? 80 : 75,
+    matchScore:
+      app.status === 'offer'        ? 100 :
+      app.status === 'interview'    ? 90  :
+      app.status === 'phone_screen' ? 85  :
+      app.status === 'applied'      ? 80  : 75,
     aiReasoning: null,
     skillsMatched: [],
     skillsMissing: [],
@@ -35,26 +28,29 @@ async function getJobMatches(userId: string) {
 
 export default async function JobMatchesPage() {
   const { userId } = await auth();
-
-  if (!userId) {
-    redirect('/sign-in');
-  }
+  if (!userId) redirect('/sign-in');
 
   const matches = await getJobMatches(userId);
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Job Matches</h1>
-        <p className="text-gray-600 mt-2">
-          AI-curated opportunities that match your profile
-        </p>
+    <div className="shell">
+      <div className="page-head">
+        <div>
+          <h1>New <em>opportunities</em></h1>
+          <p>{matches.length} role{matches.length === 1 ? '' : 's'} match your profile · sorted by fit</p>
+        </div>
+        <div className="chip">
+          <Clock size={13} />
+          Last scan · just now
+        </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid-2">
         {matches.length === 0 ? (
-          <div className="col-span-2 bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-500">No job matches found. Check back soon!</p>
+          <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '64px var(--pad)' }}>
+            <p style={{ color: 'var(--ink-3)', fontSize: 14 }}>
+              No matches yet — use <strong>Find New Matches</strong> to get started.
+            </p>
           </div>
         ) : (
           matches.map((match) => (

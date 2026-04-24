@@ -1,124 +1,86 @@
-"use client";
-
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
+import { FileText, Phone, Calendar, Gift, XCircle, Pencil, CheckCircle2 } from "lucide-react";
 
 interface ApplicationFunnelProps {
-  data: Array<{
-    status: string;
-    _count: number;
-  }>;
+  data: Array<{ status: string; _count: number }>;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Draft', color: '#9ca3af' },
-  applied: { label: 'Applied', color: '#1877f2' },
-  phone_screen: { label: 'Phone Screen', color: '#fdc901' },
-  interview: { label: 'Interview', color: '#06b6d4' },
-  offer: { label: 'Offer', color: '#22c55e' },
-  rejected: { label: 'Rejected', color: '#ef4444' },
-  accepted: { label: 'Accepted', color: '#16a34a' },
+const STAGE_CONFIG: Record<string, {
+  label: string;
+  sub: string;
+  icon: React.ElementType;
+  iconColor: string;
+}> = {
+  draft:        { label: 'Draft',        sub: 'Not submitted yet',       icon: Pencil,      iconColor: '#9ca3af' },
+  applied:      { label: 'Applied',      sub: 'Submitted applications',  icon: FileText,    iconColor: 'var(--accent-c)' },
+  phone_screen: { label: 'Phone Screen', sub: 'Initial screening calls', icon: Phone,       iconColor: 'var(--accent-a)' },
+  interview:    { label: 'Interview',    sub: 'Active interview rounds',  icon: Calendar,    iconColor: 'var(--accent-b)' },
+  offer:        { label: 'Offer',        sub: 'Received an offer',        icon: Gift,        iconColor: '#9FE6C9' },
+  accepted:     { label: 'Accepted',     sub: 'Offer accepted',           icon: CheckCircle2,iconColor: '#6DCBAE' },
+  rejected:     { label: 'Rejected',     sub: 'No longer active',         icon: XCircle,     iconColor: '#fca5a5' },
 };
 
 export function ApplicationFunnel({ data }: ApplicationFunnelProps) {
-  const chartData = data.map(item => ({
-    status: STATUS_CONFIG[item.status]?.label ?? item.status,
-    count: item._count,
-    color: STATUS_CONFIG[item.status]?.color ?? '#9ca3af',
-  }));
+  const total = data.reduce((s, i) => s + i._count, 0);
+  const max = Math.max(...data.map(d => d._count), 1);
 
   return (
-    <div
-      className="rounded-2xl bg-white border shadow-sm overflow-hidden"
-      style={{ borderColor: '#e2e3e4' }}
-    >
-      <div
-        className="px-6 py-4 flex items-center justify-between border-b"
-        style={{ borderColor: '#e2e3e4' }}
-      >
+    <div className="card g-funnel">
+      <div className="card-head">
         <div>
-          <h2 className="text-sm font-bold" style={{ color: '#080101' }}>
-            Application Funnel
-          </h2>
-          <p className="text-xs mt-0.5" style={{ color: '#473e3b' }}>
-            Track your application progress
-          </p>
+          <p className="card-title">Pipeline</p>
+          <p className="card-lead">Application funnel</p>
         </div>
-        {chartData.length > 0 && (
-          <p className="text-2xl font-black tabular-nums" style={{ color: '#080101' }}>
-            {data.reduce((s, i) => s + i._count, 0)}
-            <span className="text-xs font-normal ml-1" style={{ color: '#473e3b' }}>total</span>
-          </p>
+        {total > 0 && (
+          <span style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 28,
+            letterSpacing: '-0.02em',
+            color: 'var(--ink-2)',
+            lineHeight: 1,
+          }}>
+            {total}
+          </span>
         )}
       </div>
 
-      <div className="p-6">
-        {chartData.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-sm" style={{ color: '#473e3b' }}>No applications yet</p>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={chartData} barCategoryGap="30%">
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e3e4" vertical={false} />
-              <XAxis
-                dataKey="status"
-                tick={{ fontSize: 11, fill: '#473e3b' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: '#473e3b' }}
-                axisLine={false}
-                tickLine={false}
-                width={24}
-              />
-              <Tooltip
-                cursor={{ fill: '#fcfcff' }}
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e3e4',
-                  borderRadius: '0.75rem',
-                  fontSize: 12,
-                  color: '#080101',
-                }}
-              />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+      {data.length === 0 ? (
+        <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--ink-3)', fontSize: 13 }}>
+          No applications yet
+        </div>
+      ) : (
+        <div className="funnel">
+          {data.map((item) => {
+            const cfg = STAGE_CONFIG[item.status] ?? {
+              label: item.status,
+              sub: '',
+              icon: FileText,
+              iconColor: '#9ca3af',
+            };
+            const Icon = cfg.icon;
+            const pct = Math.round((item._count / total) * 100);
+            const barWidth = Math.round((item._count / max) * 100);
 
-        {chartData.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
-            {chartData.map((item) => (
-              <div key={item.status} className="flex items-center gap-1.5">
-                <div
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-xs" style={{ color: '#473e3b' }}>
-                  {item.status}:{' '}
-                  <span className="font-semibold" style={{ color: '#080101' }}>
-                    {item.count}
-                  </span>
-                </span>
+            return (
+              <div key={item.status} className="stage">
+                <div className="stage-ico" style={{ color: cfg.iconColor }}>
+                  <Icon size={14} />
+                </div>
+                <div>
+                  <p className="stage-name">{cfg.label}</p>
+                  <p className="stage-sub">{cfg.sub}</p>
+                </div>
+                <div className="stage-count">
+                  {item._count}
+                  {pct > 0 && <span className="stage-pct">{pct}%</span>}
+                </div>
+                <div className="stage-bar">
+                  <span style={{ width: `${barWidth}%` }} />
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

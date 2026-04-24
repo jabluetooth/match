@@ -37,17 +37,15 @@ export default async function SettingsPage() {
   const profile = await getUserProfile(userId);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600 mt-2">
-            Manage your profile and job search preferences
-          </p>
+    <div className="shell">
+      <div className="page-head">
+        <div>
+          <h1><em>Profile</em> &amp; settings</h1>
+          <p>Manage your preferences and job search criteria</p>
         </div>
-
-        <SettingsForm profile={profile} userId={userId} />
       </div>
+
+      <SettingsForm profile={profile} userId={userId} />
     </div>
   );
 }

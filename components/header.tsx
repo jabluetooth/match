@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { Sparkles } from "lucide-react";
+import { Search, Bell, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { GooeyInput } from "@/components/ui/gooey-input";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
@@ -33,64 +34,66 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-gray-200/80 bg-white/80 px-6 backdrop-blur-md">
-
-      {/* Left — brand */}
-      <span
-        className="shrink-0 select-none text-2xl font-black text-gray-900"
-        style={{ fontFamily: "var(--font-outfit), 'Inter', sans-serif", letterSpacing: "-0.04em" }}
-      >
+    <header className="topbar">
+      {/* Left — logo */}
+      <Link href="/" className="logo">
         match
-      </span>
+      </Link>
 
-      {isJobs ? (
-        <>
-          {/* Middle — search + filters (jobs page only) */}
-          <div className="flex flex-1 items-center justify-center overflow-visible">
-            <GooeyInput
-              placeholder="Search jobs, companies..."
-              collapsedWidth={150}
-              expandedWidth={520}
-              expandedOffset={48}
-              gooeyBlur={5}
-              filters={{
-                location: {
-                  options: [
-                    { label: "Remote", value: "remote" },
-                    { label: "Hybrid", value: "hybrid" },
-                    { label: "On-site", value: "onsite" },
-                  ],
-                  placeholder: "All Locations",
-                },
-                sort: {
-                  options: [
-                    { label: "Highest Match", value: "score" },
-                    { label: "Most Recent", value: "date" },
-                  ],
-                  placeholder: "Sort by Match",
-                },
-              }}
-            />
+      {/* Center — search / gooey input */}
+      <div className="topbar-center">
+        {isJobs ? (
+          <GooeyInput
+            placeholder="Search jobs, companies..."
+            collapsedWidth={150}
+            expandedWidth={520}
+            expandedOffset={48}
+            gooeyBlur={5}
+            filters={{
+              location: {
+                options: [
+                  { label: "Remote",  value: "remote" },
+                  { label: "Hybrid",  value: "hybrid" },
+                  { label: "On-site", value: "onsite" },
+                ],
+                placeholder: "All Locations",
+              },
+              sort: {
+                options: [
+                  { label: "Highest Match", value: "score" },
+                  { label: "Most Recent",   value: "date" },
+                ],
+                placeholder: "Sort by Match",
+              },
+            }}
+          />
+        ) : (
+          <div className="search-bar">
+            <Search size={14} />
+            <span>Search jobs, companies…</span>
+            <kbd>⌘K</kbd>
           </div>
+        )}
+      </div>
 
-          {/* Right — button (jobs page only) */}
-          <div className="flex shrink-0 items-center gap-2">
-            <InteractiveHoverButton
-              disabled={matching}
-              onClick={handleFindMatches}
-              className={matching ? "opacity-60 cursor-not-allowed" : ""}
-            >
-              <span className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                {matching ? "Finding..." : "Find New Matches"}
-              </span>
-            </InteractiveHoverButton>
-          </div>
-        </>
-      ) : (
-        /* Non-jobs pages: empty flex spacer */
-        <div className="flex-1" />
-      )}
+      {/* Right — actions */}
+      <div className="topbar-right">
+        {isJobs && (
+          <InteractiveHoverButton
+            disabled={matching}
+            onClick={handleFindMatches}
+            className={matching ? "opacity-60 cursor-not-allowed" : ""}
+          >
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              {matching ? "Finding…" : "Find New Matches"}
+            </span>
+          </InteractiveHoverButton>
+        )}
+        <button className="icon-btn" aria-label="Notifications" type="button">
+          <Bell size={16} />
+        </button>
+      </div>
     </header>
   );
 }
