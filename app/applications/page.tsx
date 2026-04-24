@@ -22,8 +22,8 @@ export default async function ApplicationsPage() {
 
   const groupedApplications = {
     draft:     applications.filter(app => app.status === 'draft'),
-    submitted: applications.filter(app => app.status === 'submitted'),
-    screening: applications.filter(app => app.status === 'screening'),
+    submitted: applications.filter(app => ['applied', 'submitted'].includes(app.status)),
+    screening: applications.filter(app => ['phone_screen', 'screening'].includes(app.status)),
     interview: applications.filter(app => app.status === 'interview'),
     offer:     applications.filter(app => app.status === 'offer'),
     rejected:  applications.filter(app => app.status === 'rejected'),

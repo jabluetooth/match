@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>match — applications (kanban)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+  :root {
+    --bg: oklch(0.985 0.005 85);
+    --bg-2: oklch(0.97 0.006 85);
+    --ink: oklch(0.22 0.02 265);
+    --ink-2: oklch(0.45 0.02 265);
+    --ink-3: oklch(0.62 0.015 265);
+    --line: oklch(0.92 0.005 85);
+    --line-2: oklch(0.88 0.008 85);
+    --card: #ffffff;
+    --accent-a: #FFB39A;
+    --accent-b: #FF7A8A;
+    --primary: #FF8A6B;
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --shadow-card: 0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(30,20,10,.04), 0 8px 24px -12px rgba(30,20,10,.08);
+    --font-display: 'Instrument Serif', serif;
+    --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    letter-spacing: -0.005em;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, color-mix(in oklab, #A8C5FF 18%, transparent), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #root { position: relative; z-index: 1; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 36px;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 30px;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-b) 18%, transparent);
+  }
+
+  .top-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    width: 320px;
+    color: var(--ink-3);
+    font-size: 13px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: #fff;
+    display: grid;
+    place-items: center;
+    color: var(--ink-2);
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    font-size: 0;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #A8C5FF, #B8A6FF);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 72px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+    z-index: 50;
+  }
+
+  .nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    background: var(--bg-2);
+    color: var(--ink);
+  }
+
+  .nav-link.active {
+    background: linear-gradient(135deg, color-mix(in oklab, var(--accent-a) 20%, transparent), color-mix(in oklab, var(--accent-b) 20%, transparent));
+    color: var(--primary);
+  }
+
+  .shell {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 36px 36px 120px;
+  }
+
+  .page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 24px;
+  }
+
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(36px, 3.8vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0 0 6px;
+  }
+
+  .page-head h1 em {
+    font-style: italic;
+    color: color-mix(in oklab, var(--primary) 80%, var(--ink));
+  }
+
+  .page-head p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 14px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-2);
+    box-shadow: var(--shadow-card);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    letter-spacing: -0.005em;
+    transition: transform 0.12s ease;
+    white-space: nowrap;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+    color: #fff;
+    box-shadow: 0 6px 18px -6px color-mix(in oklab, var(--accent-b) 80%, transparent);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line-2);
+  }
+
+  .btn-ghost:hover {
+    background: var(--bg-2);
+  }
+
+  .btn-sm {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* ─── Kanban Board ─── */
+  .kanban {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 320px;
+    flex: 0 0 320px;
+  }
+
+  .column-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 8px;
+  }
+
+  .column-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .column-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--bg-2);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+
+  .column.draft .column-badge { background: color-mix(in oklab, #B8A6FF 15%, transparent); color: oklch(0.35 0.06 300); }
+  .column.submitted .column-badge { background: color-mix(in oklab, var(--accent-a) 15%, transparent); color: var(--primary); }
+  .column.screening .column-badge { background: color-mix(in oklab, #A8C5FF 15%, transparent); color: oklch(0.28 0.05 260); }
+  .column.interview .column-badge { background: color-mix(in oklab, #B4EBD1 15%, transparent); color: oklch(0.3 0.08 170); }
+  .column.offer .column-badge { background: color-mix(in oklab, #D4FF9F 15%, transparent); color: oklch(0.4 0.1 90); }
+  .column.rejected .column-badge { background: color-mix(in oklab, #FFB3A3 15%, transparent); color: oklch(0.35 0.08 40); }
+
+  .column-divider {
+    height: 2px;
+    background: linear-gradient(90deg, var(--line), transparent);
+    border-radius: 999px;
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 120px;
+  }
+
+  .app-card {
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-card);
+  }
+
+  .app-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(30,20,10,.04), 0 12px 32px -10px rgba(255,120,90,.18);
+    transform: translateY(-2px);
+  }
+
+  .app-card-drag {
+    opacity: 0.5;
+    transform: scale(0.98);
+  }
+
+  .app-card-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+
+  .app-card-company {
+    font-size: 11.5px;
+    color: var(--ink-3);
+    margin: 0 0 8px;
+  }
+
+  .app-card-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+
+  .app-card-meta span {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .app-card-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--bg-2);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-3);
+  }
+
+  .app-card-status .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .app-card-status.submitted { background: color-mix(in oklab, var(--accent-a) 20%, transparent); color: var(--primary); }
+  .app-card-status.screening { background: color-mix(in oklab, #A8C5FF 20%, transparent); color: oklch(0.28 0.05 260); }
+  .app-card-status.interview { background: color-mix(in oklab, #B4EBD1 20%, transparent); color: oklch(0.3 0.08 170); }
+  .app-card-status.offer { background: color-mix(in oklab, #D4FF9F 20%, transparent); color: oklch(0.4 0.1 90); }
+  .app-card-status.rejected { background: color-mix(in oklab, #FFB3A3 20%, transparent); color: oklch(0.35 0.08 40); }
+
+  /* ─── Side Panel ─── */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .panel-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 420px;
+    background: var(--card);
+    border-left: 1px solid var(--line);
+    z-index: 101;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.1);
+  }
+
+  .panel.open {
+    transform: translateX(0);
+  }
+
+  .panel-head {
+    padding: 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .panel-company {
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-top: 4px;
+  }
+
+  .panel-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--bg-2);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--ink-2);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .panel-close:hover {
+    background: var(--line-2);
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .panel-section {
+    margin-bottom: 24px;
+  }
+
+  .panel-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .panel-section-content {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+  }
+
+  .timeline-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  .timeline-content {
+    flex: 1;
+    font-size: 12px;
+  }
+
+  .timeline-content-title {
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .timeline-content-time {
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--line);
+    margin: 24px 0;
+  }
+
+  .panel-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .panel-actions .btn {
+    flex: 1;
+  }
+
+  .panel-footer {
+    padding: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    text-align: center;
+    color: var(--ink-3);
+  }
+
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .empty-state-text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 1200px) {
+    .kanban { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .column { flex: 0 0 280px; }
+    .panel { width: 100%; }
+  }
+
+  @media (max-width: 720px) {
+    .shell { padding: 24px 18px 120px; }
+    .kanban { grid-template-columns: 1fr; }
+    .column { flex: 1; }
+    .panel { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+const I = {
+  search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>,
+  bell: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/></svg>,
+  x: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  home: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>,
+  briefcase: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>,
+  send: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m22 2-7 20-4-9-9-4z"/></svg>,
+  calendar: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
+  repeat: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/></svg>,
+  settings: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6"/></svg>,
+  clock: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>,
+};
+
+function TopBar() {
+  return (
+    <div className="topbar">
+      <div className="logo">match</div>
+      <div className="top-right">
+        <div className="search">{I.search}<span>Search…</span></div>
+        <button className="icon-btn">{I.bell}</button>
+        <div className="avatar">N</div>
+      </div>
+    </div>
+  );
+}
+
+function Sidebar() {
+  return (
+    <div className="sidebar">
+      {[
+        {id: 'home', label: 'Dashboard', icon: I.home},
+        {id: 'jobs', label: 'Jobs', icon: I.briefcase},
+        {id: 'apps', label: 'Applications', icon: I.send},
+        {id: 'interviews', label: 'Interviews', icon: I.calendar},
+        {id: 'followups', label: 'Follow-ups', icon: I.repeat},
+        {id: 'settings', label: 'Settings', icon: I.settings},
+      ].map(p => (
+        <button key={p.id} className={`nav-link ${p.id === 'apps' ? 'active' : ''}`}>
+          {p.icon}<span>{p.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Column({ title, apps, onCardClick, columnKey }) {
+  const columnClass = ['draft', 'submitted', 'screening', 'interview', 'offer', 'rejected'][columnKey] || '';
+  return (
+    <div className={`column ${columnClass}`}>
+      <div className="column-head">
+        <div className="column-title">
+          <span>{title}</span>
+          <div className="column-badge">{apps.length}</div>
+        </div>
+      </div>
+      <div className="column-divider"></div>
+      <div className="cards">
+        {apps.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">→</div>
+            <div className="empty-state-text">No applications yet</div>
+          </div>
+        ) : (
+          apps.map(app => (
+            <div
+              key={app.id}
+              className="app-card"
+              onClick={() => onCardClick(app)}
+            >
+              <h3 className="app-card-title">{app.role}</h3>
+              <div className="app-card-company">{app.company}</div>
+              <div className="app-card-meta">
+                <span>{I.clock} {app.date}</span>
+              </div>
+              <div className={`app-card-status ${app.status}`}>
+                <span className="dot"></span>
+                {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Panel({ app, onClose, isOpen }) {
+  if (!app) return null;
+
+  const timeline = [
+    {title: 'Application submitted', time: 'Apr 22, 2:14 PM'},
+    {title: 'Viewed by recruiter', time: 'Apr 23, 9:00 AM'},
+    {title: 'Interview scheduled', time: 'Apr 25, 1:30 PM'},
+  ];
+
+  return (
+    <>
+      <div className={`panel-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}></div>
+      <div className={`panel ${isOpen ? 'open' : ''}`}>
+        <div className="panel-head">
+          <div>
+            <h2 className="panel-title">{app.role}</h2>
+            <div className="panel-company">{app.company}</div>
+          </div>
+          <button className="panel-close" onClick={onClose}>{I.x}</button>
+        </div>
+
+        <div className="panel-body">
+          <div className="panel-section">
+            <label className="panel-section-label">Status</label>
+            <div className={`app-card-status ${app.status}`}>
+              <span className="dot"></span>
+              {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+            </div>
+          </div>
+
+          <div className="panel-section">
+            <label className="panel-section-label">Applied date</label>
+            <div className="panel-section-content">{app.date}</div>
+          </div>
+
+          <div className="panel-section">
+            <label className="panel-section-label">Job description</label>
+            <div className="panel-section-content">
+              We're looking for a passionate engineer to join our growing team. Ideal candidate has 5+ years experience with React, Node.js, and system design.
+            </div>
+          </div>
+
+          <div className="panel-section">
+            <label className="panel-section-label">Your cover letter</label>
+            <div className="panel-section-content">
+              I'm excited about this opportunity at {app.company}. My experience with React and system design aligns perfectly with your needs...
+            </div>
+          </div>
+
+          <div className="divider"></div>
+
+          <div className="panel-section">
+            <label className="panel-section-label">Timeline</label>
+            <div className="timeline">
+              {timeline.map((t, i) => (
+                <div key={i} className="timeline-item">
+                  <div className="timeline-dot"></div>
+                  <div className="timeline-content">
+                    <div className="timeline-content-title">{t.title}</div>
+                    <div className="timeline-content-time">{t.time}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="divider"></div>
+
+          <div className="panel-section">
+            <label className="panel-section-label">Notes</label>
+            <div className="panel-section-content">
+              Strong technical interview. Waiting for final decision. Follow up on May 1st if no response.
+            </div>
+          </div>
+        </div>
+
+        <div className="panel-footer">
+          <div className="panel-actions">
+            <button className="btn btn-primary btn-sm">Move stage →</button>
+            <button className="btn btn-ghost btn-sm">More actions</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function App() {
+  const [selectedApp, setSelectedApp] = useState(null);
+
+  const applications = [
+    { id: 1, role: 'Senior React Engineer', company: 'Vercel', date: 'Apr 22', status: 'submitted', column: 1 },
+    { id: 2, role: 'Product Designer', company: 'Linear', date: 'Apr 18', status: 'screening', column: 2 },
+    { id: 3, role: 'Full Stack Engineer', company: 'Cal.com', date: 'Apr 15', status: 'interview', column: 3 },
+    { id: 4, role: 'Frontend Lead', company: 'Raycast', date: 'Apr 12', status: 'submitted', column: 1 },
+    { id: 5, role: 'Design Systems', company: 'Figma', date: 'Apr 10', status: 'rejected', column: 5 },
+    { id: 6, role: 'Staff Engineer', company: 'Stripe', date: 'Apr 8', status: 'interview', column: 3 },
+  ];
+
+  const columns = [
+    { title: 'Draft', key: 0, apps: applications.filter(a => a.column === 0) },
+    { title: 'Submitted', key: 1, apps: applications.filter(a => a.column === 1) },
+    { title: 'Screening', key: 2, apps: applications.filter(a => a.column === 2) },
+    { title: 'Interview', key: 3, apps: applications.filter(a => a.column === 3) },
+    { title: 'Offer', key: 4, apps: applications.filter(a => a.column === 4) },
+    { title: 'Rejected', key: 5, apps: applications.filter(a => a.column === 5) },
+  ];
+
+  return (
+    <>
+      <TopBar />
+      <div className="shell">
+        <div className="page-head">
+          <div>
+            <h1>Your <em>pipeline</em></h1>
+            <p>6 applications · drag to move between stages</p>
+          </div>
+          <div className="chip">{I.clock} Avg. response time: 8 days</div>
+        </div>
+
+        <div className="kanban">
+          {columns.map(col => (
+            <Column
+              key={col.key}
+              title={col.title}
+              apps={col.apps}
+              onCardClick={setSelectedApp}
+              columnKey={col.key}
+            />
+          ))}
+        </div>
+      </div>
+
+      <Panel app={selectedApp} onClose={() => setSelectedApp(null)} isOpen={!!selectedApp} />
+      <Sidebar />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
