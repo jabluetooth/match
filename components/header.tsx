@@ -1,37 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
-import { Search, Bell, Sparkles } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { GooeyInput } from "@/components/ui/gooey-input";
-import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 export function Header() {
   const pathname = usePathname();
-  const { userId } = useAuth();
   const isJobs = pathname === "/jobs";
-  const [matching, setMatching] = useState(false);
-
-  const handleFindMatches = async () => {
-    if (!userId) return;
-    setMatching(true);
-    try {
-      const res = await fetch("/api/match/jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      alert("Job matching started! New matches will appear shortly.");
-      window.location.reload();
-    } catch {
-      alert("Failed to start job matching. Please try again.");
-    } finally {
-      setMatching(false);
-    }
-  };
 
   return (
     <header className="topbar">
@@ -40,13 +16,13 @@ export function Header() {
         match
       </Link>
 
-      {/* Center — search / gooey input */}
+      {/* Center — search (jobs only) */}
       <div className="topbar-center">
-        {isJobs ? (
+        {isJobs && (
           <GooeyInput
-            placeholder="Search jobs, companies..."
-            collapsedWidth={150}
-            expandedWidth={520}
+            placeholder="Search jobs, companies…"
+            collapsedWidth={160}
+            expandedWidth={480}
             expandedOffset={48}
             gooeyBlur={5}
             filters={{
@@ -67,29 +43,11 @@ export function Header() {
               },
             }}
           />
-        ) : (
-          <div className="search-bar">
-            <Search size={14} />
-            <span>Search jobs, companies…</span>
-            <kbd>⌘K</kbd>
-          </div>
         )}
       </div>
 
-      {/* Right — actions */}
+      {/* Right — icon actions */}
       <div className="topbar-right">
-        {isJobs && (
-          <InteractiveHoverButton
-            disabled={matching}
-            onClick={handleFindMatches}
-            className={matching ? "opacity-60 cursor-not-allowed" : ""}
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              {matching ? "Finding…" : "Find New Matches"}
-            </span>
-          </InteractiveHoverButton>
-        )}
         <button className="icon-btn" aria-label="Notifications" type="button">
           <Bell size={16} />
         </button>

@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { JobMatchCard } from '@/components/job-match-card';
+import { FindMatchesButton } from '@/components/find-matches-button';
 import { Clock } from 'lucide-react';
 
 export const revalidate = 60;
@@ -39,9 +40,12 @@ export default async function JobMatchesPage() {
           <h1>New <em>opportunities</em></h1>
           <p>{matches.length} role{matches.length === 1 ? '' : 's'} match your profile · sorted by fit</p>
         </div>
-        <div className="chip">
-          <Clock size={13} />
-          Last scan · just now
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <FindMatchesButton />
+          <div className="chip">
+            <Clock size={13} />
+            Last scan · just now
+          </div>
         </div>
       </div>
 

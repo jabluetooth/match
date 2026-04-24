@@ -57,7 +57,8 @@ function ChevronDown() {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 20 20"
       fill="currentColor"
-      className="size-3 shrink-0 text-background/50"
+      className="size-3 shrink-0"
+      style={{ color: 'var(--ink-3)' }}
     >
       <path
         fillRule="evenodd"
@@ -249,7 +250,7 @@ export function GooeyInput({
     filters?.sort?.placeholder ??
     "Sort by Match";
 
-  const surfaceClass = "bg-foreground text-background shadow-sm ring-1 ring-border/60";
+  const surfaceClass = "bg-white border border-[oklch(0.92_0.005_85)] [box-shadow:var(--shadow-card)]";
   const totalWidth = expandedWidth + expandedOffset;
 
   return (
@@ -284,7 +285,7 @@ export function GooeyInput({
               )}
             >
               <SearchIcon layoutId={iconLayoutId} />
-              <span className="truncate text-background/60">{placeholder}</span>
+              <span className="truncate text-sm" style={{ color: 'var(--ink-3)' }}>{placeholder}</span>
             </button>
           )}
 
@@ -307,17 +308,18 @@ export function GooeyInput({
                 onBlur={handleBlur}
                 placeholder={placeholder}
                 className={cn(
-                  "h-full min-w-0 flex-1 bg-transparent text-sm text-background outline-none placeholder:text-background/40",
+                  "h-full min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[oklch(0.62_0.015_265)]",
                   classNames?.input,
                 )}
+                style={{ color: 'var(--ink)' }}
               />
 
               {hasFilters && filters?.location && (
                 <>
-                  <div className="h-4 w-px shrink-0 bg-background/20" />
+                  <div className="h-4 w-px shrink-0" style={{ background: 'var(--line)' }} />
                   {/* Styled label is visible; transparent select on top captures interaction */}
                   <div className="relative flex w-28 shrink-0 cursor-pointer items-center gap-1">
-                    <span className="pointer-events-none flex min-w-0 flex-1 items-center gap-1 truncate text-sm text-background">
+                    <span className="pointer-events-none flex min-w-0 flex-1 items-center gap-1 truncate text-sm" style={{ color: 'var(--ink-2)' }}>
                       {locLabel}
                     </span>
                     <ChevronDown />
@@ -339,9 +341,9 @@ export function GooeyInput({
 
               {hasFilters && filters?.sort && (
                 <>
-                  <div className="h-4 w-px shrink-0 bg-background/20" />
+                  <div className="h-4 w-px shrink-0" style={{ background: 'var(--line)' }} />
                   <div className="relative flex w-32 shrink-0 cursor-pointer items-center gap-1">
-                    <span className="pointer-events-none flex min-w-0 flex-1 items-center gap-1 truncate text-sm text-background">
+                    <span className="pointer-events-none flex min-w-0 flex-1 items-center gap-1 truncate text-sm" style={{ color: 'var(--ink-2)' }}>
                       {srtLabel}
                     </span>
                     <ChevronDown />
