@@ -8,23 +8,38 @@ import { Clock } from 'lucide-react';
 export const revalidate = 60;
 
 async function getJobMatches(userId: string) {
-  const applications = await prisma.application.findMany({
-    where: { userId },
-    include: { job: true },
-    orderBy: { createdAt: 'desc' },
+  const matches = await prisma.jobMatch.findMany({
+    where: { userId, status: 'pending' },
+    orderBy: { matchScore: 'desc' },
   });
 
-  return applications.map(app => ({
-    ...app,
-    matchScore:
-      app.status === 'offer'        ? 100 :
-      app.status === 'interview'    ? 90  :
-      app.status === 'phone_screen' ? 85  :
-      app.status === 'applied'      ? 80  : 75,
-    aiReasoning: null,
-    skillsMatched: [],
-    skillsMissing: [],
-  }));
+  if (matches.length === 0) return [];
+
+  const jobIds = matches.map(m => m.jobId).filter(Boolean) as number[];
+  const jobs = await prisma.job.findMany({ where: { id: { in: jobIds } } });
+  const jobMap = new Map(jobs.map(j => [j.id, j]));
+
+  return matches
+    .map(m => ({
+      id: m.id,
+      userId: m.userId ?? userId,
+      matchScore: Number(m.matchScore ?? 0),
+      aiReasoning: m.aiReasoning ?? null,
+      skillsMatched: m.skillsMatched ?? [],
+      skillsMissing: m.skillsMissing ?? [],
+      createdAt: m.createdAt,
+      job: jobMap.get(m.jobId!),
+    }))
+    .filter(m => m.job != null) as Array<{
+      id: number;
+      userId: string;
+      matchScore: number;
+      aiReasoning: string | null;
+      skillsMatched: string[];
+      skillsMissing: string[];
+      createdAt: Date;
+      job: NonNullable<ReturnType<typeof jobMap.get>>;
+    }>;
 }
 
 export default async function JobMatchesPage() {

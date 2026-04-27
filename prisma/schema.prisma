@@ -191,6 +191,7 @@ model TailoredResume {
   coreSkills          String[]  @map("core_skills")
   keywords            String[]
   tailoringNotes      String?   @map("tailoring_notes")
+  htmlContent         String?   @map("html_content")
   version             Int       @default(1)
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @default(now()) @map("updated_at") @updatedAt

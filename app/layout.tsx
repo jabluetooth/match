@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import { NavDock } from "@/components/nav-dock";
 import { Header } from "@/components/header";
 
-const fraunces = Fraunces({
+const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-instrument",
   weight: ['400'],
   style: ['normal', 'italic'],
   display: 'swap',
@@ -38,8 +38,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" data-accent="peach" data-cardstyle="soft" data-density="regular" data-font="modern">
-        <body className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+      <html lang="en" data-accent="peach" data-cardstyle="soft" data-density="regular" data-font="editorial">
+        <body className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
           <Header />
           <main className="pb-28">
             {children}

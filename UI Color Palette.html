@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Match — UI Color Palette</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #fafafa;
+    padding: 60px 40px;
+  }
+  .container { max-width: 1000px; margin: 0 auto; }
+  
+  h1 { 
+    font-size: 36px; 
+    font-weight: 600;
+    margin-bottom: 8px; 
+    color: #1a1a1a; 
+  }
+  .subtitle { 
+    font-size: 16px; 
+    color: #666; 
+    margin-bottom: 48px;
+    line-height: 1.5;
+  }
+  
+  .section {
+    margin-bottom: 48px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: 12px;
+    color: #999;
+  }
+  
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  
+  .color-swatch {
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+  }
+  
+  .color-preview {
+    height: 100px;
+    width: 100%;
+  }
+  
+  .color-info {
+    padding: 14px;
+  }
+  
+  .color-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+  
+  .color-hex {
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 2px;
+  }
+  
+  .color-role {
+    font-size: 11px;
+    color: #bbb;
+  }
+
+  .usage-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+
+  .usage-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+  }
+
+  .usage-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .usage-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #999;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .usage-table td {
+    padding: 12px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f5f5f5;
+  }
+
+  .usage-table td:first-child {
+    width: 20%;
+  }
+
+  .usage-table td:nth-child(2) {
+    width: 50%;
+    color: #666;
+  }
+
+  .color-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .code-block {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    color: #333;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Match</h1>
+  <div class="subtitle">UI Color Palette — Emerald Green System</div>
+
+  <!-- Primary Colors -->
+  <div class="section">
+    <div class="section-title">Primary Brand Colors</div>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #10b981;"></div>
+        <div class="color-info">
+          <div class="color-name">Primary</div>
+          <div class="color-hex">#10B981</div>
+          <div class="color-role">Hero color, CTAs, accents</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #a7f3d0;"></div>
+        <div class="color-info">
+          <div class="color-name">Light Accent</div>
+          <div class="color-hex">#A7F3D0</div>
+          <div class="color-role">Gradient start, highlights</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #6ee7b7;"></div>
+        <div class="color-info">
+          <div class="color-name">Mid Accent</div>
+          <div class="color-hex">#6EE7B7</div>
+          <div class="color-role">Gradient end, secondary</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Neutrals -->
+  <div class="section">
+    <div class="section-title">Neutral & Background</div>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #f0fdf4;"></div>
+        <div class="color-info">
+          <div class="color-name">Background</div>
+          <div class="color-hex">#F0FDF4</div>
+          <div class="color-role">Page background</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #e6f5ec;"></div>
+        <div class="color-info">
+          <div class="color-name">Secondary BG</div>
+          <div class="color-hex">#E6F5EC</div>
+          <div class="color-role">Hover states, sections</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #ffffff;"></div>
+        <div class="color-info">
+          <div class="color-name">Card/White</div>
+          <div class="color-hex">#FFFFFF</div>
+          <div class="color-role">Cards, modals, surfaces</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #c7e8d8;"></div>
+        <div class="color-info">
+          <div class="color-name">Border Light</div>
+          <div class="color-hex">#C7E8D8</div>
+          <div class="color-role">Primary borders</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #b0dcc9;"></div>
+        <div class="color-info">
+          <div class="color-name">Border Medium</div>
+          <div class="color-hex">#B0DCC9</div>
+          <div class="color-role">Secondary borders, dividers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Colors -->
+  <div class="section">
+    <div class="section-title">Text Colors</div>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #0b3d2c;"></div>
+        <div class="color-info">
+          <div class="color-name">Primary Text</div>
+          <div class="color-hex">#0B3D2C</div>
+          <div class="color-role">Headings, body copy</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #2d6a4f;"></div>
+        <div class="color-info">
+          <div class="color-name">Secondary Text</div>
+          <div class="color-hex">#2D6A4F</div>
+          <div class="color-role">Descriptions, labels</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #52806f;"></div>
+        <div class="color-info">
+          <div class="color-name">Tertiary Text</div>
+          <div class="color-hex">#52806F</div>
+          <div class="color-role">Hints, metadata, disabled</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Colors -->
+  <div class="section">
+    <div class="section-title">Status & Semantic Colors</div>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #10b981;"></div>
+        <div class="color-info">
+          <div class="color-name">Success/Active</div>
+          <div class="color-hex">#10B981</div>
+          <div class="color-role">Applied, approved, live</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #3b82f6;"></div>
+        <div class="color-info">
+          <div class="color-name">Info/Screening</div>
+          <div class="color-hex">#3B82F6</div>
+          <div class="color-role">In progress, screened</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #f59e0b;"></div>
+        <div class="color-info">
+          <div class="color-name">Warning</div>
+          <div class="color-hex">#F59E0B</div>
+          <div class="color-role">Attention needed</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #ef4444;"></div>
+        <div class="color-info">
+          <div class="color-name">Error/Rejected</div>
+          <div class="color-hex">#EF4444</div>
+          <div class="color-role">Rejected, error states</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Guide -->
+  <div class="usage-section">
+    <div class="usage-title">CSS Variables & Usage</div>
+    <div class="code-block">
+:root {
+  /* Primary Brand */
+  --primary: #10B981;
+  --accent-a: #A7F3D0;
+  --accent-b: #6EE7B7;
+
+  /* Backgrounds */
+  --bg: #F0FDF4;
+  --bg-2: #E6F5EC;
+  --card: #FFFFFF;
+
+  /* Borders */
+  --line: #C7E8D8;
+  --line-2: #B0DCC9;
+
+  /* Text */
+  --ink: #0B3D2C;
+  --ink-2: #2D6A4F;
+  --ink-3: #52806F;
+
+  /* Effects */
+  --shadow-card: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(16,185,129,.12);
+  --shadow-tile: 0 1px 3px rgba(0,0,0,.08), 0 8px 20px rgba(16,185,129,.15);
+}
+    </div>
+  </div>
+
+  <!-- Component Usage -->
+  <div class="usage-section">
+    <div class="usage-title">Where Each Color is Used</div>
+    <table class="usage-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Color Usage</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="color-dot" style="background: #10b981;"></span>Buttons</td>
+          <td>Primary CTA buttons use gradient (#6EE7B7 → #10B981)</td>
+          <td>"Activate agent", "Upload résumé"</td>
+        </tr>
+        <tr>
+          <td><span class="color-dot" style="background: #10b981;"></span>Accents</td>
+          <td>Primary #10B981 for interactive elements, links, hover states</td>
+          <td>Logo dot, active steps, selected states</td>
+        </tr>
+        <tr>
+          <td><span class="color-dot" style="background: #f0fdf4;"></span>Backgrounds</td>
+          <td>#F0FDF4 for page, #E6F5EC for secondary areas</td>
+          <td>Page background, card hover states</td>
+        </tr>
+        <tr>
+          <td><span class="color-dot" style="background: #c7e8d8;"></span>Borders</td>
+          <td>#C7E8D8 for primary, #B0DCC9 for secondary</td>
+          <td>Card edges, dividers, input borders</td>
+        </tr>
+        <tr>
+          <td><span class="color-dot" style="background: #0b3d2c;"></span>Text</td>
+          <td>#0B3D2C for headings, #2D6A4F for body, #52806F for hints</td>
+          <td>All copy, labels, descriptions</td>
+        </tr>
+        <tr>
+          <td><span class="color-dot" style="background: #3b82f6;"></span>Status</td>
+          <td>Blue #3B82F6 for "screened", Green #10B981 for "applied"</td>
+          <td>Pipeline stages, status badges</td>
+        </tr>
+        <tr>
+          <td><span class="color-dot" style="background: #ef4444;"></span>Error</td>
+          <td>Red #EF4444 for rejected, errors, destructive actions</td>
+          <td>"Rejected" status, error messages</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Gradient Reference -->
+  <div class="usage-section">
+    <div class="usage-title">Primary Gradient</div>
+    <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Used for buttons, primary accents, and hero elements</p>
+    <div style="height: 60px; background: linear-gradient(135deg, #6ee7b7, #10b981); border-radius: 8px; margin-bottom: 12px;"></div>
+    <div class="code-block">linear-gradient(135deg, #6EE7B7, #10B981)</div>
+  </div>
+
+  <!-- Shadow Reference -->
+  <div class="usage-section">
+    <div class="usage-title">Shadows</div>
+    <div style="margin-bottom: 16px;">
+      <p style="font-size: 12px; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600;">Card Shadow</p>
+      <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(16,185,129,.12);">
+        <div style="font-size: 13px; color: #666;">Standard card elevation</div>
+      </div>
+    </div>
+    <div class="code-block">box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(16,185,129,.12);</div>
+  </div>
+
+</div>
+
+</body>
+</html>
