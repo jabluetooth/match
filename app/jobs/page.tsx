@@ -16,8 +16,17 @@ async function getJobMatches(userId: string) {
   if (matches.length === 0) return [];
 
   const jobIds = matches.map(m => m.jobId).filter(Boolean) as number[];
-  const jobs = await prisma.job.findMany({ where: { id: { in: jobIds } } });
+
+  const [jobs, tailoredResumes] = await Promise.all([
+    prisma.job.findMany({ where: { id: { in: jobIds } } }),
+    prisma.tailoredResume.findMany({
+      where: { userId, jobId: { in: jobIds } },
+      select: { jobId: true },
+    }),
+  ]);
+
   const jobMap = new Map(jobs.map(j => [j.id, j]));
+  const resumeSet = new Set(tailoredResumes.map(r => r.jobId));
 
   return matches
     .map(m => ({
@@ -29,6 +38,7 @@ async function getJobMatches(userId: string) {
       skillsMissing: m.skillsMissing ?? [],
       createdAt: m.createdAt,
       job: jobMap.get(m.jobId!),
+      hasResume: resumeSet.has(m.jobId!),
     }))
     .filter(m => m.job != null) as Array<{
       id: number;
@@ -38,6 +48,7 @@ async function getJobMatches(userId: string) {
       skillsMatched: string[];
       skillsMissing: string[];
       createdAt: Date;
+      hasResume: boolean;
       job: NonNullable<ReturnType<typeof jobMap.get>>;
     }>;
 }

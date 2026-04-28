@@ -10,23 +10,24 @@ export class N8NClient {
   }
 
   private webhookUrl(path: string): string {
-    const useTest = process.env.N8N_FORCE_TEST_WEBHOOKS === 'true' || !IS_PROD;
+    const force = process.env.N8N_FORCE_TEST_WEBHOOKS;
+    const useTest = force === 'true' || (force !== 'false' && !IS_PROD);
     return `${this.baseUrl}${useTest ? '/webhook-test/' : '/webhook/'}${path.replace(/^\//, '')}`;
   }
 
-  private async call<T = unknown>(path: string, body: Record<string, unknown>, timeoutMs = TIMEOUT_MS): Promise<T> {
+  private async call<T = unknown>(path: string, body: Record<string, unknown>, timeoutMs?: number): Promise<T> {
     const url = this.webhookUrl(path);
     console.log(`[n8n] POST ${url}`);
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const controller = timeoutMs ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-        signal: controller.signal,
+        ...(controller ? { signal: controller.signal } : {}),
       });
 
       if (!response.ok) {
@@ -40,12 +41,12 @@ export class N8NClient {
       console.error(`[n8n] ${path}: ${error.message}`);
       throw error;
     } finally {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
     }
   }
 
-  tailorResume(params: { user_id: number; job_id: number }) {
-    return this.call('tailor-resume', params);
+  tailorResume(params: { user_id: string; job_id: number }) {
+    return this.call('tailor-resume', params as Record<string, unknown>);
   }
 
   researchCompany(params: { user_id: number; application_id?: number; job_id?: number }) {
@@ -53,8 +54,7 @@ export class N8NClient {
   }
 
   matchJobs(user_id: string) {
-    // Long-running: 1 Gemini batch call per user
-    return this.call('match-jobs', { user_id, trigger: 'manual' }, 5 * 60_000);
+    return this.call('match-job', { user_id, trigger: 'manual' });
   }
 
   scrapeJobs() {

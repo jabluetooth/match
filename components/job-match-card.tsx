@@ -13,6 +13,7 @@ interface JobMatchCardProps {
     skillsMatched?: string[];
     skillsMissing?: string[];
     createdAt: Date;
+    hasResume?: boolean;
     job: {
       id: number;
       title: string;
@@ -29,8 +30,59 @@ interface JobMatchCardProps {
 
 export function JobMatchCard({ match }: JobMatchCardProps) {
   const [tailoring, setTailoring] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [hasResume, setHasResume] = useState(match.hasResume ?? false);
   const score = Math.round(Number(match.matchScore));
   const matchClass = score >= 85 ? 'high' : score >= 75 ? 'med' : '';
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/tailor/resume/${match.job.id}/download`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error === 'Resume not found'
+          ? 'Resume HTML not stored — please tailor the resume again to enable download.'
+          : 'Download failed. Please try again.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume_${match.job.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Download failed. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const pollForResume = async () => {
+    const maxAttempts = 100; // 100 × 3s = 5 min max
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      try {
+        const res = await fetch(`/api/tailor/resume/${match.job.id}/status`);
+        const { ready, exists } = await res.json();
+        if (ready) {
+          setHasResume(true);
+          setTailoring(false);
+          return;
+        }
+        // Record exists but no HTML means n8n Insert node isn't storing html_content
+        if (exists && i > 5) {
+          setTailoring(false);
+          alert('Resume was tailored but the HTML content was not saved. Update the Insert Tailored Resume node in n8n to include html_content, then tailor again.');
+          return;
+        }
+      } catch { /* keep polling */ }
+    }
+    setTailoring(false);
+    alert('Tailoring timed out. Check n8n execution logs to see if the workflow completed.');
+  };
 
   const handleTailorResume = async () => {
     setTailoring(true);
@@ -38,13 +90,12 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
       const res = await fetch('/api/tailor/resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: match.userId, job_id: match.job.id }),
+        body: JSON.stringify({ job_id: match.job.id }),
       });
       if (!res.ok) throw new Error('Failed');
-      alert('Resume tailoring started! You will receive an email when ready.');
+      pollForResume(); // fire and don't await — polling runs in background
     } catch {
-      alert('Failed to start resume tailoring. Please try again.');
-    } finally {
+      alert('Failed to tailor resume. Please try again.');
       setTailoring(false);
     }
   };
@@ -124,16 +175,29 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
           Matched {formatRelativeTime(match.createdAt)}
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={handleTailorResume}
-            disabled={tailoring}
-            className="btn btn-primary btn-sm"
-            style={tailoring ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-            type="button"
-          >
-            <Sparkles size={12} />
-            {tailoring ? 'Tailoring…' : 'Tailor Resume'}
-          </button>
+          {hasResume ? (
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="btn btn-primary btn-sm"
+              style={downloading ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+              type="button"
+            >
+              <Sparkles size={12} />
+              {downloading ? 'Downloading…' : 'Download Resume'}
+            </button>
+          ) : (
+            <button
+              onClick={handleTailorResume}
+              disabled={tailoring}
+              className="btn btn-primary btn-sm"
+              style={tailoring ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+              type="button"
+            >
+              <Sparkles size={12} />
+              {tailoring ? 'Tailoring…' : 'Tailor Resume'}
+            </button>
+          )}
           <a href={match.job.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
             View
           </a>
