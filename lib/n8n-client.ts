@@ -59,7 +59,7 @@ export class N8NClient {
 
   trackApplication(params: {
     action: 'create' | 'update_status' | 'schedule_interview';
-    user_id: number;
+    user_id: string;
     job_id?: number;
     application_id?: number;
     status?: string;
@@ -76,14 +76,14 @@ export class N8NClient {
   trackFollowUpResponse(params: {
     followup_id: number;
     application_id: number;
-    user_id: number;
+    user_id: string;
     response_status: 'replied' | 'no_response' | 'bounced';
   }) {
     return this.call('followup-response', params);
   }
 
   generateInterviewPrep(params: {
-    user_id: number;
+    user_id: string;
     application_id: number;
     interviewer_name?: string | null;
     interviewer_role?: string | null;
