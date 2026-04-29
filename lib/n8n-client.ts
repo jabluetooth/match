@@ -49,7 +49,7 @@ export class N8NClient {
     return this.call('tailor-resume', params as Record<string, unknown>, TIMEOUT_MS);
   }
 
-  researchCompany(params: { user_id: number; application_id?: number; job_id?: number }) {
+  researchCompany(params: { user_id: string; application_id?: number; job_id?: number }) {
     return this.call('company-research', params, TIMEOUT_MS);
   }
 

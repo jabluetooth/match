@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatRelativeTime, formatCurrency, truncate } from "@/lib/utils";
 import { ExternalLink, MapPin, DollarSign, Sparkles, Search } from "lucide-react";
+import { WorkflowLoader } from "@/components/workflow-loader";
 
 interface JobMatchCardProps {
   match: {
@@ -96,6 +97,13 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         body: JSON.stringify({ job_id: match.job.id }),
       });
       if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      const researchId = data?.result?.research_id;
+      if (!researchId) {
+        alert('Research completed but could not be saved. Check the n8n workflow logs for the "Save Research to DB1" node.');
+        setResearching(false);
+        return;
+      }
       window.location.href = `/research/${match.job.id}`;
     } catch {
       alert('Failed to start company research. Please try again.');
@@ -138,6 +146,33 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
   };
 
   return (
+    <>
+    <WorkflowLoader
+      show={tailoring}
+      label="Tailoring your resume…"
+      messages={[
+        `Reading the job description for ${match.job.title}…`,
+        "Identifying required skills and keywords…",
+        "Matching your experience to the role…",
+        "Crafting your professional summary…",
+        "Optimising for ATS keywords…",
+        "Generating your achievement bullets…",
+        "Almost done — finalising your resume…",
+      ]}
+    />
+    <WorkflowLoader
+      show={researching}
+      label="Researching company…"
+      messages={[
+        `Visiting ${match.job.companyName}'s website…`,
+        "Scraping company overview and mission…",
+        "Fetching recent news and developments…",
+        "Analysing the role and hiring context…",
+        "Building your interview talking points…",
+        "Identifying potential red flags…",
+        "Finalising your research brief…",
+      ]}
+    />
     <div className="job-card">
       {/* Header */}
       <div className="job-header">
@@ -260,5 +295,6 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }

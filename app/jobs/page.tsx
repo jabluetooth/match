@@ -7,10 +7,10 @@ import { Clock } from 'lucide-react';
 
 export const revalidate = 60;
 
-async function getJobMatches(userId: string) {
+async function getJobMatches(userId: string, q: string, location: string, sort: string) {
   const matches = await prisma.jobMatch.findMany({
     where: { userId, status: 'pending' },
-    orderBy: { matchScore: 'desc' },
+    orderBy: sort === 'date' ? { createdAt: 'desc' } : { matchScore: 'desc' },
   });
 
   if (matches.length === 0) return [];
@@ -28,6 +28,9 @@ async function getJobMatches(userId: string) {
   const jobMap = new Map(jobs.map(j => [j.id, j]));
   const resumeSet = new Set(tailoredResumes.map(r => r.jobId));
 
+  const ql = q.toLowerCase();
+  const locFilter = location.toLowerCase();
+
   return matches
     .map(m => ({
       id: m.id,
@@ -40,7 +43,12 @@ async function getJobMatches(userId: string) {
       job: jobMap.get(m.jobId!),
       hasResume: resumeSet.has(m.jobId!),
     }))
-    .filter(m => m.job != null) as Array<{
+    .filter(m => m.job != null)
+    .filter(m => {
+      if (ql && !m.job!.title.toLowerCase().includes(ql) && !m.job!.companyName.toLowerCase().includes(ql)) return false;
+      if (locFilter && m.job!.workType?.toLowerCase() !== locFilter) return false;
+      return true;
+    }) as Array<{
       id: number;
       userId: string;
       matchScore: number;
@@ -53,11 +61,16 @@ async function getJobMatches(userId: string) {
     }>;
 }
 
-export default async function JobMatchesPage() {
+export default async function JobMatchesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; location?: string; sort?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const matches = await getJobMatches(userId);
+  const { q = '', location = '', sort = '' } = await searchParams;
+  const matches = await getJobMatches(userId, q, location, sort);
 
   return (
     <div className="shell">

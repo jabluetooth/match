@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, Send, Calendar, Loader2, X } from 'lucide-react';
+import { WorkflowLoader } from '@/components/workflow-loader';
 
 const STATUSES = [
   'interested', 'applied', 'phone_screen', 'interview',
@@ -118,6 +119,16 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
 
   return (
     <>
+      <WorkflowLoader
+        show={loading}
+        label="Scheduling interview…"
+        messages={[
+          "Saving interview details…",
+          "Updating your application status…",
+          "Sending confirmation email…",
+          "Almost done…",
+        ]}
+      />
       <button className="btn btn-primary" type="button" onClick={() => setOpen(true)}>
         <Calendar size={14} />
         Schedule new
@@ -128,6 +139,7 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
           position: 'fixed', inset: 0, zIndex: 50,
           background: 'rgba(0,0,0,0.4)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          paddingBottom: 80,
         }}>
           <form
             onSubmit={handleSubmit}
@@ -137,6 +149,8 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
               padding: 28,
               width: '100%',
               maxWidth: 440,
+              maxHeight: 'calc(100vh - 120px)',
+              overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
               gap: 16,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useInterviewPrep } from "@/hooks/useInterviewPrep";
 import { FileText, Sparkles } from "lucide-react";
+import { WorkflowLoader } from "@/components/workflow-loader";
 
 interface InterviewPrepButtonProps {
   applicationId: number;
@@ -32,8 +33,22 @@ export function InterviewPrepButton({
     });
   };
 
-  if (result) {
-    return (
+  return (
+    <>
+      <WorkflowLoader
+        show={loading}
+        label="Generating prep doc…"
+        messages={[
+          `Reading the job description for ${jobTitle}…`,
+          `Researching ${companyName}'s culture and values…`,
+          "Generating behavioural questions…",
+          "Crafting technical interview questions…",
+          "Writing your STAR answer frameworks…",
+          "Preparing smart questions to ask…",
+          "Compiling your interview playbook…",
+        ]}
+      />
+      {result ? (
       <div className="rounded-lg border border-green-200 bg-green-50 p-4">
         <div className="flex items-start gap-2">
           <FileText className="h-5 w-5 text-green-600 mt-0.5" />
@@ -61,21 +76,18 @@ export function InterviewPrepButton({
           </div>
         </div>
       </div>
-    );
-  }
+      ) : (
+      <div className="space-y-3">
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
+          disabled={loading}
+        >
+          <Sparkles className="h-4 w-4" />
+          {loading ? "Generating..." : "Generate Interview Prep"}
+        </button>
 
-  return (
-    <div className="space-y-3">
-      <button
-        onClick={() => setShowForm(!showForm)}
-        className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
-        disabled={loading}
-      >
-        <Sparkles className="h-4 w-4" />
-        {loading ? "Generating..." : "Generate Interview Prep"}
-      </button>
-
-      {showForm && !loading && (
+        {showForm && !loading && (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
           <p className="text-sm font-medium text-gray-700">
             Preparing for: <span className="text-purple-700">{jobTitle}</span> at{" "}
@@ -113,11 +125,13 @@ export function InterviewPrepButton({
         </div>
       )}
 
-      {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-3">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
+        {error && (
+          <div className="rounded-md bg-red-50 border border-red-200 p-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+      </div>
       )}
-    </div>
+    </>
   );
 }

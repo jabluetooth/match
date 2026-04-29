@@ -45,3 +45,6 @@ nul
 # Uploaded files
 /public/uploads/**/*
 !/public/uploads/**/.gitkeep
+components/Match - Applications Kanban (1).html
+components/Match - Loading Animations.html
+components/Match Dashboard (2).html

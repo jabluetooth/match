@@ -34,9 +34,11 @@ async function getDashboardData(userId: string) {
   const activeApplications = allApplications.filter(
     app => ['applied', 'phone_screen', 'interview'].includes(app.status)
   ).length;
-  const interviews = allApplications.filter(
-    app => app.interviewDate && app.interviewDate >= now
-  ).length;
+  const upcomingInterviews = allApplications
+    .filter(app => app.interviewDate && app.interviewDate >= now)
+    .sort((a, b) => a.interviewDate!.getTime() - b.interviewDate!.getTime());
+  const interviews = upcomingInterviews.length;
+  const nextInterview = upcomingInterviews[0] ?? null;
   const offers = allApplications.filter(app => app.status === 'offer').length;
 
   const recentMatches = allApplications.slice(0, 6).map(app => ({
@@ -51,7 +53,7 @@ async function getDashboardData(userId: string) {
   }));
 
   return {
-    stats: { totalMatches, activeApplications, interviews, offers },
+    stats: { totalMatches, activeApplications, interviews, offers, nextInterview },
     recentMatches,
     applicationStats,
     recentActivity,
@@ -110,9 +112,13 @@ export default async function DashboardPage() {
           variant="sky"
           label="Upcoming Interviews"
           value={data.stats.interviews}
-          sub={data.stats.offers > 0
-            ? `${data.stats.offers} offer${data.stats.offers === 1 ? '' : 's'} received`
-            : 'Schedule your first interview'}
+          sub={
+            data.stats.nextInterview
+              ? `Next: ${data.stats.nextInterview.interviewDate!.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} — ${data.stats.nextInterview.job.companyName}`
+              : data.stats.offers > 0
+                ? `${data.stats.offers} offer${data.stats.offers === 1 ? '' : 's'} received`
+                : 'Schedule your first interview'
+          }
           icon={<Calendar size={16} />}
         />
 

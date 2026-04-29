@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { WorkflowLoader } from '@/components/workflow-loader';
 
 interface FollowUpCardProps {
   followUp: {
@@ -66,6 +67,16 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
     : null;
 
   return (
+    <>
+    <WorkflowLoader
+      show={loading}
+      label="Logging response…"
+      messages={[
+        "Updating your follow-up status…",
+        "Recalculating your response rate…",
+        "Advancing application stage…",
+      ]}
+    />
     <div className="followup-card">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
@@ -155,5 +166,6 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
         </p>
       )}
     </div>
+    </>
   );
 }
