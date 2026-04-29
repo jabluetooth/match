@@ -40,20 +40,7 @@ export async function GET(request: NextRequest) {
     // 3. Fetch interviews
     const interviews = await prisma.interview.findMany({
       where,
-      include: {
-        application: {
-          include: {
-            jobMatch: {
-              include: {
-                job: true
-              }
-            }
-          }
-        }
-      },
-      orderBy: {
-        scheduledDate: 'asc'
-      }
+      orderBy: { scheduledDate: 'asc' },
     });
 
     return NextResponse.json(interviews);

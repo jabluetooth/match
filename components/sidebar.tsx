@@ -83,7 +83,6 @@ export function Sidebar() {
         {isSignedIn && (
           <div className="flex items-center gap-3">
             <UserButton
-              afterSignOutUrl="/"
               appearance={{
                 elements: {
                   avatarBox: "h-10 w-10"
