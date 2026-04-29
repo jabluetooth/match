@@ -49,78 +49,54 @@ export function InterviewPrepButton({
         ]}
       />
       {result ? (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-        <div className="flex items-start gap-2">
-          <FileText className="h-5 w-5 text-green-600 mt-0.5" />
-          <div className="flex-1">
-            <p className="font-semibold text-green-800">
-              Interview prep ready for {result.company}
-            </p>
-            <p className="mt-1 text-sm text-green-700">
-              PDF {result.pdf_generated ? "generated and " : ""}sent to your email.
-            </p>
-            {result.linkedin_scraped && (
-              <p className="mt-1 text-sm text-green-700">
-                LinkedIn profile included in prep.
-              </p>
-            )}
-            <button
-              onClick={() => {
-                setShowForm(false);
-                window.location.reload();
-              }}
-              className="mt-3 text-sm text-green-600 hover:text-green-700 underline"
-            >
-              Generate again
-            </button>
-          </div>
+      <div style={{ background: 'var(--accent-a)', border: '1px solid var(--accent-b)', borderRadius: 'var(--radius-md)', padding: '14px 16px', display: 'flex', gap: 10 }}>
+        <FileText size={16} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
+        <div style={{ flex: 1 }}>
+          <p style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)', margin: '0 0 4px' }}>
+            Interview prep ready for {result.company}
+          </p>
+          <p style={{ fontSize: 12.5, color: 'var(--ink-2)', margin: 0 }}>
+            PDF {result.pdf_generated ? 'generated and ' : ''}sent to your email.
+          </p>
+          {result.linkedin_scraped && (
+            <p style={{ fontSize: 12.5, color: 'var(--ink-2)', margin: '4px 0 0' }}>LinkedIn profile included.</p>
+          )}
+          <button onClick={() => { setShowForm(false); window.location.reload(); }}
+            style={{ marginTop: 8, fontSize: 12, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline' }}>
+            Generate again
+          </button>
         </div>
       </div>
       ) : (
-      <div className="space-y-3">
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
-          disabled={loading}
-        >
-          <Sparkles className="h-4 w-4" />
-          {loading ? "Generating..." : "Generate Interview Prep"}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button onClick={() => setShowForm(!showForm)} disabled={loading} className="btn btn-ghost btn-sm">
+          <Sparkles size={13} />
+          {loading ? 'Generating…' : 'Generate Interview Prep'}
         </button>
 
         {showForm && !loading && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <p className="text-sm font-medium text-gray-700">
-            Preparing for: <span className="text-purple-700">{jobTitle}</span> at{" "}
-            <span className="text-purple-700">{companyName}</span>
+        <div style={{ background: 'var(--bg-2)', border: '1px solid var(--line)', borderRadius: 'var(--radius-md)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: 0 }}>
+            Preparing for: <strong style={{ color: 'var(--ink)' }}>{jobTitle}</strong> at <strong style={{ color: 'var(--ink)' }}>{companyName}</strong>
           </p>
 
           {interviewerName && (
-            <p className="text-sm text-gray-600">
-              Interviewer: {interviewerName}
-              {interviewerRole && ` — ${interviewerRole}`}
+            <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: 0 }}>
+              Interviewer: {interviewerName}{interviewerRole && ` — ${interviewerRole}`}
             </p>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-              Interviewer LinkedIn URL{" "}
-              <span className="text-gray-400">(optional)</span>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-3)', marginBottom: 6 }}>
+              Interviewer LinkedIn URL <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
             </label>
-            <input
-              type="url"
-              value={linkedinUrl}
-              onChange={(e) => setLinkedinUrl(e.target.value)}
+            <input type="url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)}
               placeholder="https://linkedin.com/in/username"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-            />
+              className="form-input" style={{ fontSize: 13 }} />
           </div>
 
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            className="w-full rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
-          >
-            {loading ? "Generating — this takes ~20 seconds..." : "Generate Now"}
+          <button onClick={handleGenerate} disabled={loading} className="btn btn-primary btn-sm">
+            {loading ? 'Generating — this takes ~20 seconds…' : 'Generate Now'}
           </button>
         </div>
       )}

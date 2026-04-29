@@ -77,10 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate response rate statistics
     const totalFollowUps = await prisma.followUpLog.count({
-      where: {
-        userId,
-        sentAt: { not: null },
-      }
+      where: { userId }
     });
 
     const repliedFollowUps = await prisma.followUpLog.count({

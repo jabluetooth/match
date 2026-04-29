@@ -54,19 +54,19 @@
 
 /* ─── Design System Variables ─── */
 :root {
-  --bg:       #F0FDF4;
-  --bg-2:     #E6F5EC;
-  --ink:      #0B3D2C;
-  --ink-2:    #2D6A4F;
-  --ink-3:    #52806F;
-  --line:     #C7E8D8;
-  --line-2:   #B0DCC9;
-  --card:     #ffffff;
+  --bg:     #f9fafb;
+  --bg-2:   #f3f4f6;
+  --ink:    #111827;
+  --ink-2:  #6b7280;
+  --ink-3:  #9ca3af;
+  --line:   #e5e7eb;
+  --line-2: #d1d5db;
+  --card:   #ffffff;
 
-  --accent-a: #c7d2fe;
-  --accent-b: #a5b4fc;
-  --accent-c: #818cf8;
-  --accent-d: #7c3aed;
+  --accent-a: #e0e7ff;
+  --accent-b: #c7d2fe;
+  --accent-c: #a5b4fc;
+  --accent-d: #818cf8;
   --accent-e: #6366f1;
   --primary:  #6366f1;
 
@@ -74,8 +74,8 @@
   --radius-md: 16px;
   --radius-sm: 12px;
 
-  --shadow-card: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(99,102,241,.12);
-  --shadow-tile: 0 1px 3px rgba(0,0,0,.08), 0 8px 20px rgba(99,102,241,.15);
+  --shadow-card: 0 1px 2px rgba(0,0,0,.06), 0 4px 12px rgba(99,102,241,.08);
+  --shadow-tile: 0 1px 2px rgba(0,0,0,.06), 0 8px 20px rgba(99,102,241,.12);
 
   --font-display: var(--font-instrument, 'Instrument Serif', serif);
   --font-ui:      var(--font-inter, 'Inter', ui-sans-serif, system-ui, sans-serif);
@@ -105,8 +105,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(1400px 700px at 85% -5%, rgba(124,58,237,.08), transparent 70%),
-    radial-gradient(1000px 600px at -10% 110%, rgba(168,123,255,.06), transparent 70%);
+    radial-gradient(1200px 600px at 80% -10%, rgba(99,102,241,.06), transparent 65%),
+    radial-gradient(900px 500px at -5% 105%, rgba(139,92,246,.04), transparent 65%);
   pointer-events: none;
   z-index: 0;
 }
@@ -121,9 +121,9 @@ body > * { position: relative; z-index: 1; }
   justify-content: space-between;
   padding: 20px 36px;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in oklab, var(--bg) 82%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: color-mix(in oklab, var(--bg) 72%, transparent);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -303,9 +303,10 @@ body > * { position: relative; z-index: 1; }
 
 .tile-peach {
   background:
-    radial-gradient(130% 120% at 0% 0%, #D1FAE5 0%, transparent 55%),
-    radial-gradient(120% 120% at 100% 100%, #A7F3D0 0%, transparent 60%),
-    linear-gradient(135deg, #ECFDF5, #D1FAE5);
+    radial-gradient(130% 120% at 0% 0%, #ede9fe 0%, transparent 55%),
+    radial-gradient(120% 120% at 100% 100%, #ddd6fe 0%, transparent 60%),
+    linear-gradient(135deg, #f5f3ff, #ede9fe);
+  color: #3b0764;
 }
 
 .tile-sky {
@@ -575,13 +576,13 @@ body > * { position: relative; z-index: 1; }
 }
 
 .step.done .step-num {
-  background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
   border-color: transparent;
-  color: #065f46;
+  color: #4338ca;
 }
 
 .step.active .step-num {
-  background: linear-gradient(135deg, #6EE7B7, #10B981);
+  background: linear-gradient(135deg, #a5b4fc, #6366f1);
   border-color: transparent;
   color: #fff;
 }
@@ -678,7 +679,7 @@ body > * { position: relative; z-index: 1; }
 .stage-bar span {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #6EE7B7, #10B981);
+  background: linear-gradient(90deg, #a5b4fc, #6366f1);
   border-radius: inherit;
   transition: width 0.6s ease;
 }
@@ -732,9 +733,9 @@ body > * { position: relative; z-index: 1; }
 }
 
 .filter-chip.active {
-  background: linear-gradient(135deg, color-mix(in oklab, #6EE7B7 40%, transparent), color-mix(in oklab, #10B981 40%, transparent));
+  background: #e0e7ff;
   border-color: transparent;
-  color: #10B981;
+  color: #4338ca;
   font-weight: 600;
 }
 
@@ -750,7 +751,7 @@ body > * { position: relative; z-index: 1; }
 
 .job-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(30,20,10,.04), 0 16px 40px -12px rgba(16,185,129,.18);
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(0,0,0,.04), 0 16px 40px -12px rgba(99,102,241,.16);
 }
 
 .job-title {
@@ -767,7 +768,7 @@ body > * { position: relative; z-index: 1; }
 .job-match {
   padding: 6px 10px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #6EE7B7, #10B981);
+  background: linear-gradient(135deg, #a5b4fc, #6366f1);
   color: #fff;
   font-size: 11px;
   font-weight: 600;
@@ -775,8 +776,8 @@ body > * { position: relative; z-index: 1; }
   flex-shrink: 0;
 }
 
-.job-match.high { background: linear-gradient(135deg, #9FE6C9, #6DCBAE); color: oklch(0.3 0.08 170); }
-.job-match.med  { background: linear-gradient(135deg, #A8C5FF, #7FA5FF); color: oklch(0.25 0.05 260); }
+.job-match.high { background: linear-gradient(135deg, #a5b4fc, #6366f1); }
+.job-match.med  { background: var(--bg-2); color: var(--ink-2); border: 1px solid var(--line-2); }
 
 .job-meta {
   display: flex;
@@ -844,14 +845,15 @@ body > * { position: relative; z-index: 1; }
 }
 
 .app-status .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-.app-status.applied   { background: color-mix(in oklab, #A7F3D0 20%, transparent); color: #10B981; }
-.app-status.screened  { background: color-mix(in oklab, #A8C5FF 20%, transparent); color: oklch(0.28 0.05 260); }
-.app-status.phone_screen { background: color-mix(in oklab, #A8C5FF 20%, transparent); color: oklch(0.28 0.05 260); }
-.app-status.interview { background: color-mix(in oklab, #B4EBD1 20%, transparent); color: oklch(0.3 0.08 170); }
-.app-status.offer     { background: color-mix(in oklab, #9FE6C9 25%, transparent); color: oklch(0.3 0.09 160); }
-.app-status.rejected  { background: color-mix(in oklab, #FFB3A3 20%, transparent); color: oklch(0.35 0.08 40); }
-.app-status.accepted  { background: color-mix(in oklab, #B4EBD1 25%, transparent); color: oklch(0.28 0.08 160); }
-.app-status.draft     { background: var(--bg-2); color: var(--ink-3); }
+.app-status.applied      { background: #dcfce7; color: #166534; }
+.app-status.screened     { background: #e0e7ff; color: #3730a3; }
+.app-status.phone_screen { background: #e0e7ff; color: #3730a3; }
+.app-status.interview    { background: #ede9fe; color: #5b21b6; }
+.app-status.offer        { background: #dcfce7; color: #166534; }
+.app-status.rejected     { background: #fee2e2; color: #991b1b; }
+.app-status.accepted     { background: #dcfce7; color: #166534; }
+.app-status.draft        { background: var(--bg-2); color: var(--ink-3); }
+.app-status.interested   { background: var(--bg-2); color: var(--ink-2); }
 
 .app-progress {
   grid-column: 1 / -1;
@@ -865,7 +867,7 @@ body > * { position: relative; z-index: 1; }
 .app-progress span {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #6EE7B7, #10B981);
+  background: linear-gradient(90deg, #a5b4fc, #6366f1);
   transition: width 0.6s ease;
 }
 
@@ -894,8 +896,8 @@ body > * { position: relative; z-index: 1; }
 .cal-day.other { opacity: 0.4; }
 .cal-day.today { background: var(--primary); color: #fff; font-weight: 600; border-color: var(--primary); }
 .cal-day.event {
-  background: linear-gradient(135deg, color-mix(in oklab, #6EE7B7 30%, transparent), color-mix(in oklab, #10B981 30%, transparent));
-  border-color: #10B981;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  border-color: #6366f1;
 }
 
 .interview-card {
@@ -909,7 +911,7 @@ body > * { position: relative; z-index: 1; }
 
 .interview-card:hover {
   border-color: var(--primary);
-  box-shadow: 0 8px 24px rgba(16,185,129,.12);
+  box-shadow: 0 8px 24px rgba(99,102,241,.12);
 }
 
 .interview-type {
@@ -924,15 +926,14 @@ body > * { position: relative; z-index: 1; }
   font-weight: 600;
 }
 
-.interview-type.phone  { background: color-mix(in oklab, #A8C5FF 20%, transparent); color: oklch(0.28 0.05 260); }
-.interview-type.video  { background: color-mix(in oklab, #6EE7B7 20%, transparent); color: #10B981; }
-.interview-type.onsite { background: color-mix(in oklab, #B4EBD1 20%, transparent); color: oklch(0.3 0.08 170); }
+.interview-type.phone  { background: #e0e7ff; color: #4338ca; }
+.interview-type.video  { background: #ede9fe; color: #6d28d9; }
+.interview-type.onsite { background: var(--bg-2); color: var(--ink-2); }
 
 .interview-time {
-  font-family: var(--font-mono);
   font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
+  font-weight: 500;
+  color: var(--ink-2);
   margin-top: 8px;
 }
 
@@ -948,7 +949,7 @@ body > * { position: relative; z-index: 1; }
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(180deg, #6EE7B7, #10B981);
+  background: linear-gradient(180deg, #c7d2fe, #6366f1);
 }
 
 .followup-item {
@@ -965,16 +966,16 @@ body > * { position: relative; z-index: 1; }
   height: 12px;
   border-radius: 50%;
   background: var(--bg-2);
-  border: 2px solid #10B981;
+  border: 2px solid #6366f1;
 }
 
 .followup-item.pending::before {
-  background: #6EE7B7;
-  box-shadow: 0 0 0 3px rgba(16,185,129,.3);
+  background: #c7d2fe;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.2);
 }
 
 .followup-item.done::before {
-  background: linear-gradient(135deg, #B4EBD1, #6DCBAE);
+  background: linear-gradient(135deg, #c7d2fe, #6366f1);
   border-color: transparent;
 }
 
@@ -1001,7 +1002,6 @@ body > * { position: relative; z-index: 1; }
 .followup-meta span { display: flex; align-items: center; gap: 5px; }
 
 .followup-next {
-  font-family: var(--font-mono);
   font-size: 11.5px;
   color: var(--primary);
   font-weight: 600;
@@ -1041,8 +1041,8 @@ body > * { position: relative; z-index: 1; }
 .settings-nav-item:hover { background: var(--bg-2); color: var(--ink); }
 
 .settings-nav-item.active {
-  background: linear-gradient(135deg, color-mix(in oklab, #6EE7B7 25%, transparent), color-mix(in oklab, #10B981 25%, transparent));
-  color: #10B981;
+  background: #e0e7ff;
+  color: #4338ca;
   font-weight: 600;
 }
 
@@ -1090,7 +1090,7 @@ body > * { position: relative; z-index: 1; }
 .form-select:focus,
 .form-textarea:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(16,185,129,.2);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
 }
 
 .form-textarea { resize: vertical; min-height: 100px; }
@@ -1122,7 +1122,7 @@ body > * { position: relative; z-index: 1; }
 
 .page-head h1 em {
   font-style: italic;
-  color: #10B981;
+  color: #6366f1;
 }
 
 .page-head p { margin: 0; color: var(--ink-2); font-size: 15px; }
