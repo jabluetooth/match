@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatRelativeTime, formatCurrency, truncate } from "@/lib/utils";
-import { ExternalLink, MapPin, DollarSign, Sparkles } from "lucide-react";
+import { ExternalLink, MapPin, DollarSign, Sparkles, Search } from "lucide-react";
 
 interface JobMatchCardProps {
   match: {
@@ -32,6 +32,9 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
   const [tailoring, setTailoring] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [hasResume, setHasResume] = useState(match.hasResume ?? false);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const [researching, setResearching] = useState(false);
   const score = Math.round(Number(match.matchScore));
   const matchClass = score >= 85 ? 'high' : score >= 75 ? 'med' : '';
 
@@ -84,6 +87,40 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
     alert('Tailoring timed out. Check n8n execution logs to see if the workflow completed.');
   };
 
+  const handleResearch = async () => {
+    setResearching(true);
+    try {
+      const res = await fetch('/api/research/company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: match.job.id }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      window.location.href = `/research/${match.job.id}`;
+    } catch {
+      alert('Failed to start company research. Please try again.');
+      setResearching(false);
+    }
+  };
+
+  const handleApply = async () => {
+    setApplying(true);
+    try {
+      const res = await fetch('/api/track/application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', job_id: match.job.id }),
+      });
+      if (res.status === 409) { setApplied(true); return; }
+      if (!res.ok) throw new Error('Failed');
+      setApplied(true);
+    } catch {
+      alert('Failed to create application. Please try again.');
+    } finally {
+      setApplying(false);
+    }
+  };
+
   const handleTailorResume = async () => {
     setTailoring(true);
     try {
@@ -110,6 +147,16 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <span className={`job-match ${matchClass}`}>{score}%</span>
+          <button
+            onClick={handleResearch}
+            disabled={researching}
+            className="btn btn-ghost btn-sm"
+            style={researching ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+            type="button"
+          >
+            <Search size={12} />
+            {researching ? 'Researching…' : 'Research'}
+          </button>
           <a href={match.job.sourceUrl} target="_blank" rel="noopener noreferrer"
             style={{ color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}>
             <ExternalLink size={14} />
@@ -198,6 +245,15 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
               {tailoring ? 'Tailoring…' : 'Tailor Resume'}
             </button>
           )}
+          <button
+            onClick={handleApply}
+            disabled={applying || applied}
+            className="btn btn-ghost btn-sm"
+            style={applied ? { color: 'var(--accent-e, #16a34a)' } : applying ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+            type="button"
+          >
+            {applied ? '✓ Applied' : applying ? 'Saving…' : 'Apply'}
+          </button>
           <a href={match.job.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
             View
           </a>

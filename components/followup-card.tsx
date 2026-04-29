@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Mail, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 interface FollowUpCardProps {
@@ -28,6 +29,7 @@ interface FollowUpCardProps {
 
 export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleResponse = async (responseStatus: 'replied' | 'no_response' | 'bounced') => {
     setLoading(true);
@@ -51,6 +53,7 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
       const msgs = { replied: 'Marked as replied!', no_response: 'Marked as no response.', bounced: 'Marked as bounced.' };
       alert(`${msgs[responseStatus]} Response rate: ${result.response_rate_pct}%`);
       onResponse?.();
+      router.refresh();
     } catch (error: unknown) {
       alert((error as Error).message || 'Failed to update follow-up. Please try again.');
     } finally {

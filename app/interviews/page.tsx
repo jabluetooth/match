@@ -1,18 +1,26 @@
 import { prisma } from '@/lib/prisma';
 import { requireUserWithSync } from '@/lib/auth';
-import { Calendar, Clock, MapPin, User, ExternalLink, Plus } from 'lucide-react';
+import { Clock, MapPin, User, ExternalLink } from 'lucide-react';
 import { InterviewPrepButton } from '@/components/interview-prep-button';
+import { ScheduleInterviewModal } from '@/components/application-actions';
 
 export const revalidate = 60;
 
 export default async function InterviewsPage() {
   const user = await requireUserWithSync();
 
-  const applications = await prisma.application.findMany({
-    where: { userId: user.id, interviewDate: { not: null } },
-    include: { job: true },
-    orderBy: { interviewDate: 'asc' },
-  });
+  const [applications, schedulable] = await Promise.all([
+    prisma.application.findMany({
+      where: { userId: user.id, interviewDate: { not: null } },
+      include: { job: true },
+      orderBy: { interviewDate: 'asc' },
+    }),
+    prisma.application.findMany({
+      where: { userId: user.id, interviewDate: null, status: { in: ['interested', 'applied', 'phone_screen'] } },
+      include: { job: { select: { title: true, companyName: true } } },
+      orderBy: { updatedAt: 'desc' },
+    }),
+  ]);
 
   const now = new Date();
   const upcoming = applications.filter(app => app.interviewDate && app.interviewDate > now);
@@ -25,10 +33,13 @@ export default async function InterviewsPage() {
           <h1>Interview <em>calendar</em></h1>
           <p>{upcoming.length} upcoming · with prep guides and AI coaching</p>
         </div>
-        <button className="btn btn-primary" type="button">
-          <Plus size={14} />
-          Schedule new
-        </button>
+        <ScheduleInterviewModal
+          applications={schedulable.map(a => ({
+            id: a.id,
+            jobTitle: a.job.title,
+            companyName: a.job.companyName,
+          }))}
+        />
       </div>
 
       {/* Upcoming */}

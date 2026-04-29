@@ -1,7 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { Clock, ArrowUpRight } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { ApplicationRowActions } from '@/components/application-actions';
 
 export const revalidate = 30;
 
@@ -139,7 +140,7 @@ export default async function ApplicationsPage() {
               <div className="app-info">
                 <div className="app-title">{app.job.title}</div>
                 <div className="app-company">
-                  {app.job.company} · {new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {app.job.companyName} · {new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </div>
               </div>
               <div className={`app-status ${app.status}`}>
@@ -149,13 +150,9 @@ export default async function ApplicationsPage() {
               <div className="app-status">
                 {getStatusDescription(app.status)}
               </div>
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ justifySelf: 'end' }}
-                type="button"
-              >
-                <ArrowUpRight size={14} />
-              </button>
+              <div style={{ justifySelf: 'end' }}>
+                <ApplicationRowActions applicationId={app.id} currentStatus={app.status} />
+              </div>
               <div style={{ gridColumn: '1/-1' }}>
                 <div className="app-progress">
                   <span style={{ width: `${getProgressPercentage(app.status)}%` }}></span>

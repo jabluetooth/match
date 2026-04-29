@@ -1,18 +1,18 @@
 import { prisma } from '@/lib/prisma';
+import { requireUserWithSync } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Building2, Calendar, AlertTriangle } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ jobId: string }>;
-  searchParams: Promise<{ user_id?: string }>;
 }
 
-export default async function CompanyResearchPage({ params, searchParams }: PageProps) {
+export default async function CompanyResearchPage({ params }: PageProps) {
   const { jobId } = await params;
-  const { user_id } = await searchParams;
+  const user = await requireUserWithSync();
 
-  const userId = user_id ? parseInt(user_id) : 1;
+  const userId = user.id;
   const jobIdNum = parseInt(jobId);
 
   const research = await prisma.companyResearch.findUnique({

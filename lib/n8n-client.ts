@@ -46,19 +46,15 @@ export class N8NClient {
   }
 
   tailorResume(params: { user_id: string; job_id: number }) {
-    return this.call('tailor-resume', params as Record<string, unknown>);
+    return this.call('tailor-resume', params as Record<string, unknown>, TIMEOUT_MS);
   }
 
   researchCompany(params: { user_id: number; application_id?: number; job_id?: number }) {
-    return this.call('company-research', params);
+    return this.call('company-research', params, TIMEOUT_MS);
   }
 
   matchJobs(user_id: string) {
     return this.call('match-job', { user_id, trigger: 'manual' });
-  }
-
-  scrapeJobs() {
-    return this.call('scrape-jobs', { trigger: 'manual' });
   }
 
   trackApplication(params: {
