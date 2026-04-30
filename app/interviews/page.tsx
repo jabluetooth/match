@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { requireUserWithSync } from '@/lib/auth';
-import { Clock, MapPin, User, ExternalLink } from 'lucide-react';
+import { Clock, MapPin, User, ExternalLink, FileText } from 'lucide-react';
 import { InterviewPrepButton } from '@/components/interview-prep-button';
 import { ScheduleInterviewModal } from '@/components/application-actions';
+import Link from 'next/link';
 
 export const revalidate = 60;
 
@@ -21,6 +22,13 @@ export default async function InterviewsPage() {
       orderBy: { updatedAt: 'desc' },
     }),
   ]);
+
+  const appIds = applications.map(a => a.id);
+  const preps = await prisma.interviewPrep.findMany({
+    where: { applicationId: { in: appIds } },
+    select: { id: true, applicationId: true, pdfGenerated: true },
+  });
+  const prepByAppId = new Map(preps.map(p => [p.applicationId, p]));
 
   const now = new Date();
   const upcoming = applications.filter(app => app.interviewDate && app.interviewDate > now);
@@ -101,14 +109,25 @@ export default async function InterviewsPage() {
                   </div>
                 )}
 
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px dashed var(--line-2)' }}>
-                  <InterviewPrepButton
-                    applicationId={app.id}
-                    jobTitle={app.job.title}
-                    companyName={app.job.companyName}
-                    interviewerName={app.interviewerName}
-                    interviewerRole={app.interviewerRole}
-                  />
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px dashed var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {prepByAppId.has(app.id) ? (
+                    <Link
+                      href={`/interview-prep/${prepByAppId.get(app.id)!.id}`}
+                      className="btn btn-ghost btn-sm"
+                      style={{ alignSelf: 'flex-start' }}
+                    >
+                      <FileText size={13} />
+                      View Prep Guide
+                    </Link>
+                  ) : (
+                    <InterviewPrepButton
+                      applicationId={app.id}
+                      jobTitle={app.job.title}
+                      companyName={app.job.companyName}
+                      interviewerName={app.interviewerName}
+                      interviewerRole={app.interviewerRole}
+                    />
+                  )}
                 </div>
               </div>
             ))}

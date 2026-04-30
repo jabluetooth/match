@@ -44,9 +44,9 @@ The workflow saves `html_content` + `pdf_binary` to `interview_prep` table and e
 
 | # | Task | Status |
 |---|---|---|
-| 4.1 | Create `/api/interview-prep/[id]/download` route — fetch `html_content` from DB, re-render via PDFShift, stream PDF | ⬜ pending |
-| 4.2 | Create `app/interview-prep/[id]/page.tsx` — render `html_content` inline (iframe or sanitised HTML) with a Download PDF button | ⬜ pending |
-| 4.3 | Link from the interview card in `app/interviews/page.tsx` to the prep viewer once prep is generated | ⬜ pending |
+| 4.1 | Create `/api/interview-prep/[id]/download` route — fetch `html_content` from DB, re-render via PDFShift, stream PDF | ✅ done |
+| 4.2 | Create `app/interview-prep/[id]/page.tsx` — render `html_content` inline (iframe or sanitised HTML) with a Download PDF button | ✅ done |
+| 4.3 | Link from the interview card in `app/interviews/page.tsx` to the prep viewer once prep is generated | ✅ done |
 
 ---
 
