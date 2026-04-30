@@ -3,7 +3,7 @@
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GooeyInput } from "@/components/ui/gooey-input";
 
 export function Header() {
@@ -12,7 +12,15 @@ export function Header() {
   const searchParams = useSearchParams();
   const isJobs = pathname === "/jobs";
 
-  // Keep a ref so debounced callbacks always read the latest searchParams
+  // Local state drives the input display so keystrokes appear instantly.
+  // The URL update is debounced separately.
+  const [localQ, setLocalQ] = useState(searchParams.get("q") ?? "");
+
+  // Sync local state if the user navigates away and back to /jobs
+  useEffect(() => {
+    setLocalQ(searchParams.get("q") ?? "");
+  }, [pathname]); // intentionally only on pathname change, not every searchParams update
+
   const searchParamsRef = useRef(searchParams);
   searchParamsRef.current = searchParams;
 
@@ -25,10 +33,10 @@ export function Header() {
     router.replace(`/jobs?${params.toString()}`);
   }, [router]);
 
-  // Text search: debounced — avoids a server roundtrip on every keystroke
-  const updateParamDebounced = useCallback((key: string, value: string) => {
+  const handleSearchChange = useCallback((v: string) => {
+    setLocalQ(v);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => pushParam(key, value), 300);
+    debounceRef.current = setTimeout(() => pushParam("q", v), 300);
   }, [pushParam]);
 
   return (
@@ -43,8 +51,8 @@ export function Header() {
             expandedWidth={480}
             expandedOffset={48}
             gooeyBlur={5}
-            value={searchParams.get("q") ?? ""}
-            onValueChange={(v) => updateParamDebounced("q", v)}
+            value={localQ}
+            onValueChange={handleSearchChange}
             filters={{
               location: {
                 options: [
