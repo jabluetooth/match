@@ -119,13 +119,16 @@ body > * { position: relative; z-index: 1; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 36px;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in oklab, var(--bg) 72%, transparent);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  padding: 14px 24px;
+  margin: 12px 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: color-mix(in oklab, var(--bg) 55%, transparent);
+  backdrop-filter: blur(48px) saturate(1.6);
+  -webkit-backdrop-filter: blur(48px) saturate(1.6);
+  box-shadow: 0 2px 16px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   position: sticky;
-  top: 0;
+  top: 12px;
   z-index: 20;
 }
 
@@ -1384,5 +1387,5 @@ body > * { position: relative; z-index: 1; }
   .search-bar { display: none; }
   .g-hero, .g-onboard, .g-stat-a, .g-stat-b, .g-funnel, .g-matches, .g-activity { grid-column: 1; grid-row: auto; }
   .shell { padding: 20px 16px 160px; }
-  .topbar { padding: 16px 20px; }
+  .topbar { padding: 12px 16px; margin: 8px 12px; border-radius: 16px; }
 }

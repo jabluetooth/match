@@ -3,7 +3,7 @@
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { GooeyInput } from "@/components/ui/gooey-input";
 
 export function Header() {
@@ -12,12 +12,24 @@ export function Header() {
   const searchParams = useSearchParams();
   const isJobs = pathname === "/jobs";
 
-  const updateParam = useCallback((key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+  // Keep a ref so debounced callbacks always read the latest searchParams
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pushParam = useCallback((key: string, value: string) => {
+    const params = new URLSearchParams(searchParamsRef.current.toString());
     if (value) params.set(key, value);
     else params.delete(key);
     router.replace(`/jobs?${params.toString()}`);
-  }, [router, searchParams]);
+  }, [router]);
+
+  // Text search: debounced — avoids a server roundtrip on every keystroke
+  const updateParamDebounced = useCallback((key: string, value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => pushParam(key, value), 300);
+  }, [pushParam]);
 
   return (
     <header className="topbar">
@@ -32,7 +44,7 @@ export function Header() {
             expandedOffset={48}
             gooeyBlur={5}
             value={searchParams.get("q") ?? ""}
-            onValueChange={(v) => updateParam("q", v)}
+            onValueChange={(v) => updateParamDebounced("q", v)}
             filters={{
               location: {
                 options: [
@@ -42,7 +54,7 @@ export function Header() {
                 ],
                 placeholder: "All Locations",
                 value: searchParams.get("location") ?? "",
-                onChange: (v) => updateParam("location", v),
+                onChange: (v) => pushParam("location", v),
               },
               sort: {
                 options: [
@@ -51,7 +63,7 @@ export function Header() {
                 ],
                 placeholder: "Sort by Match",
                 value: searchParams.get("sort") ?? "",
-                onChange: (v) => updateParam("sort", v),
+                onChange: (v) => pushParam("sort", v),
               },
             }}
           />
