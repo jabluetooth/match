@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { WorkflowLoader } from '@/components/workflow-loader';
+import { toast } from '@/hooks/use-toast';
 
 interface FollowUpCardProps {
   followUp: {
@@ -51,12 +52,12 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
         throw new Error(err.errorMessage || 'Failed to update follow-up');
       }
       const result = await res.json();
-      const msgs = { replied: 'Marked as replied!', no_response: 'Marked as no response.', bounced: 'Marked as bounced.' };
-      alert(`${msgs[responseStatus]} Response rate: ${result.response_rate_pct}%`);
+      const titles = { replied: 'Marked as replied', no_response: 'Marked as no response', bounced: 'Marked as bounced' };
+      toast.success(titles[responseStatus], `Response rate: ${result.response_rate_pct}%`);
       onResponse?.();
       router.refresh();
     } catch (error: unknown) {
-      alert((error as Error).message || 'Failed to update follow-up. Please try again.');
+      toast.error('Couldn’t update follow-up', (error as Error).message || 'Please try again.');
     } finally {
       setLoading(false);
     }

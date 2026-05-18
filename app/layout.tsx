@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { NavDock } from "@/components/nav-dock";
 import { Header } from "@/components/header";
+import { Toaster } from "@/components/ui/toast";
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
@@ -44,9 +45,10 @@ export default function RootLayout({
           <Suspense fallback={<div style={{ height: 65 }} />}>
             <Header />
           </Suspense>
-          <main className="pb-28">
+          <main className="pb-24">
             {children}
           </main>
+          <Toaster />
           <NavDock />
         </body>
       </html>

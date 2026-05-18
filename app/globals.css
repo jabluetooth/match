@@ -55,27 +55,47 @@
 /* ─── Design System Variables ─── */
 :root {
   --bg:     #f9fafb;
-  --bg-2:   #f3f4f6;
-  --ink:    #111827;
-  --ink-2:  #6b7280;
-  --ink-3:  #9ca3af;
-  --line:   #e5e7eb;
-  --line-2: #d1d5db;
+  --bg-2:   #f1f2f5;
+  --ink:    #0f172a;
+  --ink-2:  #475569;
+  --ink-3:  #64748b;
+  --line:   #e2e6ec;
+  --line-2: #cbd2dc;
   --card:   #ffffff;
 
-  --accent-a: #e0e7ff;
+  /* Indigo accent scale (light → deepest). Use --accent-strong for primary CTAs/links. */
+  --accent-a: #eef2ff;
   --accent-b: #c7d2fe;
-  --accent-c: #a5b4fc;
-  --accent-d: #818cf8;
-  --accent-e: #6366f1;
-  --primary:  #6366f1;
+  --accent-c: #818cf8;
+  --accent-d: #6366f1;
+  --accent-e: #4f46e5;
+  --accent-strong: #4f46e5;
+  --accent-deeper: #4338ca;
+  --primary:        #4f46e5;
+  --primary-soft:   #eef2ff;
+  --primary-ink:    #3730a3;
+
+  /* Status accents — used by funnel/status pills. Saturated, accessible on white. */
+  --success:        #16a34a;
+  --success-soft:   #dcfce7;
+  --success-ink:    #166534;
+  --warning:        #d97706;
+  --warning-soft:   #fef3c7;
+  --warning-ink:    #92400e;
+  --danger:         #dc2626;
+  --danger-soft:    #fee2e2;
+  --danger-ink:     #991b1b;
+  --info:           #2563eb;
+  --info-soft:      #dbeafe;
+  --info-ink:       #1e40af;
 
   --radius-lg: 20px;
   --radius-md: 16px;
   --radius-sm: 12px;
 
-  --shadow-card: 0 1px 2px rgba(0,0,0,.06), 0 4px 12px rgba(99,102,241,.08);
-  --shadow-tile: 0 1px 2px rgba(0,0,0,.06), 0 8px 20px rgba(99,102,241,.12);
+  --shadow-card: 0 1px 2px rgba(15,23,42,.06), 0 6px 16px rgba(79,70,229,.08);
+  --shadow-tile: 0 1px 2px rgba(15,23,42,.06), 0 10px 24px rgba(79,70,229,.14);
+  --shadow-pop:  0 12px 32px rgba(15,23,42,.12), 0 4px 8px rgba(15,23,42,.06);
 
   --font-display: var(--font-instrument, 'Instrument Serif', serif);
   --font-ui:      var(--font-inter, 'Inter', ui-sans-serif, system-ui, sans-serif);
@@ -83,6 +103,8 @@
 
   --pad:  28px;
   --gap:  20px;
+
+  --header-h: 76px;
 }
 
 /* Density */
@@ -114,22 +136,29 @@ body::before {
 /* Ensure all children sit above the overlay */
 body > * { position: relative; z-index: 1; }
 
-/* ─── Topbar ─── */
+/* ─── Topbar ─── matches the nav-dock surface: white/80 + blur-xl + shadow-xl + rounded-2xl */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
+  padding: 12px 20px;
   margin: 12px 20px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: color-mix(in oklab, var(--bg) 55%, transparent);
-  backdrop-filter: blur(48px) saturate(1.6);
-  -webkit-backdrop-filter: blur(48px) saturate(1.6);
-  box-shadow: 0 2px 16px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 12px;
   z-index: 20;
+}
+
+/* Browsers without backdrop-filter support get a near-solid fallback */
+@supports not (backdrop-filter: blur(1px)) {
+  .topbar { background: rgba(255, 255, 255, 0.96); }
 }
 
 .logo {
@@ -219,7 +248,7 @@ body > * { position: relative; z-index: 1; }
 .shell {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 36px 36px 160px;
+  padding: 32px 36px 40px;
   position: relative;
   z-index: 1;
 }
@@ -522,18 +551,20 @@ body > * { position: relative; z-index: 1; }
 .btn:hover { transform: translateY(-1px); }
 
 .btn-primary {
-  background: linear-gradient(135deg, #a5b4fc, #6366f1);
+  background: linear-gradient(135deg, var(--accent-d), var(--accent-deeper));
   color: #fff;
-  box-shadow: 0 8px 20px rgba(99,102,241,.25);
+  box-shadow: 0 8px 20px rgba(67,56,202,.32), inset 0 1px 0 rgba(255,255,255,.18);
 }
 
+.btn-primary:hover { box-shadow: 0 12px 28px rgba(67,56,202,.4), inset 0 1px 0 rgba(255,255,255,.18); }
+
 .btn-ghost {
-  background: transparent;
+  background: #fff;
   color: var(--ink);
   border: 1px solid var(--line-2);
 }
 
-.btn-ghost:hover { background: var(--bg-2); }
+.btn-ghost:hover { background: var(--bg-2); border-color: var(--ink-3); }
 
 /* ─── Chip / Pill ─── */
 .chip {
@@ -736,9 +767,10 @@ body > * { position: relative; z-index: 1; }
 }
 
 .filter-chip.active {
-  background: #e0e7ff;
-  border-color: transparent;
-  color: #4338ca;
+  background: var(--primary-soft);
+  border-color: var(--accent-c);
+  border-style: solid;
+  color: var(--accent-deeper);
   font-weight: 600;
 }
 
@@ -848,15 +880,15 @@ body > * { position: relative; z-index: 1; }
 }
 
 .app-status .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-.app-status.applied      { background: #dcfce7; color: #166534; }
-.app-status.screened     { background: #e0e7ff; color: #3730a3; }
-.app-status.phone_screen { background: #e0e7ff; color: #3730a3; }
-.app-status.interview    { background: #ede9fe; color: #5b21b6; }
-.app-status.offer        { background: #dcfce7; color: #166534; }
-.app-status.rejected     { background: #fee2e2; color: #991b1b; }
-.app-status.accepted     { background: #dcfce7; color: #166534; }
-.app-status.draft        { background: var(--bg-2); color: var(--ink-3); }
-.app-status.interested   { background: var(--bg-2); color: var(--ink-2); }
+.app-status.applied      { background: var(--success-soft); color: var(--success-ink); }
+.app-status.screened     { background: var(--primary-soft); color: var(--primary-ink); }
+.app-status.phone_screen { background: var(--primary-soft); color: var(--primary-ink); }
+.app-status.interview    { background: #ede9fe;             color: #5b21b6; }
+.app-status.offer        { background: var(--success-soft); color: var(--success-ink); }
+.app-status.rejected     { background: var(--danger-soft);  color: var(--danger-ink); }
+.app-status.accepted     { background: var(--success-soft); color: var(--success-ink); }
+.app-status.draft        { background: var(--bg-2);         color: var(--ink-2); }
+.app-status.interested   { background: var(--bg-2);         color: var(--ink-2); }
 
 .app-progress {
   grid-column: 1 / -1;
@@ -1014,20 +1046,26 @@ body > * { position: relative; z-index: 1; }
 .followup-actions { display: flex; gap: 8px; margin-top: 12px; }
 
 /* ─── Settings Page ─── */
-.settings-grid { display: grid; grid-template-columns: 280px 1fr; gap: 28px; }
+.settings-grid { display: grid; grid-template-columns: 240px 1fr; gap: 24px; }
+
+@media (max-width: 900px) {
+  .settings-grid { grid-template-columns: 1fr; gap: 16px; }
+  .settings-nav { position: static; flex-direction: row; overflow-x: auto; padding: 8px; }
+  .settings-nav-item { white-space: nowrap; }
+}
 
 .settings-nav {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 16px;
+  padding: 14px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   height: fit-content;
   position: sticky;
-  top: 90px;
+  top: 96px;
 }
 
 .settings-nav-item {
@@ -1044,8 +1082,8 @@ body > * { position: relative; z-index: 1; }
 .settings-nav-item:hover { background: var(--bg-2); color: var(--ink); }
 
 .settings-nav-item.active {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: var(--primary-soft);
+  color: var(--accent-deeper);
   font-weight: 600;
 }
 

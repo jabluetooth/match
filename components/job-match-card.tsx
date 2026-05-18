@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatRelativeTime, formatCurrency, truncate } from "@/lib/utils";
 import { ExternalLink, MapPin, DollarSign, Sparkles, Search } from "lucide-react";
 import { WorkflowLoader } from "@/components/workflow-loader";
+import { toast } from "@/hooks/use-toast";
 
 interface JobMatchCardProps {
   match: {
@@ -30,6 +32,7 @@ interface JobMatchCardProps {
 }
 
 export function JobMatchCard({ match }: JobMatchCardProps) {
+  const router = useRouter();
   const [tailoring, setTailoring] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [hasResume, setHasResume] = useState(match.hasResume ?? false);
@@ -45,9 +48,12 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
       const res = await fetch(`/api/tailor/resume/${match.job.id}/download`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err.error === 'Resume not found'
-          ? 'Resume HTML not stored — please tailor the resume again to enable download.'
-          : 'Download failed. Please try again.');
+        toast.error(
+          'Download failed',
+          err.error === 'Resume not found'
+            ? 'Resume HTML not stored — please tailor the resume again to enable download.'
+            : 'Something went wrong. Please try again.',
+        );
         return;
       }
       const blob = await res.blob();
@@ -58,7 +64,7 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      alert('Download failed. Please try again.');
+      toast.error('Download failed', 'Please try again.');
     } finally {
       setDownloading(false);
     }
@@ -79,13 +85,21 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         // Record exists but no HTML means n8n Insert node isn't storing html_content
         if (exists && i > 5) {
           setTailoring(false);
-          alert('Resume was tailored but the HTML content was not saved. Update the Insert Tailored Resume node in n8n to include html_content, then tailor again.');
+          toast.error(
+            'Resume HTML missing',
+            'Tailoring finished but no html_content was saved. Update the Insert Tailored Resume node in n8n, then tailor again.',
+            8000,
+          );
           return;
         }
       } catch { /* keep polling */ }
     }
     setTailoring(false);
-    alert('Tailoring timed out. Check n8n execution logs to see if the workflow completed.');
+    toast.error(
+      'Tailoring timed out',
+      'Check the n8n execution logs to see whether the workflow completed.',
+      7000,
+    );
   };
 
   const handleResearch = async () => {
@@ -100,13 +114,17 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
       const data = await res.json();
       const researchId = data?.result?.research_id;
       if (!researchId) {
-        alert('Research completed but could not be saved. Check the n8n workflow logs for the "Save Research to DB1" node.');
+        toast.error(
+          'Research not saved',
+          'The workflow ran but no research record was written. Check the "Save Research to DB1" node in n8n.',
+          7000,
+        );
         setResearching(false);
         return;
       }
-      window.location.href = `/research/${match.job.id}`;
+      router.push(`/research/${match.job.id}`);
     } catch {
-      alert('Failed to start company research. Please try again.');
+      toast.error('Couldn’t start research', 'Please try again.');
       setResearching(false);
     }
   };
@@ -119,11 +137,12 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'create', job_id: match.job.id }),
       });
-      if (res.status === 409) { setApplied(true); return; }
+      if (res.status === 409) { setApplied(true); toast.info('Already applied', 'You have an existing application for this role.'); return; }
       if (!res.ok) throw new Error('Failed');
       setApplied(true);
+      toast.success('Application started', `Tracking ${match.job.title} at ${match.job.companyName}.`);
     } catch {
-      alert('Failed to create application. Please try again.');
+      toast.error('Couldn’t create application', 'Please try again.');
     } finally {
       setApplying(false);
     }
@@ -140,7 +159,7 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
       if (!res.ok) throw new Error('Failed');
       pollForResume(); // fire and don't await — polling runs in background
     } catch {
-      alert('Failed to tailor resume. Please try again.');
+      toast.error('Couldn’t tailor resume', 'Please try again.');
       setTailoring(false);
     }
   };

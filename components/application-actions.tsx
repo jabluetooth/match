@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, Send, Calendar, Loader2, X } from 'lucide-react';
 import { WorkflowLoader } from '@/components/workflow-loader';
+import { toast } from '@/hooks/use-toast';
 
 const STATUSES = [
   'interested', 'applied', 'phone_screen', 'interview',
@@ -31,9 +32,10 @@ export function ApplicationRowActions({ applicationId, currentStatus }: Applicat
         body: JSON.stringify({ action: 'update_status', application_id: applicationId, status: newStatus }),
       });
       if (!res.ok) throw new Error('Failed to update status');
+      toast.success('Status updated', `Now: ${newStatus.replace(/_/g, ' ')}`);
       router.refresh();
     } catch {
-      alert('Failed to update status. Please try again.');
+      toast.error('Couldn’t update status', 'Please try again.');
     } finally {
       setLoading(false);
     }
@@ -83,7 +85,7 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.interview_date) { alert('Interview date is required.'); return; }
+    if (!form.interview_date) { toast.error('Date required', 'Please choose an interview date and time.'); return; }
     setLoading(true);
     try {
       const res = await fetch('/api/track/application', {
@@ -105,9 +107,10 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
         throw new Error(err.error || 'Failed to schedule interview');
       }
       setOpen(false);
+      toast.success('Interview scheduled', new Date(form.interview_date).toLocaleString());
       router.refresh();
     } catch (err: any) {
-      alert(err.message || 'Failed to schedule interview. Please try again.');
+      toast.error('Couldn’t schedule interview', err.message || 'Please try again.');
     } finally {
       setLoading(false);
     }
@@ -277,7 +280,7 @@ export function ApplicationActions({ userId, jobId, applicationId, onSuccess }: 
       console.log('Application created:', result);
 
       onSuccess?.();
-      alert(`Application created successfully! ID: ${result.application_id}`);
+      toast.success('Application created', `ID: ${result.application_id}`);
     } catch (err: any) {
       console.error('Failed to create application:', err);
       setError(err.message);
@@ -323,7 +326,7 @@ export function ApplicationActions({ userId, jobId, applicationId, onSuccess }: 
       console.log('Status updated:', result);
 
       onSuccess?.();
-      alert(`Status updated to ${newStatus}`);
+      toast.success('Status updated', newStatus);
     } catch (err: any) {
       console.error('Failed to update status:', err);
       setError(err.message);
@@ -377,7 +380,7 @@ export function ApplicationActions({ userId, jobId, applicationId, onSuccess }: 
       console.log('Interview scheduled:', result);
 
       onSuccess?.();
-      alert(`Interview scheduled for ${new Date(result.interview_date).toLocaleString()}`);
+      toast.success('Interview scheduled', new Date(result.interview_date).toLocaleString());
     } catch (err: any) {
       console.error('Failed to schedule interview:', err);
       setError(err.message);

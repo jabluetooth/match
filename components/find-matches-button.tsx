@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export function FindMatchesButton() {
   const { userId } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
@@ -18,10 +21,10 @@ export function FindMatchesButton() {
         body: JSON.stringify({ user_id: userId }),
       });
       if (!res.ok) throw new Error("Failed");
-      alert("Job matching started! New matches will appear shortly.");
-      window.location.reload();
+      toast.success("Match started", "New job matches will appear shortly.");
+      router.refresh();
     } catch {
-      alert("Failed to start job matching. Please try again.");
+      toast.error("Couldn’t start matching", "Please try again.");
     } finally {
       setLoading(false);
     }

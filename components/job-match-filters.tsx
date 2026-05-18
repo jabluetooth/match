@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { GooeyInput } from "@/components/ui/gooey-input";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { toast } from "@/hooks/use-toast";
 
 interface JobMatchFiltersProps {
   userId: string;
@@ -21,6 +23,7 @@ const SORT_OPTIONS = [
 ];
 
 export function JobMatchFilters({ userId }: JobMatchFiltersProps) {
+  const router = useRouter();
   const [matching, setMatching] = useState(false);
   const [location, setLocation] = useState("");
   const [sort, setSort] = useState("");
@@ -36,11 +39,11 @@ export function JobMatchFilters({ userId }: JobMatchFiltersProps) {
 
       if (!response.ok) throw new Error("Failed to trigger job matching");
 
-      alert("Job matching started! New matches will appear shortly.");
-      window.location.reload();
+      toast.success("Match started", "New job matches will appear shortly.");
+      router.refresh();
     } catch (error) {
       console.error("Failed to trigger job matching:", error);
-      alert("Failed to start job matching. Please try again.");
+      toast.error("Couldn’t start matching", "Please try again.");
     } finally {
       setMatching(false);
     }

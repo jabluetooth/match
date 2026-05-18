@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useInterviewPrep } from "@/hooks/useInterviewPrep";
 import { FileText, Sparkles } from "lucide-react";
 import { WorkflowLoader } from "@/components/workflow-loader";
@@ -20,6 +21,7 @@ export function InterviewPrepButton({
   interviewerName,
   interviewerRole,
 }: InterviewPrepButtonProps) {
+  const router = useRouter();
   const { generate, loading, error, result } = useInterviewPrep();
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -61,7 +63,7 @@ export function InterviewPrepButton({
           {result.linkedin_scraped && (
             <p style={{ fontSize: 12.5, color: 'var(--ink-2)', margin: '4px 0 0' }}>LinkedIn profile included.</p>
           )}
-          <button onClick={() => { setShowForm(false); window.location.reload(); }}
+          <button onClick={() => { setShowForm(false); router.refresh(); }}
             style={{ marginTop: 8, fontSize: 12, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline' }}>
             Generate again
           </button>

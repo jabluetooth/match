@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ApplicationCard } from './application-card';
 import { X } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface Application {
   id: number;
@@ -78,6 +80,7 @@ function buildTimeline(app: Application) {
 }
 
 export function ApplicationBoard({ applications }: ApplicationBoardProps) {
+  const router = useRouter();
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [researching, setResearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -101,10 +104,11 @@ export function ApplicationBoard({ applications }: ApplicationBoardProps) {
         }),
       });
       if (!res.ok) throw new Error('Failed');
-      alert('Application marked as applied!');
-      window.location.reload();
+      toast.success('Marked as applied', `${selectedApp.job.title} at ${selectedApp.job.companyName}.`);
+      setSelectedApp(null);
+      router.refresh();
     } catch {
-      alert('Failed to update. Please try again.');
+      toast.error('Couldn’t update', 'Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -124,9 +128,9 @@ export function ApplicationBoard({ applications }: ApplicationBoardProps) {
         }),
       });
       if (!res.ok) throw new Error('Failed');
-      alert('Company research started! Check back shortly.');
+      toast.success('Research started', 'It will appear here when ready.');
     } catch {
-      alert('Failed to start research. Please try again.');
+      toast.error('Couldn’t start research', 'Please try again.');
     } finally {
       setResearching(false);
     }
