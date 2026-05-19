@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatRelativeTime, formatCurrency, truncate } from "@/lib/utils";
-import { ExternalLink, MapPin, DollarSign, Sparkles, Search } from "lucide-react";
+import { ExternalLink, MapPin, Sparkles, Search } from "lucide-react";
 import { WorkflowLoader } from "@/components/workflow-loader";
 import { toast } from "@/hooks/use-toast";
 
@@ -218,20 +218,23 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         </div>
       </div>
 
-      {/* Meta */}
+      {/* Meta — workType is suppressed when it duplicates the location string
+          (e.g. location="Remote" + workType="Remote"). */}
       <div className="job-meta">
         {match.job.location && (
           <span><MapPin size={12} />{match.job.location}</span>
         )}
         {(match.job.salaryMin || match.job.salaryMax) && (
           <span>
-            <DollarSign size={12} />
             {match.job.salaryMin ? formatCurrency(match.job.salaryMin) : ''}
             {match.job.salaryMin && match.job.salaryMax ? ' – ' : ''}
             {match.job.salaryMax ? formatCurrency(match.job.salaryMax) : ''}
           </span>
         )}
-        {match.job.workType && <span>{match.job.workType}</span>}
+        {match.job.workType &&
+          match.job.workType.toLowerCase() !== (match.job.location ?? '').toLowerCase() && (
+          <span>{match.job.workType}</span>
+        )}
       </div>
 
       {/* Description */}
@@ -263,7 +266,17 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
       {(match.skillsMatched?.length ?? 0) > 0 && (
         <div className="job-tags" style={{ marginBottom: 0 }}>
           {match.skillsMatched!.map(skill => (
-            <span key={skill} className="tag" style={{ background: 'color-mix(in oklab, var(--accent-e) 30%, #fff)' }}>
+            <span
+              key={skill}
+              className="tag"
+              style={{
+                background: 'rgba(99, 102, 241, 0.18)',
+                borderColor: 'rgba(129, 140, 248, 0.4)',
+                borderStyle: 'solid',
+                color: 'var(--primary-ink)',
+                fontWeight: 500,
+              }}
+            >
               {skill}
             </span>
           ))}

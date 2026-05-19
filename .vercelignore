@@ -8,6 +8,3 @@ node_modules
 .idea
 coverage
 .claude
-setup.sh
-setup.bat
-setup.ps1

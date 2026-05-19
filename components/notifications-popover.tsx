@@ -100,7 +100,9 @@ export function NotificationsPopover({ items }: NotificationsPopoverProps) {
             right: 0,
             width: 340,
             maxWidth: "calc(100vw - 32px)",
-            background: "#fff",
+            background: "rgba(20, 22, 30, 0.92)",
+            backdropFilter: "blur(20px) saturate(1.4)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.4)",
             border: "1px solid var(--line)",
             borderRadius: 14,
             boxShadow: "var(--shadow-pop)",
@@ -166,7 +168,7 @@ export function NotificationsPopover({ items }: NotificationsPopoverProps) {
                         color: "inherit",
                         transition: "background .12s ease",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-2)"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                     >
                       <span

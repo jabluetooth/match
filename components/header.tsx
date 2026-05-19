@@ -13,8 +13,7 @@ export async function Header() {
     }
   } catch {
     // If auth or the DB hiccups, render the header without a notifications
-    // payload rather than 500-ing the layout. The popover will show its
-    // empty state.
+    // payload rather than 500-ing the layout.
   }
 
   return (

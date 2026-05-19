@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
-import { JobMatchCard } from '@/components/job-match-card';
+import { JobMatchesPaged } from '@/components/job-matches-paged';
 import { FindMatchesButton } from '@/components/find-matches-button';
 import { JobsSearch } from '@/components/jobs-search';
 import { Clock } from 'lucide-react';
@@ -94,21 +94,17 @@ export default async function JobMatchesPage({
         <JobsSearch resultCount={matches.length} />
       </Suspense>
 
-      <div className="grid-2">
-        {matches.length === 0 ? (
-          <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '64px var(--pad)' }}>
-            <p style={{ color: 'var(--ink-3)', fontSize: 14 }}>
-              {q || location || sort
-                ? 'No matches fit your filters. Try clearing them or running Find New Matches.'
-                : <>No matches yet — use <strong>Find New Matches</strong> to get started.</>}
-            </p>
-          </div>
-        ) : (
-          matches.map((match) => (
-            <JobMatchCard key={match.id} match={match} />
-          ))
-        )}
-      </div>
+      {matches.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '64px var(--pad)' }}>
+          <p style={{ color: 'var(--ink-3)', fontSize: 14 }}>
+            {q || location || sort
+              ? 'No matches fit your filters. Try clearing them or running Find New Matches.'
+              : <>No matches yet — use <strong>Find New Matches</strong> to get started.</>}
+          </p>
+        </div>
+      ) : (
+        <JobMatchesPaged matches={matches} pageSize={9} />
+      )}
     </div>
   );
 }

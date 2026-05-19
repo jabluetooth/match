@@ -512,7 +512,7 @@ function ResumeCard({
           display: "grid",
           placeItems: "center",
           borderRadius: 12,
-          background: "#fff",
+          background: "rgba(255, 255, 255, 0.04)",
           border: "1px solid var(--line)",
           color: "var(--accent-strong)",
           flexShrink: 0,
@@ -624,7 +624,7 @@ function Dropzone({
           display: "grid",
           placeItems: "center",
           borderRadius: 12,
-          background: "#fff",
+          background: "rgba(255, 255, 255, 0.04)",
           border: "1px solid var(--line)",
           color: "var(--accent-strong)",
         }}

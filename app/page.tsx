@@ -15,7 +15,7 @@ const ACTIVE_STATUSES = ['applied', 'submitted', 'phone_screen', 'screening', 'i
 const INTERVIEW_OR_LATER = ['phone_screen', 'screening', 'interview', 'final_round', 'offer', 'accepted'];
 
 async function getDashboardData(userId: string) {
-  const [allApplications, applicationStats, recentActivity, profile, jobMatchCount] = await Promise.all([
+  const [allApplications, applicationStats, recentActivity, profile, rawMatches] = await Promise.all([
     prisma.application.findMany({
       where: { userId },
       include: { job: true },
@@ -32,8 +32,25 @@ async function getDashboardData(userId: string) {
       take: 10,
     }),
     prisma.userProfile.findFirst({ where: { userId } }),
-    prisma.jobMatch.count({ where: { userId } }),
+    // Pending matches that the jobs page would actually surface.
+    prisma.jobMatch.findMany({
+      where: { userId, status: 'pending' },
+      select: { jobId: true },
+    }),
   ]);
+
+  // Drop matches whose Job has been deleted/excluded — same filter the
+  // /jobs page applies, so the dashboard count matches what's rendered there.
+  const matchedJobIds = Array.from(
+    new Set(rawMatches.map((m) => m.jobId).filter((id): id is number => id != null)),
+  );
+  const existingJobs = matchedJobIds.length > 0
+    ? await prisma.job.findMany({ where: { id: { in: matchedJobIds } }, select: { id: true } })
+    : [];
+  const existingJobIdSet = new Set(existingJobs.map((j) => j.id));
+  const jobMatchCount = rawMatches.filter(
+    (m) => m.jobId != null && existingJobIdSet.has(m.jobId),
+  ).length;
 
   const now = new Date();
   const totalApplications = allApplications.length;

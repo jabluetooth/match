@@ -38,7 +38,7 @@ export function NavDock() {
           iconSize={44}
           iconMagnification={68}
           iconDistance={120}
-          className="bg-white/80 dark:bg-gray-900/80 border-gray-200/60 dark:border-gray-700/60 shadow-xl backdrop-blur-xl"
+          className="bg-[rgba(16,18,26,0.55)] border-white/10 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.6),0_8px_16px_-4px_rgba(0,0,0,0.4)] backdrop-blur-xl"
         >
           {isSignedIn ? (
             <>
@@ -53,9 +53,9 @@ export function NavDock() {
                         "flex h-full w-full items-center justify-center rounded-full transition-colors",
                         isActive
                           ? ""
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                          : "text-white/65 hover:bg-white/10 hover:text-white",
                       )}
-                      style={isActive ? { background: 'var(--primary-soft)', color: 'var(--primary)' } : undefined}
+                      style={isActive ? { background: 'var(--primary-soft)', color: 'var(--primary-ink)' } : undefined}
                     >
                       <item.icon className="h-5 w-5" />
                     </Link>
@@ -63,7 +63,7 @@ export function NavDock() {
                 );
               })}
 
-              <div className="mx-1 w-px self-center bg-gray-200/80 h-8" />
+              <div className="mx-1 w-px self-center bg-white/10 h-8" />
 
               <DockIcon>
                 <div className="flex h-full w-full items-center justify-center rounded-full">
@@ -76,18 +76,18 @@ export function NavDock() {
           ) : (
             <>
               <DockIcon>
-                <div className="flex h-full w-full items-center justify-center rounded-full text-blue-600">
+                <div className="flex h-full w-full items-center justify-center rounded-full text-indigo-400">
                   <Briefcase className="h-5 w-5" />
                 </div>
               </DockIcon>
 
-              <div className="mx-1 w-px self-center bg-gray-200/80 h-8" />
+              <div className="mx-1 w-px self-center bg-white/10 h-8" />
 
               <DockIcon>
                 <SignInButton mode="modal">
                   <button
                     title="Sign In"
-                    className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors text-xs font-semibold px-2"
+                    className="flex h-full w-full items-center justify-center rounded-full bg-indigo-500 text-white hover:bg-indigo-400 transition-colors text-xs font-semibold px-2"
                   >
                     Sign In
                   </button>

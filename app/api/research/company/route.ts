@@ -47,6 +47,18 @@ export async function POST(request: NextRequest) {
       application_id: validated.application_id,
       job_id: validated.job_id,
     });
+
+    // n8n runs the workflow end-to-end but the "Save Research to DB" node
+    // is known to silently rollback when its SQL doesn't match the schema
+    // (see PHASES.md item 6.1). If research_id is missing, log what we got
+    // so the client toast and the server log are both actionable.
+    const hasResearchId =
+      result && typeof result === 'object' &&
+      'research_id' in (result as Record<string, unknown>);
+    if (!hasResearchId) {
+      console.error('[company-research] n8n returned no research_id — DB save likely failed silently. Payload:', result);
+    }
+
     return NextResponse.json({ success: true, result });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';

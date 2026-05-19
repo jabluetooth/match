@@ -16,10 +16,10 @@ interface ApplicationsPipelineProps {
 /** Icon color + soft tile background per stage key. Keeps the funnel coherent
  * with `application-funnel.tsx` while staying readable on white. */
 const STAGE_TINTS: Record<string, { color: string; bg: string }> = {
-  applied:   { color: "var(--info)",            bg: "var(--info-soft)" },
-  screened:  { color: "var(--accent-strong)",   bg: "var(--primary-soft)" },
-  interview: { color: "#6d28d9",                bg: "#ede9fe" },
-  offer:     { color: "var(--success)",         bg: "var(--success-soft)" },
+  applied:   { color: "var(--info)",          bg: "var(--info-soft)" },
+  screened:  { color: "var(--accent-strong)", bg: "var(--primary-soft)" },
+  interview: { color: "#c4b5fd",              bg: "rgba(168, 85, 247, 0.18)" },
+  offer:     { color: "var(--success)",       bg: "var(--success-soft)" },
 };
 const FALLBACK_TINT = { color: "var(--ink-2)", bg: "var(--bg-2)" } as const;
 
@@ -131,7 +131,7 @@ function PipelineItem({
           flexDirection: "column",
           gap: 10,
           padding: "14px 16px",
-          background: "#fff",
+          background: "rgba(255, 255, 255, 0.04)",
           border: "1px solid var(--line)",
           borderRadius: "var(--radius-md)",
           opacity: isEmpty ? 0.55 : 1,
@@ -254,7 +254,7 @@ function PipelineConnector({ conversion }: { conversion: number | null }) {
             fontSize: 10,
             fontWeight: 600,
             color: "var(--ink-3)",
-            background: "#fff",
+            background: "rgba(255, 255, 255, 0.04)",
             border: "1px solid var(--line)",
             borderRadius: 999,
             padding: "1px 6px",

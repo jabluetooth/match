@@ -118,7 +118,7 @@ export function ApplicationsList({ applications }: ApplicationsListProps) {
             flex: "1 1 280px",
             minWidth: 240,
             height: 40,
-            background: "#fff",
+            background: "rgba(255, 255, 255, 0.04)",
             border: "1px solid var(--line)",
             borderRadius: 12,
             boxShadow: "var(--shadow-card)",
@@ -201,7 +201,7 @@ export function ApplicationsList({ applications }: ApplicationsListProps) {
                     fontWeight: 600,
                     minWidth: 18,
                     padding: "1px 6px",
-                    background: active ? "rgba(255,255,255,.7)" : "var(--bg-2)",
+                    background: active ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.06)",
                     borderRadius: 999,
                   }}
                 >
@@ -257,7 +257,7 @@ function ApplicationRowCard({ app }: { app: ApplicationListItem }) {
         alignItems: "center",
         gap: 16,
         padding: "14px 18px",
-        background: "#fff",
+        background: "rgba(255, 255, 255, 0.04)",
         border: "1px solid var(--line)",
         borderRadius: 14,
         boxShadow: "var(--shadow-card)",
@@ -343,7 +343,7 @@ function ApplicationRowCard({ app }: { app: ApplicationListItem }) {
             border: "1px solid var(--line)",
             borderRadius: 8,
             color: "var(--ink-3)",
-            background: "#fff",
+            background: "rgba(255, 255, 255, 0.04)",
             textDecoration: "none",
           }}
         >

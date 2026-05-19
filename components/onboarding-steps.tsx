@@ -134,7 +134,7 @@ function CelebrationBlock() {
           display: 'grid',
           placeItems: 'center',
           borderRadius: 12,
-          background: '#fff',
+          background: 'rgba(255, 255, 255, 0.04)',
           color: 'var(--success)',
           border: '1px solid color-mix(in oklab, var(--success) 25%, transparent)',
           flexShrink: 0,

@@ -98,7 +98,7 @@ export function ApplicationFunnel({ data }: ApplicationFunnelProps) {
                   rowGap: 10,
                   columnGap: 14,
                   padding: '12px 14px',
-                  background: '#fff',
+                  background: 'rgba(255, 255, 255, 0.04)',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--line)',
                   opacity: isEmpty ? 0.55 : 1,

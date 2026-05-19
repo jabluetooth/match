@@ -21,7 +21,7 @@ export function PrepHtmlViewer({ html }: { html: string }) {
         minHeight: 720,
         border: "1px solid var(--line)",
         borderRadius: "var(--radius-md)",
-        background: "#fff",
+        background: "rgba(255, 255, 255, 0.04)",
       }}
     />
   );

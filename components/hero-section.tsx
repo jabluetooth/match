@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Sparkles, ArrowRight } from "lucide-react";
 
 interface HeroSectionProps {
@@ -44,24 +45,58 @@ export function HeroSection({ firstName, stats }: HeroSectionProps) {
       </div>
 
       <div className="hero-right">
-        <div className="orb-wrap">
-          <div className="orb">
-            <div className="orb-ring" />
-            <div className="orb-ring r2" />
-          </div>
+        <div
+          style={{
+            position: "relative",
+            width: "min(260px, 80%)",
+            aspectRatio: "4 / 3",
+            display: "grid",
+            placeItems: "center",
+            filter: "drop-shadow(0 20px 40px rgba(99, 102, 241, 0.35))",
+          }}
+        >
+          <Image
+            src="/brand/match-mark.svg"
+            alt="Match"
+            width={260}
+            height={195}
+            priority
+            style={{
+              width: "100%",
+              height: "auto",
+              animation: "match-mark-float 6s ease-in-out infinite",
+            }}
+          />
+
           {jobMatchCount > 0 && (
-            <div className="orb-badge b1">
+            <div
+              className="orb-badge"
+              style={{ position: "absolute", top: 8, left: -10 }}
+            >
               <span className="orb-dot" />
               {jobMatchCount} match{jobMatchCount === 1 ? '' : 'es'}
             </div>
           )}
           {activeApplications > 0 && (
-            <div className="orb-badge b2">
+            <div
+              className="orb-badge"
+              style={{ position: "absolute", bottom: 12, right: -8 }}
+            >
               <span className="orb-dot" style={{ background: '#4FC8A3' }} />
               {activeApplications} active
             </div>
           )}
         </div>
+
+        <style>{`
+          @keyframes match-mark-float {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-8px); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            [style*="match-mark-float"] { animation: none !important; }
+          }
+        `}</style>
       </div>
     </div>
   );

@@ -225,8 +225,8 @@ npm run db:studio      # Prisma Studio (DB inspector)
 Useful files when planning work:
 
 - [PHASES.md](PHASES.md) — n8n-workflow audit and the 6-phase plan to close the gaps the audit found.
-- [REFACTOR_PLAN.md](REFACTOR_PLAN.md) — the 5-slice production-readiness work tracker. Mark items ✅ as they ship.
 - [SECURITY.md](SECURITY.md) — current security posture + outstanding items.
+- [PERFORMANCE.md](PERFORMANCE.md) — where to look first when things feel slow.
 
 ---
 

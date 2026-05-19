@@ -33,6 +33,11 @@ export const metadata: Metadata = {
   description: "Automated job search, application tracking, and interview preparation",
 };
 
+export const viewport = {
+  themeColor: "#08090f",
+  colorScheme: "dark" as const,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" data-accent="peach" data-cardstyle="soft" data-density="regular" data-font="editorial">
+      <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
         <body className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
           <Suspense fallback={<div style={{ height: 65 }} />}>
             <Header />
