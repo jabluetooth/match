@@ -4,10 +4,16 @@ import { prisma } from '@/lib/prisma';
 import { requireUserWithSync } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Building2, Calendar, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, AlertTriangle, Sparkles } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ jobId: string }>;
+}
+
+interface TalkingPoint {
+  topic?: string;
+  point?: string;
+  source?: string;
 }
 
 export default async function CompanyResearchPage({ params }: PageProps) {
@@ -15,123 +21,247 @@ export default async function CompanyResearchPage({ params }: PageProps) {
   const user = await requireUserWithSync();
 
   const userId = user.id;
-  const jobIdNum = parseInt(jobId);
+  const jobIdNum = parseInt(jobId, 10);
+  if (Number.isNaN(jobIdNum)) notFound();
 
-  const research = await prisma.companyResearch.findUnique({
-    where: {
-      jobId_userId: {
-        jobId: jobIdNum,
-        userId,
-      },
-    },
-  });
+  const [research, job] = await Promise.all([
+    prisma.companyResearch.findUnique({
+      where: { jobId_userId: { jobId: jobIdNum, userId } },
+    }),
+    prisma.job.findUnique({ where: { id: jobIdNum } }),
+  ]);
 
-  const job = await prisma.job.findUnique({
-    where: { id: jobIdNum },
-  });
+  if (!job) notFound();
 
-  if (!research || !job) {
-    notFound();
-  }
-
-  const talkingPoints = research.talkingPoints as any[] || [];
-  const questionsToAsk = research.questionsToAsk as string[] || [];
-  const redFlags = research.redFlags as string[] || [];
-  const recentDevelopments = research.recentDevelopments as string[] || [];
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
+  // Research is generated asynchronously by the n8n workflow. If we got here
+  // before the row landed, show a "preparing" state instead of a hard 404 so
+  // the user can come back in a moment.
+  if (!research) {
+    return (
+      <div className="shell">
+        <div style={{ maxWidth: 720, marginInline: 'auto' }}>
           <Link
-            href="/applications"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+            href="/jobs"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: 'var(--ink-3)',
+              fontSize: 13,
+              textDecoration: 'none',
+              marginBottom: 20,
+            }}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Applications
+            <ArrowLeft size={14} /> Back to Jobs
           </Link>
 
-          <div className="flex items-start gap-4">
-            <Building2 className="h-12 w-12 text-blue-600 mt-1" />
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">{research.companyName}</h1>
-              <p className="text-gray-600 mt-1">{job.title}</p>
-              {research.companyUrl && (
-                <a
-                  href={research.companyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline text-sm mt-1 inline-block"
-                >
-                  {research.companyUrl}
-                </a>
-              )}
-            </div>
-            {research.confidenceScore && (
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{research.confidenceScore}%</div>
-                <div className="text-xs text-gray-600">Confidence</div>
-              </div>
-            )}
+          <div className="card" style={{ textAlign: 'center', padding: '48px var(--pad)' }}>
+            <span
+              aria-hidden
+              style={{
+                width: 48,
+                height: 48,
+                display: 'grid',
+                placeItems: 'center',
+                margin: '0 auto 18px',
+                borderRadius: 14,
+                background: 'var(--primary-soft)',
+                color: 'var(--accent-strong)',
+                border: '1px solid color-mix(in oklab, var(--accent-c) 30%, transparent)',
+              }}
+            >
+              <Sparkles size={20} />
+            </span>
+            <h2
+              style={{
+                margin: 0,
+                fontFamily: 'var(--font-display)',
+                fontSize: 26,
+                color: 'var(--ink)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Researching {job.companyName}
+            </h2>
+            <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.55 }}>
+              The agent is reading {job.companyName}&apos;s website, recent news, and the role
+              context. This usually takes a minute or two.
+            </p>
+            <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-3)' }}>
+              You&apos;ll also get the brief by email when it&apos;s ready.
+            </p>
+            <Link
+              href={`/research/${jobIdNum}`}
+              className="btn btn-ghost btn-sm"
+              style={{ marginTop: 18, textDecoration: 'none' }}
+            >
+              Check again
+            </Link>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Main Content */}
-        <div className="space-y-6">
-          {/* Company Overview */}
+  const talkingPoints = (research.talkingPoints as TalkingPoint[] | null) ?? [];
+  const questionsToAsk = (research.questionsToAsk as string[] | null) ?? [];
+  const redFlags = (research.redFlags as string[] | null) ?? [];
+  const recentDevelopments = (research.recentDevelopments as string[] | null) ?? [];
+
+  return (
+    <div className="shell">
+      <div style={{ maxWidth: 920, marginInline: 'auto' }}>
+        <Link
+          href="/jobs"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            color: 'var(--ink-3)',
+            fontSize: 13,
+            textDecoration: 'none',
+            marginBottom: 18,
+          }}
+        >
+          <ArrowLeft size={14} /> Back to Jobs
+        </Link>
+
+        <header
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 18,
+            marginBottom: 28,
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 56,
+              height: 56,
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: 14,
+              background: 'var(--primary-soft)',
+              border: '1px solid color-mix(in oklab, var(--accent-c) 30%, transparent)',
+              color: 'var(--accent-strong)',
+              flexShrink: 0,
+            }}
+          >
+            <Building2 size={26} />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1
+              style={{
+                margin: 0,
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(28px, 3.4vw, 38px)',
+                letterSpacing: '-0.02em',
+                color: 'var(--ink)',
+              }}
+            >
+              {research.companyName}
+            </h1>
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--ink-2)' }}>{job.title}</p>
+            {research.companyUrl && (
+              <a
+                href={research.companyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-block',
+                  marginTop: 6,
+                  color: 'var(--primary-ink)',
+                  fontSize: 12.5,
+                }}
+              >
+                {research.companyUrl}
+              </a>
+            )}
+          </div>
+          {research.confidenceScore != null && (
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 32,
+                  color: 'var(--accent-c)',
+                  lineHeight: 1,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {research.confidenceScore}%
+              </div>
+              <div
+                style={{
+                  marginTop: 4,
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: 'var(--ink-3)',
+                }}
+              >
+                Confidence
+              </div>
+            </div>
+          )}
+        </header>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {research.companyOverview && (
-            <section className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Company Overview</h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{research.companyOverview}</p>
-            </section>
+            <ResearchSection title="Company Overview" body={research.companyOverview} />
           )}
 
-          {/* Mission & Values */}
           {research.missionAndValues && (
-            <section className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Mission & Values</h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{research.missionAndValues}</p>
-            </section>
+            <ResearchSection title="Mission & Values" body={research.missionAndValues} />
           )}
 
-          {/* Recent Developments */}
           {recentDevelopments.length > 0 && (
-            <section className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Recent Developments
-              </h2>
-              <ul className="space-y-2">
-                {recentDevelopments.map((dev, idx) => (
-                  <li key={idx} className="text-gray-700 flex gap-2">
-                    <span className="text-blue-600 font-bold">•</span>
-                    <span>{dev}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <ResearchListSection
+              title="Recent Developments"
+              icon={<Calendar size={15} />}
+              items={recentDevelopments}
+            />
           )}
 
-          {/* Why They're Hiring */}
           {research.whyTheyAreHiring && (
-            <section className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Why They're Hiring</h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{research.whyTheyAreHiring}</p>
-            </section>
+            <ResearchSection title="Why They’re Hiring" body={research.whyTheyAreHiring} />
           )}
 
-          {/* Talking Points */}
           {talkingPoints.length > 0 && (
-            <section className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Talking Points for Interview</h2>
-              <div className="space-y-4">
+            <section className="card">
+              <p className="card-title" style={{ marginBottom: 14 }}>
+                Talking points for the interview
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {talkingPoints.map((point, idx) => (
-                  <div key={idx} className="border-l-4 border-blue-500 pl-4">
-                    <h3 className="font-semibold text-gray-900">{point.topic || `Point ${idx + 1}`}</h3>
-                    <p className="text-gray-700 mt-1">{point.point}</p>
+                  <div
+                    key={idx}
+                    style={{
+                      paddingLeft: 14,
+                      borderLeft: '3px solid var(--accent-strong)',
+                    }}
+                  >
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: 'var(--ink)',
+                      }}
+                    >
+                      {point.topic || `Point ${idx + 1}`}
+                    </h3>
+                    {point.point && (
+                      <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.55 }}>
+                        {point.point}
+                      </p>
+                    )}
                     {point.source && (
-                      <p className="text-xs text-gray-500 mt-1">Source: {point.source}</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 11.5, color: 'var(--ink-3)' }}>
+                        Source: {point.source}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -139,32 +269,54 @@ export default async function CompanyResearchPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* Questions to Ask */}
           {questionsToAsk.length > 0 && (
-            <section className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Questions to Ask</h2>
-              <ul className="space-y-2">
+            <section className="card">
+              <p className="card-title" style={{ marginBottom: 12 }}>
+                Questions to ask
+              </p>
+              <ol style={{ margin: 0, padding: '0 0 0 22px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {questionsToAsk.map((question, idx) => (
-                  <li key={idx} className="text-gray-700 flex gap-2">
-                    <span className="text-green-600 font-bold">{idx + 1}.</span>
-                    <span>{question}</span>
+                  <li key={idx} style={{ fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.55 }}>
+                    {question}
                   </li>
                 ))}
-              </ul>
+              </ol>
             </section>
           )}
 
-          {/* Red Flags */}
           {redFlags.length > 0 && (
-            <section className="bg-red-50 rounded-lg shadow-sm p-6 border border-red-200">
-              <h2 className="text-xl font-semibold text-red-900 mb-3 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Red Flags / Considerations
-              </h2>
-              <ul className="space-y-2">
+            <section
+              className="card"
+              style={{
+                background: 'var(--danger-soft)',
+                borderColor: 'color-mix(in oklab, var(--danger) 30%, transparent)',
+              }}
+            >
+              <p
+                className="card-title"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: 'var(--danger-ink)',
+                  marginBottom: 10,
+                }}
+              >
+                <AlertTriangle size={14} /> Red flags
+              </p>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {redFlags.map((flag, idx) => (
-                  <li key={idx} className="text-red-800 flex gap-2">
-                    <span className="text-red-600 font-bold">⚠</span>
+                  <li
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      fontSize: 13.5,
+                      color: 'var(--danger-ink)',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <span aria-hidden style={{ flexShrink: 0 }}>⚠</span>
                     <span>{flag}</span>
                   </li>
                 ))}
@@ -172,39 +324,82 @@ export default async function CompanyResearchPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* Research Notes */}
           {research.researchNotes && (
-            <section className="bg-yellow-50 rounded-lg shadow-sm p-6 border border-yellow-200">
-              <h2 className="text-xl font-semibold text-yellow-900 mb-3">Additional Notes</h2>
-              <p className="text-yellow-800 leading-relaxed whitespace-pre-wrap">{research.researchNotes}</p>
-            </section>
+            <ResearchSection title="Additional notes" body={research.researchNotes} />
           )}
 
-          {/* Metadata */}
-          <section className="bg-gray-100 rounded-lg p-4 text-xs text-gray-600">
-            <div className="flex gap-6">
-              <div>
-                <span className="font-semibold">Created:</span>{' '}
+          <section style={{ fontSize: 11.5, color: 'var(--ink-3)', padding: '8px 4px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18 }}>
+              <span>
+                <strong style={{ color: 'var(--ink-2)' }}>Created:</strong>{' '}
                 {new Date(research.createdAt).toLocaleString()}
-              </div>
-              <div>
-                <span className="font-semibold">Updated:</span>{' '}
+              </span>
+              <span>
+                <strong style={{ color: 'var(--ink-2)' }}>Updated:</strong>{' '}
                 {new Date(research.updatedAt).toLocaleString()}
-              </div>
-              {research.websiteScraped && (
-                <div>
-                  <span className="font-semibold">Website Scraped:</span> Yes
-                </div>
-              )}
-              {research.newsCount > 0 && (
-                <div>
-                  <span className="font-semibold">News Articles:</span> {research.newsCount}
-                </div>
-              )}
+              </span>
+              {research.websiteScraped && <span>Website scraped</span>}
+              {research.newsCount > 0 && <span>{research.newsCount} news article{research.newsCount === 1 ? '' : 's'}</span>}
             </div>
           </section>
         </div>
       </div>
     </div>
+  );
+}
+
+function ResearchSection({ title, body }: { title: string; body: string }) {
+  return (
+    <section className="card">
+      <p className="card-title" style={{ marginBottom: 10 }}>
+        {title}
+      </p>
+      <p
+        style={{
+          margin: 0,
+          fontSize: 14,
+          color: 'var(--ink)',
+          lineHeight: 1.6,
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        {body}
+      </p>
+    </section>
+  );
+}
+
+function ResearchListSection({
+  title,
+  icon,
+  items,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  items: string[];
+}) {
+  return (
+    <section className="card">
+      <p className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+        {icon} {title}
+      </p>
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {items.map((item, idx) => (
+          <li
+            key={idx}
+            style={{
+              display: 'flex',
+              gap: 10,
+              fontSize: 13.5,
+              color: 'var(--ink)',
+              lineHeight: 1.55,
+            }}
+          >
+            <span aria-hidden style={{ color: 'var(--accent-c)', flexShrink: 0 }}>•</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -47,13 +47,16 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
     try {
       const res = await fetch(`/api/tailor/resume/${match.job.id}/download`);
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        toast.error(
-          'Download failed',
+        const err = await res.json().catch(() => ({} as { error?: string; details?: string }));
+        const reason =
           err.error === 'Resume not found'
             ? 'Resume HTML not stored — please tailor the resume again to enable download.'
-            : 'Something went wrong. Please try again.',
-        );
+            : err.error === 'PDF service not configured'
+              ? 'PDFShift API key missing on the server. Set PDFSHIFT_API_KEY in your env.'
+              : err.error === 'PDF generation failed'
+                ? `PDFShift couldn’t render this resume${err.details ? ` (${err.details})` : ''}. Try tailoring again.`
+                : (err.details || err.error || 'Unexpected error.');
+        toast.error('Download failed', reason, 8000);
         return;
       }
       const blob = await res.blob();
@@ -63,8 +66,11 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
       a.download = `resume_${match.job.id}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Download failed', 'Please try again.');
+    } catch (err: unknown) {
+      toast.error(
+        'Download failed',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setDownloading(false);
     }
@@ -111,17 +117,11 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         body: JSON.stringify({ job_id: match.job.id }),
       });
       if (!res.ok) throw new Error('Failed');
-      const data = await res.json();
-      const researchId = data?.result?.research_id;
-      if (!researchId) {
-        toast.error(
-          'Research not saved',
-          'The workflow ran but no research record was written. Check the "Save Research to DB1" node in n8n.',
-          7000,
-        );
-        setResearching(false);
-        return;
-      }
+
+      // The n8n workflow may not return `research_id` in its response payload
+      // even when the save succeeds (depends on how the webhook is configured
+      // — "respond immediately" vs "respond when workflow finishes"). The
+      // research page handles "not yet ready" itself, so always navigate.
       router.push(`/research/${match.job.id}`);
     } catch {
       toast.error('Couldn’t start research', 'Please try again.');
@@ -150,17 +150,28 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
 
   const handleTailorResume = async () => {
     setTailoring(true);
+
+    // Start polling immediately so the trigger's response timing can't gate
+    // the flow. n8n's webhook may respond after 30s if configured to wait for
+    // the whole workflow; the DB row is what really matters.
+    pollForResume();
+
     try {
       const res = await fetch('/api/tailor/resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ job_id: match.job.id }),
       });
-      if (!res.ok) throw new Error('Failed');
-      pollForResume(); // fire and don't await — polling runs in background
+
+      // 4xx errors are authoritative — bail out. 5xx / timeout might just be
+      // n8n taking longer than its sync window, so we let the poller continue.
+      if (!res.ok && res.status >= 400 && res.status < 500) {
+        const err = await res.json().catch(() => ({} as { error?: string; details?: string }));
+        toast.error('Couldn’t tailor resume', err.error || err.details || 'Please try again.');
+        setTailoring(false);
+      }
     } catch {
-      toast.error('Couldn’t tailor resume', 'Please try again.');
-      setTailoring(false);
+      // Network error — keep polling; the workflow may already be running.
     }
   };
 
