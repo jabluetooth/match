@@ -15,27 +15,16 @@ export async function POST(request: NextRequest) {
       user_id: userId, // Override with authenticated user ID
     });
 
-    // 3. Call n8n workflow with authenticated user ID
     const result = await n8nClient.matchJobs(userId);
-
     return NextResponse.json({ success: true, result });
-  } catch (error: any) {
-    // Handle authentication errors
-    if (error.message?.includes('Unauthorized')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 401 }
-      );
-    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
 
-    console.error('Job matching error:', error);
+    console.error('[match-jobs] error:', message);
     return NextResponse.json(
-      {
-        error: 'Failed to trigger job matching',
-        details: error.message,
-        hint: 'Check Vercel logs for [n8n] prefix to see the exact URL called.'
-      },
-      { status: 500 }
+      { error: 'Failed to trigger job matching', details: message },
+      { status: 500 },
     );
   }
 }

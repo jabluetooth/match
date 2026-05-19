@@ -16,30 +16,19 @@ export async function POST(request: NextRequest) {
       user_id: userId, // Override with authenticated user ID
     });
 
-    // 3. Call n8n workflow
     const result = await n8nClient.tailorResume({
       user_id: userId,
       job_id: validated.job_id,
     });
-
     return NextResponse.json({ success: true, result });
-  } catch (error: any) {
-    // Handle authentication errors
-    if (error.message?.includes('Unauthorized')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 401 }
-      );
-    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
 
-    console.error('Resume tailor error:', error);
+    console.error('[tailor-resume] error:', message);
     return NextResponse.json(
-      {
-        error: 'Failed to trigger resume tailoring',
-        details: error.message,
-        hint: 'Check Vercel logs for [n8n] prefix.'
-      },
-      { status: 500 }
+      { error: 'Failed to trigger resume tailoring', details: message },
+      { status: 500 },
     );
   }
 }

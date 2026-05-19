@@ -1,161 +1,82 @@
-# Security Implementation Guide
+# Security
 
-This document outlines the security measures implemented in the Match application.
+Current security posture and known gaps. Mirrors what's actually in the code as of the Slice 5 production-readiness pass.
 
-## 🔐 Authentication (Clerk)
+## Authentication & Authorization
 
-### Setup
-1. **Get Clerk API Keys**: Visit https://dashboard.clerk.com/
-2. **Update `.env` file**:
-   ```bash
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
-   CLERK_SECRET_KEY=sk_test_your_secret_here
-   ```
+- **Clerk** wraps the application (`ClerkProvider` in [app/layout.tsx](app/layout.tsx)).
+- **Middleware** at [middleware.ts](middleware.ts) protects every route except `/sign-in`, `/sign-up`, and `/api/webhooks/*`.
+- API routes call `requireAuth()` from [lib/auth.ts](lib/auth.ts) at the top of every handler. The client **never** sends a `user_id` — the userId is always derived from the Clerk session server-side. Two routes previously trusted client-supplied user_ids ([`/api/resume/upload`](app/api/resume/upload/route.ts), [`/api/profile/update`](app/api/profile/update/route.ts)); both have been closed.
+- Resource-bound routes additionally call `verifyOwnership()` before performing mutations.
+- First-time visitors are synced into the `users` table via `requireUserWithSync()`.
 
-### Implementation
-- ✅ **ClerkProvider** wraps the entire application (app/layout.tsx)
-- ✅ **Middleware** protects all routes except public ones (middleware.ts)
-- ✅ **Sidebar** shows sign-in/sign-out buttons with user profile
-- ✅ **Database Schema** uses Clerk user IDs (VARCHAR instead of INT)
-- ✅ **Auto User Sync** - Users are automatically created in the database on first visit via `requireUserWithSync()`
+## Input Validation
 
-## 🛡️ Authorization
+All `POST` bodies are parsed through zod schemas in [lib/validation.ts](lib/validation.ts):
 
-### API Route Protection
-All API routes use the `requireAuth()` helper:
+- `InterviewPrepSchema`, `FollowUpResponseSchema`, `ApplicationTrackerSchema`, `CompanyResearchSchema`, `TailorResumeSchema`, `MatchJobsSchema`.
+- `validateAndSanitize()` HTML-escapes every string field after parsing to prevent reflected XSS once the data is later interpolated by n8n / LLM output.
+- The `/api/profile/update` route has its own inline schema that also enforces `min_salary ≤ max_salary` and caps array lengths.
 
-```typescript
-import { requireAuth, verifyOwnership } from '@/lib/auth';
+## XSS / HTML Injection
 
-export async function POST(request: NextRequest) {
-  // 1. Authenticate user
-  const userId = await requireAuth();
+- `dangerouslySetInnerHTML` is used exactly once, in [components/prep-html-viewer.tsx](components/prep-html-viewer.tsx) — but it's rendered inside a `<iframe sandbox="">` with a fresh document, so any injected content can't reach the parent DOM, run scripts, or read cookies.
+- React's default JSX escaping handles all other user-controllable text.
 
-  // 2. Verify ownership of resource
-  const resource = await prisma.application.findUnique({
-    where: { id: applicationId }
-  });
-  await verifyOwnership(resource.userId);
+## Security Headers
 
-  // 3. Proceed with authorized action
-}
-```
+Set globally via [next.config.mjs](next.config.mjs):
 
-### Ownership Verification
-- ✅ Users can only access their own applications
-- ✅ Users can only access their own interviews
-- ✅ Users can only access their own follow-ups
-- ✅ Database queries filtered by authenticated user ID
+| Header | Value |
+|---|---|
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `X-DNS-Prefetch-Control` | `on` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
 
-## ✅ Input Validation & Sanitization
+## File Uploads
 
-### Zod Schemas
-All API inputs are validated using Zod schemas (lib/validation.ts):
+- Auth required (Clerk).
+- Filename is constructed from the authenticated userId (sanitized) — client-supplied filenames are never trusted.
+- MIME-type whitelist: `application/pdf`, `application/msword`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`.
+- 5 MB cap.
+- The serve endpoint ([app/api/resume/file/route.ts](app/api/resume/file/route.ts)) re-derives the filesystem path from the authenticated user's `baseResumeUrl`, and resolves + checks containment against the uploads directory to block traversal.
 
-```typescript
-import { validateAndSanitize, InterviewPrepSchema } from '@/lib/validation';
+## Database
 
-const validated = validateAndSanitize(InterviewPrepSchema, body);
-```
+- All Prisma queries are parameterized (no raw SQL strings constructed from user input).
+- User IDs are `VARCHAR(255)` to hold Clerk IDs.
+- Cascade deletes are configured on user → applications → events / follow-ups so account deletion cleans up cleanly.
 
-### XSS Protection
-- ✅ String inputs are sanitized to prevent XSS attacks
-- ✅ HTML entities are escaped (<, >, ", ', /)
-- ✅ React automatically escapes JSX content
+## Outstanding hardening
 
-## 🗄️ Database Security
+| Item | Notes |
+|---|---|
+| Rate limiting | None today. Consider Upstash Redis or Vercel Edge Config. n8n triggers are particularly worth limiting (e.g. `match-jobs`, `tailor-resume`). |
+| CSRF protection | Clerk session cookies are `SameSite=Lax` by default which mitigates most CSRF, but for state-changing fetches from third-party origins consider explicit CSRF tokens. |
+| Content-Security-Policy | Header isn't set yet. Need to enumerate allowed script/style/font sources first (Next inline styles, Clerk's CDN, Google Fonts). |
+| Production resume storage | Local disk doesn't work on serverless. See README → Deployment. |
+| Database RLS | A prepared but inactive `prisma/rls-policies.sql` exists. Enabling requires setting `app.current_user_id` via Prisma middleware on every query. |
+| Audit logging | Status changes are logged to `application_events`, but profile edits / resume uploads / etc. are not. |
+| 2FA | Clerk supports it; not enforced via dashboard yet. |
 
-### Migration to Clerk IDs
-User IDs changed from `INT` to `VARCHAR(255)` to support Clerk authentication:
+## Testing
 
-```sql
--- Migration applied: prisma/migrations/clerk_auth_migration.sql
-ALTER TABLE users ALTER COLUMN id TYPE VARCHAR(255);
-ALTER TABLE applications ALTER COLUMN user_id TYPE VARCHAR(255);
--- ... all user_id columns updated
-```
+### Verify auth
 
-### Row Level Security (RLS) - Optional
-RLS policies are prepared but not yet active (prisma/rls-policies.sql).
-
-**To enable RLS:**
 ```bash
-psql $DATABASE_URL < prisma/rls-policies.sql
+# No session — should return 401
+curl -X POST http://localhost:3000/api/match/jobs \
+  -H "Content-Type: application/json" -d '{}'
 ```
 
-**Note**: RLS requires setting `app.current_user_id` before each query, which needs Prisma middleware implementation.
+### Verify cross-tenant access
 
-## 🚦 Rate Limiting - TODO
+1. Create application as user A.
+2. Sign in as user B.
+3. Hit `/api/track/application` with `action: 'update_status'` and user A's `application_id` — should return `403 Forbidden`.
 
-Rate limiting is not yet implemented. Recommended approaches:
+## Reporting
 
-1. **Upstash Redis** - Serverless rate limiting
-2. **Vercel Edge Config** - For Vercel deployments
-3. **Custom middleware** - Track requests per IP/user
-
-## 🔒 Security Checklist
-
-### ✅ Implemented
-- [x] Authentication with Clerk
-- [x] Route protection middleware
-- [x] API authentication guards
-- [x] Ownership verification
-- [x] Input validation (Zod)
-- [x] XSS sanitization
-- [x] SQL injection protection (Prisma ORM)
-- [x] Secure session management (Clerk)
-- [x] HTTPS enforcement (middleware)
-
-### ⏳ Pending
-- [ ] Rate limiting on API endpoints
-- [ ] CSRF tokens for form submissions
-- [ ] Content Security Policy headers
-- [ ] Audit logging for sensitive actions
-- [ ] Two-factor authentication (Clerk supports this)
-- [ ] Database-level RLS policies
-
-### ❌ Not Applicable
-- File upload validation (not implemented yet)
-- API key rotation (not using API keys for users)
-
-## 🔧 Testing Security
-
-### Test Authentication
-1. Visit http://localhost:3000
-2. Click "Sign In" - should redirect to Clerk
-3. After sign-in, sidebar should show user profile
-4. Try accessing /dashboard without auth - should redirect to sign-in
-
-### Test API Protection
-```bash
-# Without authentication - should return 401
-curl -X POST http://localhost:3000/api/interview-prep \
-  -H "Content-Type: application/json" \
-  -d '{"application_id": 1}'
-
-# With authentication - get token from Clerk session
-curl -X POST http://localhost:3000/api/interview-prep \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_CLERK_TOKEN" \
-  -d '{"application_id": 1}'
-```
-
-### Test Ownership Verification
-1. Create application as User A
-2. Try to access it as User B - should return 403 Forbidden
-
-## 🚨 Security Incidents
-
-If you discover a security vulnerability:
-
-1. **Do NOT** open a public GitHub issue
-2. Email security concerns to your admin
-3. Include steps to reproduce
-4. Allow time for patch before disclosure
-
-## 📚 Additional Resources
-
-- [Clerk Documentation](https://clerk.com/docs)
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [Next.js Security](https://nextjs.org/docs/app/building-your-application/configuring/security)
-- [Prisma Security](https://www.prisma.io/docs/guides/security)
+Email security concerns privately rather than opening a public issue.

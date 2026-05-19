@@ -21,8 +21,6 @@ export async function POST(request: NextRequest) {
     const { action, job_id, application_id, status, interview_date, interview_location, interview_type, interviewer_name, interviewer_role, notes } = validated;
     const trigger_n8n = body.trigger_n8n !== undefined ? body.trigger_n8n : false;
 
-    console.log('[Application Tracker] Received:', { action, user_id: userId, job_id, application_id, status });
-
     let result;
 
     if (action === 'create') {
@@ -143,13 +141,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Action failed' }, { status: 500 });
     }
 
-    // 6. Optionally trigger n8n workflow for email notifications and additional processing
+    // Optionally trigger n8n for email notifications. Don't fail the request
+    // if it errors — the DB update has already succeeded.
     if (trigger_n8n) {
       try {
-        console.log('[Application Tracker] Triggering n8n workflow...');
         await n8nClient.trackApplication({
           action,
-          user_id: userId, // Use authenticated user ID
+          user_id: userId,
           job_id,
           application_id: result.id,
           status: result.status,
@@ -160,15 +158,12 @@ export async function POST(request: NextRequest) {
           interviewer_role,
           notes,
         });
-        console.log('[Application Tracker] n8n workflow triggered successfully');
-      } catch (n8nError: any) {
-        console.error('[Application Tracker] n8n trigger failed:', n8nError.message);
-        // Don't fail the request if n8n fails - database update already succeeded
+      } catch (n8nError: unknown) {
+        console.error('[track-application] n8n trigger failed:', n8nError instanceof Error ? n8nError.message : n8nError);
       }
     }
 
-    // 7. Build response compatible with n8n workflow
-    const response = {
+    return NextResponse.json({
       status: 'success',
       action,
       application_id: result.id,
@@ -176,26 +171,18 @@ export async function POST(request: NextRequest) {
       job_title: result.job.title,
       company: result.job.companyName,
       interview_date: result.interviewDate || null,
-      email_sent: trigger_n8n, // Emails sent via n8n if triggered
-    };
+      email_sent: trigger_n8n,
+    });
 
-    console.log('[Application Tracker] Success:', response);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
+    if (message.includes('Forbidden')) return NextResponse.json({ error: message }, { status: 403 });
 
-    return NextResponse.json(response);
-
-  } catch (error: any) {
-    // Handle authentication/authorization errors
-    if (error.message?.includes('Unauthorized') || error.message?.includes('Forbidden')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.message.includes('Unauthorized') ? 401 : 403 }
-      );
-    }
-
-    console.error('[Application Tracker] Error:', error);
+    console.error('[track-application] error:', message);
     return NextResponse.json(
-      { error: 'Failed to process application action', details: error.message },
-      { status: 500 }
+      { error: 'Failed to process application action', details: message },
+      { status: 500 },
     );
   }
 }

@@ -42,31 +42,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Call n8n workflow
     const result = await n8nClient.researchCompany({
       user_id: userId,
       application_id: validated.application_id,
       job_id: validated.job_id,
     });
-
     return NextResponse.json({ success: true, result });
-  } catch (error: any) {
-    // Handle authentication/authorization errors
-    if (error.message?.includes('Unauthorized') || error.message?.includes('Forbidden')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.message.includes('Unauthorized') ? 401 : 403 }
-      );
-    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
+    if (message.includes('Forbidden')) return NextResponse.json({ error: message }, { status: 403 });
 
-    console.error('Company research error:', error);
+    console.error('[company-research] error:', message);
     return NextResponse.json(
-      {
-        error: 'Failed to trigger company research',
-        details: error.message,
-        hint: 'Check Vercel logs for [n8n] prefix.'
-      },
-      { status: 500 }
+      { error: 'Failed to trigger company research', details: message },
+      { status: 500 },
     );
   }
 }

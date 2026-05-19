@@ -4,12 +4,15 @@ import { Sparkles, ArrowRight } from "lucide-react";
 interface HeroSectionProps {
   firstName: string | null;
   stats: {
-    totalMatches: number;
+    /** Number of job matches generated for this user. */
+    jobMatchCount: number;
     activeApplications: number;
   };
 }
 
 export function HeroSection({ firstName, stats }: HeroSectionProps) {
+  const { jobMatchCount, activeApplications } = stats;
+
   return (
     <div className="hero g-hero">
       <div className="hero-left">
@@ -23,8 +26,8 @@ export function HeroSection({ firstName, stats }: HeroSectionProps) {
             )}
           </h2>
           <p className="hero-desc">
-            {stats.totalMatches > 0
-              ? `You have ${stats.totalMatches} job match${stats.totalMatches === 1 ? '' : 'es'} and ${stats.activeApplications} active application${stats.activeApplications === 1 ? '' : 's'}.`
+            {jobMatchCount > 0
+              ? `You have ${jobMatchCount} job match${jobMatchCount === 1 ? '' : 'es'} and ${activeApplications} active application${activeApplications === 1 ? '' : 's'}.`
               : 'Let your AI agent scan opportunities, tailor your résumé, and track every application — automatically.'}
           </p>
         </div>
@@ -46,16 +49,16 @@ export function HeroSection({ firstName, stats }: HeroSectionProps) {
             <div className="orb-ring" />
             <div className="orb-ring r2" />
           </div>
-          {stats.totalMatches > 0 && (
+          {jobMatchCount > 0 && (
             <div className="orb-badge b1">
               <span className="orb-dot" />
-              {stats.totalMatches} match{stats.totalMatches === 1 ? '' : 'es'}
+              {jobMatchCount} match{jobMatchCount === 1 ? '' : 'es'}
             </div>
           )}
-          {stats.activeApplications > 0 && (
+          {activeApplications > 0 && (
             <div className="orb-badge b2">
               <span className="orb-dot" style={{ background: '#4FC8A3' }} />
-              {stats.activeApplications} active
+              {activeApplications} active
             </div>
           )}
         </div>

@@ -1,133 +1,34 @@
-# Performance Optimization Guide
+# Performance
 
-## Quick Wins (Do These Now!)
+What's already optimized, and where to look first if things feel slow.
 
-### 1. **Switch to Neon Pooled Connection** ⚡ CRITICAL
-Your database connection is NOT using connection pooling, which causes slow queries.
+## Already in place
 
-**How to fix:**
-1. Go to https://console.neon.tech
-2. Select your project
-3. Click "Connection Details"
-4. **Copy the "Pooled connection" string** (not the regular one!)
-5. Update `.env`:
-```env
-# OLD (slow - direct connection):
-DATABASE_URL="postgresql://neondb_owner:npg_0pCK3RwUIDfH@ep-jolly-union-anvdj5y7.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require"
+- **Database pooling** — required for serverless. Use Neon's pooled URL (append `-pooler` to the hostname). Drops connection-establish latency from hundreds of ms to single digits.
+- **Server Components by default** — pages fetch directly from Prisma; only interactive widgets (search, filters, popovers) are client components.
+- **RSC caching** — `export const revalidate = N` on every page (`30s` for app pages, `300s` for settings). Same browser refresh re-uses the cached RSC payload.
+- **Parallel queries** — every page that needs multiple tables uses `Promise.all(...)` (see [app/page.tsx](app/page.tsx)).
+- **Tight DB queries** — `select: { ... }` is used where only a few columns are needed (notifications, owner-checks, etc.).
+- **Brand loader covers route transitions** — [app/loading.tsx](app/loading.tsx) renders a fixed full-page overlay so navigations feel instant even when the server is still streaming.
+- **Debounced search** — Jobs page debounces the search input by 250ms before pushing to the URL.
 
-# NEW (fast - pooled connection):
-DATABASE_URL="postgresql://neondb_owner:npg_0pCK3RwUIDfH@ep-jolly-union-anvdj5y7-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&pgbouncer=true"
-```
+## When things feel slow
 
-**Expected improvement:** 50-70% faster database queries
+| Symptom | First check |
+|---|---|
+| Cold start latency on Vercel | Make sure `DATABASE_URL` uses the **pooled** Neon URL and that your function region is in the same AWS region as your DB (Neon shows the region in the connection string). |
+| Page feels slow in dev | `npm run dev` is unoptimized by design. Compare against `npm run build && npm start`. |
+| n8n calls hang | Check the n8n editor — if you're running with default `N8N_FORCE_TEST_WEBHOOKS` unset in dev, you need to click "Listen for test event" first. |
+| Specific slow query | Open Neon → Monitoring → "Slow queries". Indexes are already defined on `userId`, `status`, `interviewDate`. |
 
----
+## Targets
 
-### 2. **Test in Production Mode**
-Development mode (`npm run dev`) is inherently slower due to:
-- Hot module replacement
-- Extra debugging
-- No optimization
-- Turbopack dev server
+- Page TTFB (production, warm): under **300 ms**.
+- Dashboard initial render: under **800 ms**.
+- DB query duration: under **50 ms**.
 
-**Test production performance:**
-```bash
-npm run build
-npm start
-```
+## Things we deliberately haven't done
 
-**Expected improvement:** 2-3x faster page loads
-
----
-
-### 3. **Add Database Indexes** (Already done)
-The database already has indexes on:
-- `userId` on applications, events, follow-ups
-- `status` on applications
-- `interviewDate` on applications
-
-If queries are still slow, check Neon dashboard for slow query logs.
-
----
-
-## What Was Already Optimized
-
-### ✅ Caching Added
-- Pages now cache for 30-60 seconds
-- Reduces database hits by ~95% for repeat visitors
-
-### ✅ Query Optimization
-- Dashboard reduced from 7 queries to 3 queries
-- Using `Promise.all()` for parallel execution
-- Calculating stats in-memory instead of extra COUNT queries
-
-### ✅ Loading States
-- Added loading skeletons for better perceived performance
-- Users see instant feedback while data loads
-
-### ✅ Reduced Logging
-- Disabled query logging in development (was slowing console)
-- Only error and warn logs now
-
----
-
-## Performance Checklist
-
-- [ ] Switch to pooled DATABASE_URL
-- [ ] Test in production mode (`npm run build && npm start`)
-- [ ] Check network latency to Neon (us-east-1)
-- [ ] Verify page caching is working (check server logs)
-- [ ] Monitor database query times in Neon console
-
----
-
-## Advanced Optimizations (Later)
-
-### Use Prisma Accelerate (Optional)
-If still slow, consider Prisma Accelerate for global caching:
-```bash
-npm install @prisma/extension-accelerate
-```
-
-### Enable Edge Runtime (Optional)
-For even faster response times, deploy to Vercel Edge:
-```typescript
-export const runtime = 'edge'; // Add to page.tsx files
-```
-
-### Add Redis Caching (Optional)
-Cache user data in Redis for instant access:
-```bash
-npm install ioredis
-```
-
----
-
-## Measuring Performance
-
-### Check Database Query Time
-1. Go to https://console.neon.tech
-2. Click "Monitoring"
-3. Look at "Query Duration" metrics
-
-### Check Page Load Time
-1. Open Chrome DevTools (F12)
-2. Go to "Network" tab
-3. Refresh page
-4. Look at "DOMContentLoaded" time
-
-**Target times:**
-- Database queries: < 50ms
-- Page load (dev): < 2 seconds
-- Page load (production): < 500ms
-
----
-
-## Still Slow?
-
-If performance is still poor after switching to pooled connection:
-
-1. Check your internet connection to us-east-1
-2. Look for slow queries in Neon dashboard
-3. Consider upgrading Neon plan for better performance
-4. Deploy to Vercel (same region as Neon) for minimal latency
+- **Edge runtime** — Prisma + Clerk both work on Node runtime today; moving to Edge would require swapping the Prisma adapter and `@clerk/nextjs/server` for the Edge variants. Not worth the churn unless the cold-start budget actually demands it.
+- **Redis caching layer** — RSC + Vercel's data cache already covers the most common access patterns. Add Redis only when you need cross-route caching or rate limiting.
+- **Prisma Accelerate** — pooling via Neon's PgBouncer is sufficient at current scale.

@@ -23,28 +23,17 @@ export async function POST(request: NextRequest) {
       user_id: userId, // Override with authenticated user ID
     });
 
-    console.log('[Interview Prep] Received:', {
-      userId,
-      applicationId: validated.application_id
-    });
-
-    // Verify user owns the application
     const application = await prisma.application.findUnique({
       where: { id: validated.application_id },
-      select: { userId: true }
+      select: { userId: true },
     });
 
     if (!application) {
-      return NextResponse.json(
-        { error: 'Application not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
 
     await verifyOwnership(application.userId);
 
-    // Call n8n workflow
-    console.log('[Interview Prep] Triggering n8n workflow...');
     const result = await n8nClient.generateInterviewPrep({
       user_id: userId,
       application_id: validated.application_id,
@@ -53,23 +42,16 @@ export async function POST(request: NextRequest) {
       interviewer_linkedin_url: validated.interviewer_linkedin_url || null,
     });
 
-    console.log('[Interview Prep] Success');
-
     return NextResponse.json(result);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
+    if (message.includes('Forbidden')) return NextResponse.json({ error: message }, { status: 403 });
 
-  } catch (error: any) {
-    console.error('[Interview Prep] Error:', error);
-
-    if (error.message?.includes('Unauthorized') || error.message?.includes('Forbidden')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.message.includes('Unauthorized') ? 401 : 403 }
-      );
-    }
-
+    console.error('[interview-prep] error:', message);
     return NextResponse.json(
-      { error: 'Failed to generate interview prep', details: error.message },
-      { status: 500 }
+      { error: 'Failed to generate interview prep', details: message },
+      { status: 500 },
     );
   }
 }

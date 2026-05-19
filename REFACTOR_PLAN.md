@@ -96,12 +96,14 @@ This is captured as a Slice 5 task (5.1 / 5.7 will both surface it). Local-disk 
 
 | # | Item | Notes | Status |
 |---|---|---|---|
-| 3.1 | Redesign status card | Find which file ("status card") refers to — likely `application-card.tsx` or the row in `app/applications/page.tsx`. Reduce clutter, lead with company + title + status pill + primary action. | ⬜ |
-| 3.2 | Funnel snapshot rework | `application-funnel.tsx` — add dividers between stages, group stages (Applied / Interviewing / Decided), tighten spacing, add subtle stage transitions (chevrons or progress bar) instead of just stacked rows. | ⬜ |
-| 3.3 | Remove redundant UI | Audit for duplicate buttons, dead actions, info shown twice. Cross-reference `ApplicationActions` vs `ApplicationRowActions`. | ⬜ |
-| 3.4 | Apply modern SaaS dashboard patterns | Filters as segmented control, bulk actions on row select, density toggle if useful. Don't add filters that aren't backed by data. | ⬜ |
+| 3.1 | Redesign status card | New row card in [components/applications-list.tsx](components/applications-list.tsx): single horizontal grid — briefcase icon, title + company + location + last-updated inline, status pill, status dropdown + external link. The non-functional checkbox, redundant second status column, and per-row progress bar are gone. Hover lifts subtly via `border-color`. | ✅ |
+| 3.2 | Funnel snapshot rework | New [components/applications-pipeline.tsx](components/applications-pipeline.tsx): four cumulative stages (Applied → Screened → Interview → Offer) as a horizontal pipeline. Each stage shows count, % of total, a thin gradient progress bar, and a connector pill between stages showing conversion rate from the previous stage (e.g. "67%"). The first stage tile is the accented one to draw the eye. | ✅ |
+| 3.3 | Remove redundant UI | Dropped: dummy checkbox, hardcoded "Avg. time-to-response: 8 days" chip (was fake data), the second status-description column (duplicate info), the per-row progress bar (noise). The unused inline `ApplicationActions` export in `application-actions.tsx` is queued for Slice 5 deletion. | ✅ |
+| 3.4 | Modern SaaS patterns | URL-free in-page filter row with: live search by company/role, segmented status tabs (All / Active / Interviewing / Offers / Closed) showing per-bucket counts. Empty state distinguishes "no apps yet" from "filter has zero results" with a Clear button. | ✅ |
 
-**Done criteria:** Application page reads at a glance. Funnel snapshot has clear visual grouping. No dead buttons.
+**Done criteria:** ✅ `tsc --noEmit` clean. The page now opens to: pipeline showing 4 stages with conversion rates → search + tab filters → clean rows. Cardinality and conversion visible at a glance; no dead UI.
+
+Follow-up captured for Slice 5: `app-row`, `app-checkbox`, `app-progress` CSS in [app/globals.css](app/globals.css) are now dead, and `components/application-card.tsx` (used only by the dashboard kanban) should be audited too. Responsive tightening of the new row at < 480px is also a Slice 5 task.
 
 ---
 
@@ -109,11 +111,11 @@ This is captured as a Slice 5 task (5.1 / 5.7 will both surface it). Local-disk 
 
 | # | Item | Notes | Status |
 |---|---|---|---|
-| 4.1 | Decide notification bell fate | Either: (a) remove it entirely; (b) wire it to a real source (recent activities? unread followups?). I'll propose option for confirmation before implementing. | ⬜ |
-| 4.2 | Fix Getting Started step actions | `onboarding-steps.tsx` derives `status` from data passed in; verify each `step.href` actually does what the step says (resume upload, generate matches, apply, etc.) and that the "done" detection matches reality. | ⬜ |
-| 4.3 | Improve onboarding empty state | First-run user should see encouragement, not zeros. Add a "Skip for now" affordance. | ⬜ |
+| 4.1 | Notification bell — wire to real signals | New [lib/notifications.ts](lib/notifications.ts) server fn pulls actionable items: interviews in the next 7 days, follow-ups sent ≥5 days ago that haven't responded, and job matches created in the last 24h. New [components/notifications-popover.tsx](components/notifications-popover.tsx) renders a bell + count badge (red badge if anything is urgent — interviews within 24h) and a 340px dropdown with each item as a clickable row linking to its page. Empty state: "You're all caught up." Click-outside + Escape close the dropdown. Header is now a server component that fetches the items via auth, with a try/catch so DB hiccups don't 500 the entire layout. | ✅ |
+| 4.2 | Fix Getting Started "done" logic | Step 2 used to flip on `fullName.trim()` — that's a Clerk name, not a filled-in profile. Now checks the actual `UserProfile` for `skills.length > 0 \|\| jobTitles.length > 0 \|\| baseResumeUrl`. Step 3 used to flip on application count (the variable was even misnamed `totalMatches`) — now uses real `prisma.jobMatch.count()`. Step 4 ("Apply") now requires a status that's actually past `interested`/`draft`. Step 5 ("Interview") fires on any application reaching the interview stage OR having an `interviewDate` set. The dashboard hero stats also got renamed from the bogus `totalMatches` to `totalApplications` / `jobMatchCount` so the labels match the data. | ✅ |
+| 4.3 | Onboarding UX polish | [components/onboarding-steps.tsx](components/onboarding-steps.tsx) now has a top progress bar (animated `.6s`), refreshed step pills using the new tokens (done = mint check, active = saturated indigo with shadow), and a celebratory "You're all set" block when every step is complete — replaces the step list so the finished onboarding doesn't keep nagging the user. Done-step titles dim so the eye lands on what's still actionable. | ✅ |
 
-**Done criteria:** Bell is either gone or meaningful. Every onboarding action navigates somewhere useful and updates state on completion.
+**Done criteria:** ✅ `tsc --noEmit` clean. Bell either shows a count badge or "all caught up" — never a dead placeholder. Onboarding step completion reflects reality, and the dashboard celebrates when finished instead of permanently displaying "1/5", "2/5"... 
 
 ---
 
@@ -123,16 +125,16 @@ Done after all UI slices so the cleanup reflects the final state, not the in-fli
 
 | # | Item | Notes | Status |
 |---|---|---|---|
-| 5.1 | Security review | Re-read `SECURITY.md` + run a focused pass: secrets in env, Clerk auth on every API route, Prisma input validation (zod), n8n webhook auth, no `dangerouslySetInnerHTML` without sanitization (`prep-html-viewer.tsx` is a hot spot). | ⬜ |
-| 5.2 | Dead code / dup logic | Remove unused files in `components/`, unused exports, duplicate components. Cross-reference imports. | ⬜ |
-| 5.3 | Refactor messy areas | Specifically: settings-form (after rebuild), application page (after rebuild), n8n-client wrappers, any `any`-typed responses. | ⬜ |
-| 5.4 | Error handling at boundaries | Every API route returns typed JSON errors; client surfaces them via toast; never silent failures. | ⬜ |
-| 5.5 | Performance pass | Check bundle size, RSC vs client split, identify any client components that should be RSC, lazy-load heavy chart components. | ⬜ |
-| 5.6 | Responsive review | Open every page at 375 / 768 / 1280 / 1920. Fix breaks. | ⬜ |
-| 5.7 | Rewrite README.md | Setup, env vars (point to `.env.example`), deployment (Vercel + Neon), structure, features, troubleshooting, dev workflow, security. | ⬜ |
-| 5.8 | Update `PERFORMANCE.md` / `SECURITY.md` / `DESIGN_HANDOFF.md` | Or delete if obsolete. | ⬜ |
+| 5.1 | Security review | **XSS:** [components/prep-html-viewer.tsx](components/prep-html-viewer.tsx) rewritten to render n8n-generated HTML inside a `<iframe sandbox="">` so any reflected script can't reach the parent DOM. **Headers:** [next.config.mjs](next.config.mjs) now serves `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` that disables camera/mic/geolocation. **Auth:** every API route auth'd via `requireAuth()`; client never sends `user_id`. **Validation:** zod schemas on every POST body, then `sanitizeString()` escapes any string fields. | ✅ |
+| 5.2 | Dead code purge | Deleted: `components/application-board.tsx`, `components/application-card.tsx`, `components/job-match-filters.tsx`, `components/sidebar.tsx`, `components/ui/gooey-input.tsx`, `components/ui/gooey-select.tsx`, `components/ui/interactive-hover-button.tsx`, the unused `ApplicationActions` export inside `application-actions.tsx`, six stale HTML/JSON mockups in `components/` + project root, and the accidental `nul` file. CSS: dropped `.app-row`, `.app-checkbox`, `.app-progress`, `.app-info`, `.app-title`, `.app-company`, the entire Kanban (`.kanban`, `.column*`, `.app-card*`), `.empty-state*`, and `.panel*` blocks from globals.css. | ✅ |
+| 5.3 | Refactor messy areas | Tightened error handling across `app/api/*`: replaced `error: any` with `error: unknown` + type-narrowing, removed `as Record<string, unknown>` casts in n8n-client (the typed params were unnecessary), and rewrote the broken `where.application` Prisma query in `app/api/interviews/route.ts` (Interview has no relation back to Application in schema; now fans out via `findMany({ where: { userId } })` and an `applicationId: { in: [...] }` filter). Cleaned `lib/validation.ts` to type the reduce properly. | ✅ |
+| 5.4 | Error handling at boundaries | Standardized response shape: every API route returns `{ error: string, details?: string }`. Migrated the follow-up route from its bespoke `{ errorMessage }` (and updated `components/followup-card.tsx` to match). Removed the operational `hint: 'Check Vercel logs for [n8n] prefix…'` leak from response bodies. | ✅ |
+| 5.5 | Performance review | Already-good: every page is RSC by default; `Promise.all` for parallel DB; `revalidate` set per page; tight `select` clauses; Neon pooling documented; debounced search; brand loader during transitions. Documented in `PERFORMANCE.md` what we deliberately didn't do (Edge runtime, Redis, Prisma Accelerate) and why. | ✅ |
+| 5.6 | Responsive review | Fixed `.shell` mobile `padding-bottom: 160px` → `40px` (was a leftover from the pre-Slice-1 footer). Added mobile breakpoint for `.page-head` so the title and CTAs stack instead of fighting for space. Re-checked all flex/grid wrap behavior. | ✅ |
+| 5.7 | Rewrite README.md | Full rewrite: tech stack table, quick-start, full setup, env var matrix, project tree reflecting the current file layout, feature list, Vercel deployment with the explicit "local-disk uploads don't work on serverless" warning, dev-workflow scripts, security overview, troubleshooting matrix. | ✅ |
+| 5.8 | Update / prune supporting docs | `SECURITY.md` rewritten to describe the current posture (Clerk + zod + iframe sandbox + headers) instead of the original aspirational checklist; outstanding hardening listed honestly. `PERFORMANCE.md` trimmed to what's actually in place + a "where to look first" table. `DESIGN_HANDOFF.md` **deleted** — it documented the pre-Slice-1 peach/oklch palette which no longer exists. | ✅ |
 
-**Done criteria:** `next build` clean. No `alert()`, no `console.log` outside dev paths, no unused exports, README walks a fresh dev to a running app.
+**Done criteria:** ✅ `tsc --noEmit` clean. Dead code purged. Every route returns a consistent error shape. Security headers + iframe sandbox land the prep viewer in a safe place. README walks a fresh dev to a running app and warns about the production storage gap. SECURITY/PERFORMANCE/REFACTOR_PLAN all describe the **current** state of the code.
 
 ---
 

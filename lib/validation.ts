@@ -62,23 +62,19 @@ export function sanitizeString(input: string): string {
 }
 
 /**
- * Validate and sanitize object
+ * Validate and sanitize object: string fields are HTML-escaped to prevent
+ * downstream reflection XSS. Non-string fields pass through unchanged.
  */
 export function validateAndSanitize<T extends z.ZodType>(
   schema: T,
-  data: unknown
+  data: unknown,
 ): z.infer<T> {
-  const validated = schema.parse(data);
+  const validated = schema.parse(data) as Record<string, unknown>;
 
-  // Sanitize all string fields
-  const sanitized = Object.entries(validated).reduce((acc, [key, value]) => {
-    if (typeof value === 'string') {
-      acc[key] = sanitizeString(value);
-    } else {
-      acc[key] = value;
-    }
-    return acc;
-  }, {} as any);
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(validated)) {
+    sanitized[key] = typeof value === 'string' ? sanitizeString(value) : value;
+  }
 
-  return sanitized;
+  return sanitized as z.infer<T>;
 }

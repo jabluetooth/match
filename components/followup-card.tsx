@@ -49,7 +49,7 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.errorMessage || 'Failed to update follow-up');
+        throw new Error(err.error || err.details || 'Failed to update follow-up');
       }
       const result = await res.json();
       const titles = { replied: 'Marked as replied', no_response: 'Marked as no response', bounced: 'Marked as bounced' };

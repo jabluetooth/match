@@ -39,19 +39,14 @@ export async function GET(
     }
 
     return NextResponse.json(companyResearch);
-  } catch (error: any) {
-    // Handle authentication errors
-    if (error.message?.includes('Unauthorized')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 401 }
-      );
-    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
 
-    console.error('Failed to fetch company research:', error);
+    console.error('[company-research:get] error:', message);
     return NextResponse.json(
-      { error: 'Failed to fetch company research', details: error.message },
-      { status: 500 }
+      { error: 'Failed to fetch company research', details: message },
+      { status: 500 },
     );
   }
 }

@@ -1,17 +1,28 @@
-"use client";
-
-import { Bell } from "lucide-react";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { getNotifications, type NotificationItem } from "@/lib/notifications";
+import { NotificationsPopover } from "@/components/notifications-popover";
 
-export function Header() {
+export async function Header() {
+  let items: NotificationItem[] = [];
+
+  try {
+    const { userId } = await auth();
+    if (userId) {
+      items = await getNotifications(userId);
+    }
+  } catch {
+    // If auth or the DB hiccups, render the header without a notifications
+    // payload rather than 500-ing the layout. The popover will show its
+    // empty state.
+  }
+
   return (
     <header className="topbar">
       <Link href="/" className="logo">match</Link>
 
       <div className="topbar-right">
-        <button className="icon-btn" aria-label="Notifications" type="button">
-          <Bell size={16} />
-        </button>
+        <NotificationsPopover items={items} />
       </div>
     </header>
   );

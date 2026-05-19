@@ -15,10 +15,12 @@ export class N8NClient {
     return `${this.baseUrl}${useTest ? '/webhook-test/' : '/webhook/'}${path.replace(/^\//, '')}`;
   }
 
-  private async call<T = unknown>(path: string, body: Record<string, unknown>, timeoutMs?: number): Promise<T> {
+  private async call<T = unknown>(
+    path: string,
+    body: Record<string, unknown>,
+    timeoutMs?: number,
+  ): Promise<T> {
     const url = this.webhookUrl(path);
-    console.log(`[n8n] POST ${url}`);
-
     const controller = timeoutMs ? new AbortController() : null;
     const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
@@ -37,8 +39,8 @@ export class N8NClient {
 
       const text = await response.text();
       return (text ? JSON.parse(text) : { success: true, message: 'Workflow triggered successfully' }) as T;
-    } catch (error: any) {
-      console.error(`[n8n] ${path}: ${error.message}`);
+    } catch (error: unknown) {
+      console.error(`[n8n] ${path}: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     } finally {
       if (timer) clearTimeout(timer);
@@ -46,7 +48,7 @@ export class N8NClient {
   }
 
   tailorResume(params: { user_id: string; job_id: number }) {
-    return this.call('tailor-resume', params as Record<string, unknown>, TIMEOUT_MS);
+    return this.call('tailor-resume', params, TIMEOUT_MS);
   }
 
   researchCompany(params: { user_id: string; application_id?: number; job_id?: number }) {
@@ -70,7 +72,7 @@ export class N8NClient {
     interviewer_role?: string;
     notes?: string;
   }) {
-    return this.call('application-tracker', params as Record<string, unknown>);
+    return this.call('application-tracker', params);
   }
 
   trackFollowUpResponse(params: {
@@ -89,7 +91,7 @@ export class N8NClient {
     interviewer_role?: string | null;
     interviewer_linkedin_url?: string | null;
   }) {
-    return this.call('interview-prep', params as Record<string, unknown>);
+    return this.call('interview-prep', params);
   }
 
   async getExecutionStatus(executionId: string) {
@@ -97,8 +99,6 @@ export class N8NClient {
     if (!apiKey) throw new Error('N8N_API_KEY not configured');
 
     const url = `${this.baseUrl}/api/v1/executions/${executionId}`;
-    console.log(`[n8n] GET ${url}`);
-
     const response = await fetch(url, { headers: { 'X-N8N-API-KEY': apiKey } });
     if (!response.ok) throw new Error(`n8n API error: ${response.statusText}`);
     return response.json();
