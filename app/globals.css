@@ -513,6 +513,13 @@ body > * { position: relative; z-index: 1; }
 
 @keyframes orb-spin { to { transform: rotate(360deg); } }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.btn-spinner {
+  animation: spin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
 .orb-badge {
   position: absolute;
   padding: 6px 10px;

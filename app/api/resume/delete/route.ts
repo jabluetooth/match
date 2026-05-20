@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { unlink } from 'fs/promises';
-import path from 'path';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 
@@ -12,22 +10,21 @@ export async function POST() {
     }
 
     const profile = await prisma.userProfile.findFirst({ where: { userId } });
-    if (!profile?.baseResumeUrl) {
+    if (!profile?.baseResumeUrl && !profile?.baseResumeData) {
       return NextResponse.json({ success: true, removed: false });
-    }
-
-    const baseName = path.basename(profile.baseResumeUrl);
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'resumes');
-    const filePath = path.resolve(path.join(uploadsDir, baseName));
-
-    if (filePath.startsWith(path.resolve(uploadsDir) + path.sep)) {
-      // Best-effort unlink — never block clearing the DB pointer on disk errors.
-      try { await unlink(filePath); } catch { /* file may already be missing */ }
     }
 
     await prisma.userProfile.update({
       where: { id: profile.id },
-      data: { baseResumeUrl: null, updatedAt: new Date() },
+      data: {
+        baseResumeUrl: null,
+        baseResumeData: null,
+        baseResumeName: null,
+        baseResumeContentType: null,
+        baseResumeSize: null,
+        baseResumeUploadedAt: null,
+        updatedAt: new Date(),
+      },
     });
 
     return NextResponse.json({ success: true, removed: true });

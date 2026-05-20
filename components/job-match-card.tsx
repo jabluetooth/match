@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatRelativeTime, formatCurrency, truncate } from "@/lib/utils";
-import { ExternalLink, MapPin, Sparkles, Search } from "lucide-react";
+import { ExternalLink, MapPin, Sparkles, Search, Loader2, Download } from "lucide-react";
 import { WorkflowLoader } from "@/components/workflow-loader";
 import { toast } from "@/hooks/use-toast";
 
@@ -219,7 +219,7 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
             style={researching ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
             type="button"
           >
-            <Search size={12} />
+            {researching ? <Loader2 size={12} className="btn-spinner" /> : <Search size={12} />}
             {researching ? 'Researching…' : 'Research'}
           </button>
           <a href={match.job.sourceUrl} target="_blank" rel="noopener noreferrer"
@@ -308,7 +308,7 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
               style={downloading ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
               type="button"
             >
-              <Sparkles size={12} />
+              {downloading ? <Loader2 size={12} className="btn-spinner" /> : <Download size={12} />}
               {downloading ? 'Downloading…' : 'Download Resume'}
             </button>
           ) : (
@@ -319,7 +319,7 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
               style={tailoring ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
               type="button"
             >
-              <Sparkles size={12} />
+              {tailoring ? <Loader2 size={12} className="btn-spinner" /> : <Sparkles size={12} />}
               {tailoring ? 'Tailoring…' : 'Tailor Resume'}
             </button>
           )}
@@ -330,6 +330,7 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
             style={applied ? { color: 'var(--accent-e, #16a34a)' } : applying ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
             type="button"
           >
+            {applying && <Loader2 size={12} className="btn-spinner" />}
             {applied ? '✓ Applied' : applying ? 'Saving…' : 'Apply'}
           </button>
           <a href={match.job.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">

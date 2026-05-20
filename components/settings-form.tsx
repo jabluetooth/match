@@ -555,7 +555,7 @@ function ResumeCard({
           disabled={uploading}
           className="btn btn-ghost btn-sm"
         >
-          {uploading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Upload size={12} />}
+          {uploading ? <Loader2 size={12} className="btn-spinner" /> : <Upload size={12} />}
           {uploading ? "Uploading…" : "Replace"}
         </button>
         <button
@@ -630,7 +630,7 @@ function Dropzone({
         }}
       >
         {uploading ? (
-          <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />
+          <Loader2 size={20} className="btn-spinner" />
         ) : (
           <Upload size={20} />
         )}
@@ -643,9 +643,6 @@ function Dropzone({
           PDF, DOC, or DOCX · up to 5 MB
         </p>
       </div>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </label>
   );
 }
@@ -686,7 +683,7 @@ function SaveBar({ dirty, saving, hasError }: { dirty: boolean; saving: boolean;
         className="btn btn-primary btn-sm"
         style={saving || hasError ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
       >
-        {saving ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Save size={13} />}
+        {saving ? <Loader2 size={13} className="btn-spinner" /> : <Save size={13} />}
         {saving ? "Saving…" : "Save changes"}
       </button>
     </div>

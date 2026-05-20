@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+// 5 MB. Matches the client-side cap in components/settings-form.tsx. The body
+// also stays under Vercel's serverless request size limit on Hobby (4.5 MB)
+// and Pro (50 MB) — the writable filesystem path /tmp would let us go larger,
+// but the DB-row approach below sidesteps that entirely.
+const MAX_BYTES = 5 * 1024 * 1024;
+
 const ALLOWED_TYPES: Record<string, string> = {
   'application/pdf': '.pdf',
   'application/msword': '.doc',
@@ -44,20 +46,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'resumes');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Filename uses authenticated userId, never any client-supplied value.
-    const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `resume_${safeUserId}_${Date.now()}${expectedExt}`;
-    const filePath = path.join(uploadsDir, fileName);
-
     const bytes = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, bytes);
+    const safeName = file.name.replace(/[\r\n"\\]/g, '_').slice(0, 255);
+    const uploadedAt = new Date();
 
-    const storedUrl = `/uploads/resumes/${fileName}`;
+    // viewUrl is what the rest of the app reads. Keep it as the API path so
+    // existing references (settings card, n8n templates) keep working.
     const viewUrl = '/api/resume/file';
 
     const existingProfile = await prisma.userProfile.findFirst({ where: { userId } });
@@ -65,13 +59,26 @@ export async function POST(request: NextRequest) {
     if (existingProfile) {
       await prisma.userProfile.update({
         where: { id: existingProfile.id },
-        data: { baseResumeUrl: storedUrl, updatedAt: new Date() },
+        data: {
+          baseResumeUrl: viewUrl,
+          baseResumeData: bytes,
+          baseResumeName: safeName,
+          baseResumeContentType: file.type,
+          baseResumeSize: file.size,
+          baseResumeUploadedAt: uploadedAt,
+          updatedAt: uploadedAt,
+        },
       });
     } else {
       await prisma.userProfile.create({
         data: {
           userId,
-          baseResumeUrl: storedUrl,
+          baseResumeUrl: viewUrl,
+          baseResumeData: bytes,
+          baseResumeName: safeName,
+          baseResumeContentType: file.type,
+          baseResumeSize: file.size,
+          baseResumeUploadedAt: uploadedAt,
           skills: [],
           jobTitles: [],
           industries: [],
@@ -82,10 +89,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      resume_url: storedUrl,
+      resume_url: viewUrl,
       view_url: viewUrl,
-      file_name: file.name,
-      stored_as: fileName,
+      file_name: safeName,
       size: file.size,
       content_type: file.type,
     });

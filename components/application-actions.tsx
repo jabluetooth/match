@@ -216,7 +216,7 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
               <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost">Cancel</button>
               <button type="submit" disabled={loading} className="btn btn-primary">
-                {loading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Scheduling…</> : <><Calendar size={14} /> Schedule</>}
+                {loading ? <><Loader2 size={14} className="btn-spinner" /> Scheduling…</> : <><Calendar size={14} /> Schedule</>}
               </button>
             </div>
           </form>

@@ -199,20 +199,25 @@ model TailoredResume {
 }
 
 model UserProfile {
-  id                 Int       @id @default(autoincrement())
-  userId             String?   @map("user_id") // Clerk user ID
-  baseResumeUrl      String?   @map("base_resume_url")
-  skills             String[]
-  experienceYears    Int?      @map("experience_years")
-  jobTitles          String[]  @map("job_titles")
-  industries         String[]
-  minSalary          Int?      @map("min_salary")
-  maxSalary          Int?      @map("max_salary")
-  preferredLocations String[]  @map("preferred_locations")
-  workType           String?   @map("work_type") @db.VarChar(50)
-  status             String    @default("active") @db.VarChar(50)
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @default(now()) @map("updated_at") @updatedAt
+  id                     Int       @id @default(autoincrement())
+  userId                 String?   @map("user_id") // Clerk user ID
+  baseResumeUrl          String?   @map("base_resume_url")
+  baseResumeData         Bytes?    @map("base_resume_data")
+  baseResumeName         String?   @map("base_resume_name") @db.VarChar(255)
+  baseResumeContentType  String?   @map("base_resume_content_type") @db.VarChar(100)
+  baseResumeSize         Int?      @map("base_resume_size")
+  baseResumeUploadedAt   DateTime? @map("base_resume_uploaded_at")
+  skills                 String[]
+  experienceYears        Int?      @map("experience_years")
+  jobTitles              String[]  @map("job_titles")
+  industries             String[]
+  minSalary              Int?      @map("min_salary")
+  maxSalary              Int?      @map("max_salary")
+  preferredLocations     String[]  @map("preferred_locations")
+  workType               String?   @map("work_type") @db.VarChar(50)
+  status                 String    @default("active") @db.VarChar(50)
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @default(now()) @map("updated_at") @updatedAt
 
   @@map("user_profiles")
 }

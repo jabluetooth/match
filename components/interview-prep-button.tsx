@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useInterviewPrep } from "@/hooks/useInterviewPrep";
-import { FileText, Sparkles } from "lucide-react";
+import { FileText, Loader2, Sparkles } from "lucide-react";
 import { WorkflowLoader } from "@/components/workflow-loader";
 
 interface InterviewPrepButtonProps {
@@ -72,7 +72,7 @@ export function InterviewPrepButton({
       ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <button onClick={() => setShowForm(!showForm)} disabled={loading} className="btn btn-ghost btn-sm">
-          <Sparkles size={13} />
+          {loading ? <Loader2 size={13} className="btn-spinner" /> : <Sparkles size={13} />}
           {loading ? 'Generating…' : 'Generate Interview Prep'}
         </button>
 
@@ -98,6 +98,7 @@ export function InterviewPrepButton({
           </div>
 
           <button onClick={handleGenerate} disabled={loading} className="btn btn-primary btn-sm">
+            {loading ? <Loader2 size={13} className="btn-spinner" /> : <Sparkles size={13} />}
             {loading ? 'Generating — this takes ~20 seconds…' : 'Generate Now'}
           </button>
         </div>

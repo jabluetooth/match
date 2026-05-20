@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)', // Allow webhooks from n8n
+  '/api/internal(.*)', // n8n server-to-server (auth via N8N_WEBHOOK_SECRET)
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

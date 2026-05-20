@@ -105,11 +105,18 @@ npm run build && npm start   # production locally
 | `CLERK_SECRET_KEY` | ✅ | Clerk secret key. |
 | `N8N_BASE_URL` | ✅ | Root URL of the n8n instance (no trailing slash). |
 | `N8N_API_KEY` | ⚪ | Required only for `n8nClient.getExecutionStatus()` (Slice-3 status polling). |
+| `N8N_WEBHOOK_SECRET` | ✅ in prod | Shared secret sent as `x-webhook-secret` on every outbound n8n webhook call and required on the `/api/internal/resume/[userId]` callback. Configure the same value on the n8n side (Webhook node → Authentication: Header Auth, or an IF node check). |
 | `N8N_FORCE_TEST_WEBHOOKS` | ⚪ | `true` to force `/webhook-test/` URLs even in production; `false` to force `/webhook/` even in dev. Default: dev→test, prod→prod. |
 | `PDFSHIFT_API_KEY` | ⚪ | Needed for `/api/tailor/resume/[jobId]/download` to render tailored resumes to PDF. |
-| `NEXT_PUBLIC_APP_URL` | ⚪ | Used in a few client-side helpers; defaults to `http://localhost:3000`. |
+| `NEXT_PUBLIC_APP_URL` | ⚪ | Public origin of this app — used to build the callback URL n8n hits to fetch original-resume bytes. Set to your Vercel domain in production (e.g. `https://match.example.com`). Defaults to `http://localhost:3000`. |
 
-The Clerk middleware (`middleware.ts`) protects everything except `/sign-in`, `/sign-up`, and `/api/webhooks/*`. Unauthenticated requests to any other API route return `401`.
+The Clerk middleware (`middleware.ts`) protects everything except `/sign-in`, `/sign-up`, `/api/webhooks/*`, and `/api/internal/*` (the latter is authed via `N8N_WEBHOOK_SECRET`). Unauthenticated requests to any other API route return `401`.
+
+### Resume storage
+
+Base resumes are stored as BYTEA on the `user_profiles` row (`base_resume_data` + metadata columns). Run `prisma/migrations/resume_blob_columns.sql` once against your Postgres before deploying — the previous filesystem-based flow (`public/uploads/resumes/*`) breaks on Vercel's read-only serverless filesystem (`ENOENT: mkdir '/var/task/public'`).
+
+n8n fetches the original resume via `GET /api/internal/resume/[userId]` (binary by default, or `?format=json` for base64 + metadata), passing the shared `x-webhook-secret` header. The tailor-resume webhook payload now includes `preserve_format: true` and `resume_fetch_url` — update the n8n workflow to read the original via that URL and produce a tailored copy that keeps the original layout/structure with only the content rewritten for the job.
 
 ---
 
@@ -195,14 +202,9 @@ prisma/
 5. Configure Clerk's allowed origin to include your Vercel domain.
 6. Update your n8n webhook nodes' base URLs if needed.
 
-### ⚠️ Resume file storage
+### Resume file storage
 
-Local-disk uploads (`public/uploads/resumes/`) **do not work on Vercel** — the runtime filesystem is read-only. Before going to production with the resume feature:
-
-- Install `@vercel/blob` and add a `BLOB_READ_WRITE_TOKEN` env var, or
-- Switch [app/api/resume/upload/route.ts](app/api/resume/upload/route.ts) and [app/api/resume/file/route.ts](app/api/resume/file/route.ts) to use S3 / Cloudinary / Supabase Storage.
-
-The current local-disk implementation works for `next dev` and lets the rest of the app function end-to-end; only persistent uploads need a real storage backend.
+Resume bytes live in Postgres on `user_profiles.base_resume_data` (BYTEA + metadata columns). Before deploying, run [prisma/migrations/resume_blob_columns.sql](prisma/migrations/resume_blob_columns.sql) against your DB once — see the "Resume storage" section above for the rationale.
 
 ### Other platforms
 

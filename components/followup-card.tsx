@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { Mail, Clock, CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { WorkflowLoader } from '@/components/workflow-loader';
 import { toast } from '@/hooks/use-toast';
 
@@ -137,7 +137,7 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
           type="button"
           style={loading ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
         >
-          <CheckCircle2 size={12} />
+          {loading ? <Loader2 size={12} className="btn-spinner" /> : <CheckCircle2 size={12} />}
           They Replied
         </button>
         <button
@@ -145,8 +145,9 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
           disabled={loading}
           className="btn btn-ghost btn-sm"
           type="button"
+          style={loading ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
         >
-          <XCircle size={12} />
+          {loading ? <Loader2 size={12} className="btn-spinner" /> : <XCircle size={12} />}
           No Response
         </button>
         <button
@@ -154,18 +155,12 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
           disabled={loading}
           className="btn btn-ghost btn-sm"
           type="button"
-          style={{ color: 'var(--destructive, #ef4444)' }}
+          style={{ color: 'var(--destructive, #ef4444)', ...(loading ? { opacity: 0.6, cursor: 'not-allowed' } : {}) }}
         >
-          <AlertCircle size={12} />
+          {loading ? <Loader2 size={12} className="btn-spinner" /> : <AlertCircle size={12} />}
           Bounced
         </button>
       </div>
-
-      {loading && (
-        <p style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-3)', textAlign: 'center' }}>
-          Processing…
-        </p>
-      )}
     </div>
     </>
   );
