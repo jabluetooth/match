@@ -45,7 +45,8 @@
       "Bash(npx --no-install tsc --noEmit -p tsconfig.json)",
       "Bash(npx --no-install prisma generate)",
       "Bash(node merge-tailor.mjs)",
-      "Bash(node verify-merge.mjs)"
+      "Bash(node verify-merge.mjs)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('Match.json','utf8'\\)\\); console.log\\('JSON OK'\\);\")"
     ],
     "deny": [],
     "ask": []
