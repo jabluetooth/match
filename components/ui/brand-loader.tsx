@@ -1,6 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 interface BrandLoaderProps {
   /** Fullscreen overlay that covers header + content + dock. Default true. */
@@ -25,6 +26,16 @@ export function BrandLoader({
   messageVisible = true,
   style,
 }: BrandLoaderProps) {
+  // For fullscreen overlays we portal to document.body so the `position: fixed`
+  // root is anchored to the viewport. Without this, a `transform`/`filter`/
+  // `contain` ancestor (e.g. the page-slide wrapper in job-matches-paged.tsx)
+  // creates a containing block and the loader renders inside the slide
+  // instead of over the whole screen.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const root: CSSProperties = fullScreen
     ? {
         position: "fixed",
@@ -47,7 +58,7 @@ export function BrandLoader({
         ...style,
       };
 
-  return (
+  const content = (
     <div role="status" aria-live="polite" style={root}>
       {withOrb && (
         <div className="orb-wrap" style={{ width: 180, height: 180 }}>
@@ -127,4 +138,10 @@ export function BrandLoader({
       `}</style>
     </div>
   );
+
+  if (fullScreen && mounted && typeof document !== "undefined") {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 }
