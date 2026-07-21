@@ -8,6 +8,8 @@ interface BrandLoaderProps {
   fullScreen?: boolean;
   /** Show the floating orb above the text. Default false. */
   withOrb?: boolean;
+  /** Hide the "Match…" brand title. Default false. */
+  hideTitle?: boolean;
   /** Optional secondary headline below "Match…" */
   label?: string;
   /** Optional supporting message below the label */
@@ -21,6 +23,7 @@ interface BrandLoaderProps {
 export function BrandLoader({
   fullScreen = true,
   withOrb = false,
+  hideTitle = false,
   label,
   message,
   messageVisible = true,
@@ -69,26 +72,26 @@ export function BrandLoader({
       )}
 
       <div style={{ textAlign: "center", paddingInline: 24 }}>
-        <p
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: withOrb ? 38 : 42,
-            fontWeight: 400,
-            letterSpacing: "-0.02em",
-            color: "var(--ink)",
-            margin: 0,
-            lineHeight: 1,
-            display: "inline-flex",
-            alignItems: "baseline",
-          }}
-        >
-          <span>Match</span>
-          <span aria-hidden style={{ display: "inline-flex", marginLeft: 2 }}>
-            <span className="match-loader-dot" style={{ animationDelay: "0s" }}>.</span>
-            <span className="match-loader-dot" style={{ animationDelay: ".18s" }}>.</span>
-            <span className="match-loader-dot" style={{ animationDelay: ".36s" }}>.</span>
-          </span>
-        </p>
+        {!hideTitle && (
+          <p
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: withOrb ? 38 : 42,
+              fontWeight: 400,
+              letterSpacing: "-0.02em",
+              color: "var(--ink)",
+              margin: 0,
+              lineHeight: 1,
+            }}
+          >
+            <span>Match</span>
+            <span aria-hidden style={{ marginLeft: 2 }}>
+              <span className="match-loader-dot" style={{ animationDelay: "0s" }}>.</span>
+              <span className="match-loader-dot" style={{ animationDelay: ".18s" }}>.</span>
+              <span className="match-loader-dot" style={{ animationDelay: ".36s" }}>.</span>
+            </span>
+          </p>
+        )}
 
         {label && (
           <p

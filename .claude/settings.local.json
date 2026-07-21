@@ -31,6 +31,7 @@
       "Bash(cat:*)",
       "Bash(npm install:*)",
       "mcp__Neon__run_sql_transaction",
+      "mcp__claude_ai_n8n__update_workflow",
       "Bash(cmd //c taskkill //PID 23860 //F)",
       "Bash(timeout 5 cmd //c \"\")",
       "Bash(del appapiwebhooksclerkroute.ts)",

@@ -180,11 +180,10 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
     <>
     <WorkflowLoader
       show={tailoring}
-      label="Tailoring your resume…"
+      hideTitle
       messages={[
         `Reading the job description for ${match.job.title}…`,
         "Identifying required skills and keywords…",
-        "Matching your experience to the role…",
         "Crafting your professional summary…",
         "Optimising for ATS keywords…",
         "Generating your achievement bullets…",
