@@ -6,9 +6,11 @@ import { prisma } from '@/lib/prisma';
  * Streams the authenticated user's base resume from the user_profiles row.
  *
  * Resume bytes live in the DB (see prisma/migrations/resume_blob_columns.sql)
- * so this works on Vercel's read-only serverless filesystem. Served inline so
- * it opens in the browser tab instead of forcing a download. Cache-Control is
- * private + no-store because the file is per-user.
+ * so this works on Vercel's read-only serverless filesystem. Served as an
+ * attachment (forced download) rather than inline — no reason to render a
+ * resume in-browser, and this closes off any theoretical content-sniffing
+ * risk from a spoofed content-type. Cache-Control is private + no-store
+ * because the file is per-user.
  */
 export async function GET() {
   const { userId } = await auth();
@@ -38,7 +40,7 @@ export async function GET() {
     headers: {
       'Content-Type': contentType,
       'Content-Length': String(buffer.byteLength),
-      'Content-Disposition': `inline; filename="${fileName}"`,
+      'Content-Disposition': `attachment; filename="${fileName}"`,
       'Cache-Control': 'private, no-store',
     },
   });

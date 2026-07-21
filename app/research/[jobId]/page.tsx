@@ -5,6 +5,7 @@ import { requireUserWithSync } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Building2, Calendar, AlertTriangle, Sparkles } from 'lucide-react';
+import { safeExternalUrl } from '@/lib/utils';
 
 interface PageProps {
   params: Promise<{ jobId: string }>;
@@ -107,6 +108,7 @@ export default async function CompanyResearchPage({ params }: PageProps) {
   const questionsToAsk = (research.questionsToAsk as string[] | null) ?? [];
   const redFlags = (research.redFlags as string[] | null) ?? [];
   const recentDevelopments = (research.recentDevelopments as string[] | null) ?? [];
+  const companyUrl = safeExternalUrl(research.companyUrl);
 
   return (
     <div className="shell">
@@ -163,9 +165,9 @@ export default async function CompanyResearchPage({ params }: PageProps) {
               {research.companyName}
             </h1>
             <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--ink-2)' }}>{job.title}</p>
-            {research.companyUrl && (
+            {companyUrl && (
               <a
-                href={research.companyUrl}
+                href={companyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

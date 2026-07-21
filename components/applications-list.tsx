@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Briefcase, ExternalLink, MapPin, Search, X } from "lucide-react";
 import { ApplicationRowActions } from "@/components/application-actions";
+import { safeExternalUrl } from "@/lib/utils";
 
 interface ApplicationListItem {
   id: number;
@@ -248,6 +249,7 @@ function ApplicationRowCard({ app }: { app: ApplicationListItem }) {
   const label = STATUS_LABEL[app.status] ?? app.status;
   const cssBucket = STATUS_CSS[app.status] ?? "draft";
   const updated = formatRelative(app.updatedAt);
+  const sourceUrl = safeExternalUrl(app.job.sourceUrl);
 
   return (
     <li
@@ -330,25 +332,27 @@ function ApplicationRowCard({ app }: { app: ApplicationListItem }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: 6, justifySelf: "end" }}>
         <ApplicationRowActions applicationId={app.id} currentStatus={app.status} />
-        <a
-          href={app.job.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Open ${app.job.companyName} posting`}
-          style={{
-            width: 32,
-            height: 32,
-            display: "grid",
-            placeItems: "center",
-            border: "1px solid var(--line)",
-            borderRadius: 8,
-            color: "var(--ink-3)",
-            background: "rgba(255, 255, 255, 0.04)",
-            textDecoration: "none",
-          }}
-        >
-          <ExternalLink size={13} />
-        </a>
+        {sourceUrl && (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open ${app.job.companyName} posting`}
+            style={{
+              width: 32,
+              height: 32,
+              display: "grid",
+              placeItems: "center",
+              border: "1px solid var(--line)",
+              borderRadius: 8,
+              color: "var(--ink-3)",
+              background: "rgba(255, 255, 255, 0.04)",
+              textDecoration: "none",
+            }}
+          >
+            <ExternalLink size={13} />
+          </a>
+        )}
       </div>
     </li>
   );

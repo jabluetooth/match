@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
+import { matchesFileSignature } from '@/lib/file-signatures';
 
 // 5 MB. Matches the client-side cap in components/settings-form.tsx. The body
 // also stays under Vercel's serverless request size limit on Hobby (4.5 MB)
@@ -47,6 +48,14 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = Buffer.from(await file.arrayBuffer());
+
+    if (!matchesFileSignature(bytes, file.type)) {
+      return NextResponse.json(
+        { error: 'Invalid file type', details: 'The file contents do not match the declared file type.' },
+        { status: 400 },
+      );
+    }
+
     const safeName = file.name.replace(/[\r\n"\\]/g, '_').slice(0, 255);
     const uploadedAt = new Date();
 
@@ -54,38 +63,39 @@ export async function POST(request: NextRequest) {
     // existing references (settings card, n8n templates) keep working.
     const viewUrl = '/api/resume/file';
 
-    const existingProfile = await prisma.userProfile.findFirst({ where: { userId } });
-
-    if (existingProfile) {
-      await prisma.userProfile.update({
-        where: { id: existingProfile.id },
-        data: {
-          baseResumeUrl: viewUrl,
-          baseResumeData: bytes,
-          baseResumeName: safeName,
-          baseResumeContentType: file.type,
-          baseResumeSize: file.size,
-          baseResumeUploadedAt: uploadedAt,
-          updatedAt: uploadedAt,
-        },
-      });
-    } else {
-      await prisma.userProfile.create({
-        data: {
-          userId,
-          baseResumeUrl: viewUrl,
-          baseResumeData: bytes,
-          baseResumeName: safeName,
-          baseResumeContentType: file.type,
-          baseResumeSize: file.size,
-          baseResumeUploadedAt: uploadedAt,
-          skills: [],
-          jobTitles: [],
-          industries: [],
-          preferredLocations: [],
-        },
-      });
-    }
+    // `userId` is @unique on UserProfile (see prisma/schema.prisma), so this
+    // upsert is race-safe against two concurrent uploads for the same user —
+    // unlike the previous findFirst + conditional create/update, which had a
+    // window where both requests could see "no existing profile" and both
+    // insert a row. NOTE: the unique constraint must be applied to the live
+    // DB via migration (`prisma db push` or a proper migration) before this
+    // is fully enforced — until then this degrades to a genuine unique-
+    // constraint error on a real race, rather than silently duplicating.
+    await prisma.userProfile.upsert({
+      where: { userId },
+      update: {
+        baseResumeUrl: viewUrl,
+        baseResumeData: bytes,
+        baseResumeName: safeName,
+        baseResumeContentType: file.type,
+        baseResumeSize: file.size,
+        baseResumeUploadedAt: uploadedAt,
+        updatedAt: uploadedAt,
+      },
+      create: {
+        userId,
+        baseResumeUrl: viewUrl,
+        baseResumeData: bytes,
+        baseResumeName: safeName,
+        baseResumeContentType: file.type,
+        baseResumeSize: file.size,
+        baseResumeUploadedAt: uploadedAt,
+        skills: [],
+        jobTitles: [],
+        industries: [],
+        preferredLocations: [],
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -98,7 +108,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('[API] Resume upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload resume', details: error.message },
+      { error: 'Failed to upload resume', details: 'An unexpected error occurred while uploading your resume. Please try again.' },
       { status: 500 },
     );
   }

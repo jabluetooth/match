@@ -31,7 +31,7 @@ export async function POST() {
   } catch (error: any) {
     console.error('[API] Resume delete error:', error);
     return NextResponse.json(
-      { error: 'Failed to remove resume', details: error.message },
+      { error: 'Failed to remove resume', details: 'An unexpected error occurred while removing your resume. Please try again.' },
       { status: 500 },
     );
   }

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     console.error('[interviews] error:', message);
     return NextResponse.json(
-      { error: 'Failed to fetch interviews', details: message },
+      { error: 'Failed to fetch interviews', details: 'An unexpected error occurred while fetching interviews. Please try again.' },
       { status: 500 },
     );
   }

@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/prisma';
+
+/**
+ * Constant-time string comparison. Guards the length check before calling
+ * `timingSafeEqual` (which throws on mismatched buffer lengths) so a length
+ * mismatch can't leak timing information either.
+ */
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 /**
  * Server-to-server endpoint used by n8n to fetch a user's original (base)
@@ -24,7 +37,7 @@ export async function GET(
   }
 
   const provided = request.headers.get('x-webhook-secret');
-  if (provided !== secret) {
+  if (!provided || !safeEqual(provided, secret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

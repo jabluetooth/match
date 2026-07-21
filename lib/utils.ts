@@ -39,3 +39,18 @@ export function truncate(text: string, length = 100): string {
   if (text.length <= length) return text;
   return text.slice(0, length) + "…";
 }
+
+/**
+ * Validates that a URL string uses only the http: or https: scheme before
+ * it's rendered into an href. Returns undefined for anything else, including
+ * malformed URLs and dangerous schemes like javascript:/data:/vbscript:.
+ */
+export function safeExternalUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : undefined;
+  } catch {
+    return undefined;
+  }
+}

@@ -3,6 +3,7 @@ import { n8nClient } from '@/lib/n8n-client';
 import { requireAuth, verifyOwnership } from '@/lib/auth';
 import { InterviewPrepSchema, validateAndSanitize } from '@/lib/validation';
 import { prisma } from '@/lib/prisma';
+import { enforceRateLimit, RateLimitError } from '@/lib/rate-limit';
 
 /**
  * Interview Prep API
@@ -14,6 +15,8 @@ export async function POST(request: NextRequest) {
   try {
     // Authenticate user
     const userId = await requireAuth();
+
+    await enforceRateLimit(userId, 'interview_prep', { windowMs: 10 * 60 * 1000, max: 5 });
 
     const body = await request.json();
 
@@ -44,13 +47,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error: unknown) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a few minutes and try again.' }, { status: 429 });
+    }
+
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
     if (message.includes('Forbidden')) return NextResponse.json({ error: message }, { status: 403 });
 
     console.error('[interview-prep] error:', message);
     return NextResponse.json(
-      { error: 'Failed to generate interview prep', details: message },
+      { error: 'Failed to generate interview prep', details: 'An unexpected error occurred while generating interview prep. Please try again.' },
       { status: 500 },
     );
   }

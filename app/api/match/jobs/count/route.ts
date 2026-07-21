@@ -79,6 +79,10 @@ export async function GET() {
     if (message.includes('Unauthorized')) {
       return NextResponse.json({ error: message }, { status: 401 });
     }
-    return NextResponse.json({ error: 'Failed to count matches', details: message }, { status: 500 });
+    console.error('[match-job:count] error:', message);
+    return NextResponse.json(
+      { error: 'Failed to count matches', details: 'An unexpected error occurred while fetching match counts. Please try again.' },
+      { status: 500 },
+    );
   }
 }

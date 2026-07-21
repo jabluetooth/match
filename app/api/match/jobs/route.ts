@@ -3,6 +3,7 @@ import { n8nClient } from '@/lib/n8n-client';
 import { requireAuth } from '@/lib/auth';
 import { MatchJobsSchema, validateAndSanitize } from '@/lib/validation';
 import { prisma } from '@/lib/prisma';
+import { enforceRateLimit, RateLimitError } from '@/lib/rate-limit';
 
 /**
  * Triggers n8n's "match-job" workflow with a pre-flight check.
@@ -71,10 +72,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // We have something to match. Fire the n8n webhook. We deliberately don't
-    // await for n8n's full response when it exceeds the client timeout —
-    // n8n's `match-job` flow can take 30–90s. The webhook is configured to
-    // respond as soon as it's queued.
+    // We have something to match. Rate-limit only this path — the eligibility
+    // pre-flight above is a cheap read and must stay unthrottled.
+    await enforceRateLimit(userId, 'match_jobs', { windowMs: 10 * 60 * 1000, max: 5 });
+
+    // Fire the n8n webhook. We deliberately don't await for n8n's full
+    // response when it exceeds the client timeout — n8n's `match-job` flow
+    // can take 30–90s. The webhook is configured to respond as soon as it's
+    // queued.
     let triggerError: string | null = null;
     let n8nResult: unknown = null;
     try {
@@ -96,12 +101,16 @@ export async function POST(request: NextRequest) {
       result: n8nResult,
     }, { status: triggerError ? 502 : 200 });
   } catch (error: unknown) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a few minutes and try again.' }, { status: 429 });
+    }
+
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
 
     console.error('[match-job] error:', message);
     return NextResponse.json(
-      { error: 'Failed to trigger job matching', details: message },
+      { error: 'Failed to trigger job matching', details: 'An unexpected error occurred while triggering job matching. Please try again.' },
       { status: 500 },
     );
   }

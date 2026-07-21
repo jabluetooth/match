@@ -3,6 +3,7 @@ import { requireUserWithSync } from '@/lib/auth';
 import { Clock, MapPin, User, ExternalLink, FileText } from 'lucide-react';
 import { InterviewPrepButton } from '@/components/interview-prep-button';
 import { ScheduleInterviewModal } from '@/components/application-actions';
+import { safeExternalUrl } from '@/lib/utils';
 import Link from 'next/link';
 
 export const revalidate = 60;
@@ -60,7 +61,9 @@ export default async function InterviewsPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            {upcoming.map(app => (
+            {upcoming.map(app => {
+              const sourceUrl = safeExternalUrl(app.job.sourceUrl);
+              return (
               <div key={app.id} className="interview-card">
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div>
@@ -77,10 +80,12 @@ export default async function InterviewsPage() {
                         {app.interviewType.charAt(0).toUpperCase() + app.interviewType.slice(1)}
                       </span>
                     )}
-                    <a href={app.job.sourceUrl} target="_blank" rel="noopener noreferrer"
-                      style={{ color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}>
-                      <ExternalLink size={15} />
-                    </a>
+                    {sourceUrl && (
+                      <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}>
+                        <ExternalLink size={15} />
+                      </a>
+                    )}
                   </div>
                 </div>
 
@@ -130,7 +135,8 @@ export default async function InterviewsPage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { enforceRateLimit, RateLimitError } from '@/lib/rate-limit';
 
 export async function GET(
   _request: NextRequest,
@@ -14,6 +15,9 @@ export async function GET(
     if (Number.isNaN(jobId)) {
       return NextResponse.json({ error: 'Invalid job ID' }, { status: 400 });
     }
+
+    // This route calls PDFShift's paid conversion API per request.
+    await enforceRateLimit(userId, 'tailor_resume_download', { windowMs: 10 * 60 * 1000, max: 10 });
 
     const resume = await prisma.tailoredResume.findFirst({
       where: { userId, jobId },
@@ -77,13 +81,17 @@ export async function GET(
       },
     });
   } catch (error: unknown) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a few minutes and try again.' }, { status: 429 });
+    }
+
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message.includes('Unauthorized')) {
       return NextResponse.json({ error: message }, { status: 401 });
     }
     console.error('[tailor-resume:download] error:', message);
     return NextResponse.json(
-      { error: 'Failed to download resume', details: message },
+      { error: 'Failed to download resume', details: 'An unexpected error occurred while downloading your resume. Please try again.' },
       { status: 500 },
     );
   }

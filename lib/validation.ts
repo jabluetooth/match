@@ -20,13 +20,20 @@ export const FollowUpResponseSchema = z.object({
   trigger_n8n: z.boolean().optional().default(true),
 });
 
+// Authoritative status list — mirrors STATUSES in components/application-actions.tsx.
+// Keep in sync if that list changes.
+export const APPLICATION_STATUSES = [
+  'interested', 'applied', 'phone_screen', 'interview',
+  'final_round', 'offer', 'rejected', 'withdrawn', 'accepted',
+] as const;
+
 export const ApplicationTrackerSchema = z.object({
   action: z.enum(['create', 'update_status', 'schedule_interview']),
   user_id: z.string().min(1),
   job_id: z.number().int().positive().optional(),
   application_id: z.number().int().positive().optional(),
-  status: z.string().optional(),
-  interview_date: z.string().optional(),
+  status: z.enum(APPLICATION_STATUSES).optional(),
+  interview_date: z.string().datetime({ offset: true }).optional(),
   interview_type: z.string().optional(),
   interview_location: z.string().optional(),
   interviewer_name: z.string().optional(),

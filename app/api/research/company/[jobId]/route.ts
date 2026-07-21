@@ -45,7 +45,7 @@ export async function GET(
 
     console.error('[company-research:get] error:', message);
     return NextResponse.json(
-      { error: 'Failed to fetch company research', details: message },
+      { error: 'Failed to fetch company research', details: 'An unexpected error occurred while fetching company research. Please try again.' },
       { status: 500 },
     );
   }

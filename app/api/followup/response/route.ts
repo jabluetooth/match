@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { n8nClient } from '@/lib/n8n-client';
 import { requireAuth, verifyOwnership } from '@/lib/auth';
 import { FollowUpResponseSchema, validateAndSanitize } from '@/lib/validation';
+import { enforceRateLimit, RateLimitError } from '@/lib/rate-limit';
 
 /**
  * Logs a follow-up response (replied / no_response / bounced), updates the
@@ -12,6 +13,9 @@ import { FollowUpResponseSchema, validateAndSanitize } from '@/lib/validation';
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireAuth();
+
+    await enforceRateLimit(userId, 'followup_response', { windowMs: 10 * 60 * 1000, max: 10 });
+
     const body = await request.json();
 
     const validated = validateAndSanitize(FollowUpResponseSchema, {
@@ -84,6 +88,10 @@ export async function POST(request: NextRequest) {
       total_replied: repliedFollowUps,
     });
   } catch (error: unknown) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a few minutes and try again.' }, { status: 429 });
+    }
+
     const message = error instanceof Error ? error.message : 'Unknown error';
 
     if (message.includes('Unauthorized')) {
@@ -95,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     console.error('[followup-response] error:', message);
     return NextResponse.json(
-      { error: 'Failed to process follow-up response', details: message },
+      { error: 'Failed to process follow-up response', details: 'An unexpected error occurred while processing the follow-up response. Please try again.' },
       { status: 500 },
     );
   }

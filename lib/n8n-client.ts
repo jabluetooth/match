@@ -22,7 +22,7 @@ export class N8NClient {
   private async call<T = unknown>(
     path: string,
     body: Record<string, unknown>,
-    timeoutMs?: number,
+    timeoutMs: number = TIMEOUT_MS,
   ): Promise<T> {
     const url = this.webhookUrl(path);
     const controller = timeoutMs ? new AbortController() : null;
@@ -122,9 +122,19 @@ export class N8NClient {
     if (!apiKey) throw new Error('N8N_API_KEY not configured');
 
     const url = `${this.baseUrl}/api/v1/executions/${executionId}`;
-    const response = await fetch(url, { headers: { 'X-N8N-API-KEY': apiKey } });
-    if (!response.ok) throw new Error(`n8n API error: ${response.statusText}`);
-    return response.json();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        headers: { 'X-N8N-API-KEY': apiKey },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`n8n API error: ${response.statusText}`);
+      return response.json();
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }
 

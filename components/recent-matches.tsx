@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, safeExternalUrl } from "@/lib/utils";
 import { ArrowUpRight, Briefcase } from "lucide-react";
 
 interface Match {
@@ -38,30 +38,42 @@ export function RecentMatches({ matches }: RecentMatchesProps) {
             No matches yet — check back soon!
           </div>
         ) : (
-          matches.map((match) => (
-            <a
-              key={match.id}
-              href={match.job.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="match-row"
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {match.job.title}
-                </p>
-                <p style={{ fontSize: 11.5, color: 'var(--ink-3)', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {match.job.companyName}{match.job.location ? ` · ${match.job.location}` : ''}
-                </p>
+          matches.map((match) => {
+            const sourceUrl = safeExternalUrl(match.job.sourceUrl);
+            const rowContent = (
+              <>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {match.job.title}
+                  </p>
+                  <p style={{ fontSize: 11.5, color: 'var(--ink-3)', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {match.job.companyName}{match.job.location ? ` · ${match.job.location}` : ''}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
+                    {Math.round(Number(match.matchScore))}%
+                  </span>
+                  <ArrowUpRight size={13} color="var(--ink-3)" />
+                </div>
+              </>
+            );
+            return sourceUrl ? (
+              <a
+                key={match.id}
+                href={sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="match-row"
+              >
+                {rowContent}
+              </a>
+            ) : (
+              <div key={match.id} className="match-row" aria-disabled="true">
+                {rowContent}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
-                  {Math.round(Number(match.matchScore))}%
-                </span>
-                <ArrowUpRight size={13} color="var(--ink-3)" />
-              </div>
-            </a>
-          ))
+            );
+          })
         )}
       </div>
 

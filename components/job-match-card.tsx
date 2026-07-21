@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatRelativeTime, formatCurrency, truncate } from "@/lib/utils";
+import { formatRelativeTime, formatCurrency, truncate, safeExternalUrl } from "@/lib/utils";
 import { ExternalLink, MapPin, Sparkles, Search, Loader2, Download } from "lucide-react";
 import { WorkflowLoader } from "@/components/workflow-loader";
 import { toast } from "@/hooks/use-toast";
@@ -41,6 +41,7 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
   const [researching, setResearching] = useState(false);
   const score = Math.round(Number(match.matchScore));
   const matchClass = score >= 85 ? 'high' : score >= 75 ? 'med' : '';
+  const sourceUrl = safeExternalUrl(match.job.sourceUrl);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -222,10 +223,12 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
             {researching ? <Loader2 size={12} className="btn-spinner" /> : <Search size={12} />}
             {researching ? 'Researching…' : 'Research'}
           </button>
-          <a href={match.job.sourceUrl} target="_blank" rel="noopener noreferrer"
-            style={{ color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}>
-            <ExternalLink size={14} />
-          </a>
+          {sourceUrl && (
+            <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
+              style={{ color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}>
+              <ExternalLink size={14} />
+            </a>
+          )}
         </div>
       </div>
 
@@ -333,9 +336,11 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
             {applying && <Loader2 size={12} className="btn-spinner" />}
             {applied ? '✓ Applied' : applying ? 'Saving…' : 'Apply'}
           </button>
-          <a href={match.job.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-            View
-          </a>
+          {sourceUrl && (
+            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+              View
+            </a>
+          )}
         </div>
       </div>
     </div>

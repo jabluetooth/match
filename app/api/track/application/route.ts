@@ -104,6 +104,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'interview_date is required for schedule_interview action' }, { status: 400 });
       }
 
+      const parsedInterviewDate = new Date(interview_date);
+      if (Number.isNaN(parsedInterviewDate.getTime())) {
+        return NextResponse.json({ error: 'interview_date is not a valid date' }, { status: 400 });
+      }
+
       // Verify ownership before updating
       const application = await prisma.application.findUnique({
         where: { id: application_id },
@@ -124,7 +129,7 @@ export async function POST(request: NextRequest) {
         where: { id: application_id },
         data: {
           status: 'interview',
-          interviewDate: new Date(interview_date),
+          interviewDate: parsedInterviewDate,
           interviewType: interview_type || 'video',
           interviewLocation: interview_location,
           interviewerName: interviewer_name,
@@ -181,7 +186,7 @@ export async function POST(request: NextRequest) {
 
     console.error('[track-application] error:', message);
     return NextResponse.json(
-      { error: 'Failed to process application action', details: message },
+      { error: 'Failed to process application action', details: 'An unexpected error occurred while processing the application action. Please try again.' },
       { status: 500 },
     );
   }

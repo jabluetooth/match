@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('[API] Profile update error:', error);
     return NextResponse.json(
-      { error: 'Failed to update profile', details: error.message },
+      { error: 'Failed to update profile', details: 'An unexpected error occurred while updating your profile. Please try again.' },
       { status: 500 },
     );
   }

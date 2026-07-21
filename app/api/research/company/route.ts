@@ -3,11 +3,14 @@ import { n8nClient } from '@/lib/n8n-client';
 import { requireAuth, verifyOwnership } from '@/lib/auth';
 import { CompanyResearchSchema, validateAndSanitize } from '@/lib/validation';
 import { prisma } from '@/lib/prisma';
+import { enforceRateLimit, RateLimitError } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
     // 1. Authenticate user
     const userId = await requireAuth();
+
+    await enforceRateLimit(userId, 'research_company', { windowMs: 10 * 60 * 1000, max: 5 });
 
     const body = await request.json();
 
@@ -61,13 +64,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, result });
   } catch (error: unknown) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a few minutes and try again.' }, { status: 429 });
+    }
+
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message.includes('Unauthorized')) return NextResponse.json({ error: message }, { status: 401 });
     if (message.includes('Forbidden')) return NextResponse.json({ error: message }, { status: 403 });
 
     console.error('[company-research] error:', message);
     return NextResponse.json(
-      { error: 'Failed to trigger company research', details: message },
+      { error: 'Failed to trigger company research', details: 'An unexpected error occurred while starting company research. Please try again.' },
       { status: 500 },
     );
   }

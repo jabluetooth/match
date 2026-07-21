@@ -1,3 +1,18 @@
+// ============================================================
+// SECURITY NOTE — tenant isolation boundary
+// ============================================================
+// This app does NOT use Postgres Row Level Security. The role in
+// DATABASE_URL is a table-owner role, which bypasses RLS regardless of any
+// policy defined — so RLS policies here would be decorative, not real
+// enforcement. Instead, tenant isolation is enforced entirely at the
+// application layer:
+//   - lib/auth.ts `requireAuth()` / `verifyOwnership()` on every route
+//   - explicit `where: { userId }` filters in every query on user-scoped
+//     tables (never trust an id in a request body/param alone)
+// Every new query touching a user-scoped table MUST include an explicit
+// userId filter. There is no database-level safety net here.
+// ============================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -200,7 +215,7 @@ model TailoredResume {
 
 model UserProfile {
   id                     Int       @id @default(autoincrement())
-  userId                 String?   @map("user_id") // Clerk user ID
+  userId                 String    @unique @map("user_id") // Clerk user ID
   baseResumeUrl          String?   @map("base_resume_url")
   baseResumeData         Bytes?    @map("base_resume_data")
   baseResumeName         String?   @map("base_resume_name") @db.VarChar(255)
@@ -231,6 +246,7 @@ model ActivityLog {
   metadata    Json?
   createdAt   DateTime  @default(now()) @map("created_at")
 
+  @@index([userId])
   @@map("activity_log")
 }
 
