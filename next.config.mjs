@@ -1,15 +1,19 @@
 /** @type {import('next').NextConfig} */
 // Reasonably strict but not maximally strict: 'unsafe-eval' is needed for
 // Next.js dev-mode HMR, and 'unsafe-inline' for style-src is needed because
-// Clerk's hosted auth components inject inline styles. This can be tightened
-// further later with per-request nonces if desired.
+// Clerk's hosted auth components inject inline styles. Clerk also loads its
+// JS bundle, makes API calls, and renders bot-protection challenges from its
+// own domains, so those need explicit allowances or auth breaks entirely.
+// This can be tightened further later with per-request nonces if desired.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://img.clerk.com",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com",
+  "frame-src https://challenges.cloudflare.com",
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
