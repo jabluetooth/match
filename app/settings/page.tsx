@@ -34,7 +34,10 @@ export default async function SettingsPage() {
     redirect('/sign-in');
   }
 
-  const profile = await getUserProfile(userId);
+  const [profile, user] = await Promise.all([
+    getUserProfile(userId),
+    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
+  ]);
 
   return (
     <div className="shell">
@@ -45,7 +48,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <SettingsForm profile={profile} userId={userId} />
+      <SettingsForm profile={profile} fullName={user?.fullName ?? null} userId={userId} />
     </div>
   );
 }

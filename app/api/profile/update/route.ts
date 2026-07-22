@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 const WORK_TYPES = ['remote', 'hybrid', 'onsite'] as const;
 
 const profileSchema = z.object({
+  full_name: z.string().trim().min(1).max(255).nullable().optional(),
   base_resume_url: z.string().nullable().optional(),
   skills: z.array(z.string().min(1).max(100)).max(50).optional(),
   experience_years: z.number().int().min(0).max(80).nullable().optional(),
@@ -50,6 +51,17 @@ export async function POST(request: NextRequest) {
       preferredLocations: data.preferred_locations ?? [],
       workType: data.work_type ?? null,
     };
+
+    // full_name lives on User, not UserProfile — update it separately so it
+    // flows into everything downstream that reads it (resume header, email
+    // greetings, etc.) rather than only whatever job-preference row we touch
+    // below.
+    if (data.full_name !== undefined) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { fullName: data.full_name },
+      });
+    }
 
     const existingProfile = await prisma.userProfile.findFirst({ where: { userId } });
 

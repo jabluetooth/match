@@ -29,6 +29,7 @@ interface SettingsFormProps {
     preferredLocations: string[];
     workType: string | null;
   };
+  fullName: string | null;
   userId: string;
 }
 
@@ -66,9 +67,10 @@ function formatBytes(n: number | null): string {
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
 }
 
-export function SettingsForm({ profile }: SettingsFormProps) {
+export function SettingsForm({ profile, fullName }: SettingsFormProps) {
   const initial = useMemo(
     () => ({
+      fullName: fullName ?? "",
       skills: profile.skills.join(", "),
       experienceYears: profile.experienceYears?.toString() ?? "",
       jobTitles: profile.jobTitles.join(", "),
@@ -78,9 +80,10 @@ export function SettingsForm({ profile }: SettingsFormProps) {
       preferredLocations: profile.preferredLocations.join(", "),
       workType: profile.workType ?? "remote",
     }),
-    [profile],
+    [profile, fullName],
   );
 
+  const [fullNameInput, setFullNameInput] = useState(initial.fullName);
   const [skills, setSkills] = useState(initial.skills);
   const [experienceYears, setExperienceYears] = useState(initial.experienceYears);
   const [jobTitles, setJobTitles] = useState(initial.jobTitles);
@@ -108,6 +111,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const dirty =
+    fullNameInput !== initial.fullName ||
     skills !== initial.skills ||
     experienceYears !== initial.experienceYears ||
     jobTitles !== initial.jobTitles ||
@@ -212,6 +216,9 @@ export function SettingsForm({ profile }: SettingsFormProps) {
     if (experienceYears && parseInt(experienceYears, 10) < 0) {
       return { field: "experienceYears", message: "Experience can’t be negative." };
     }
+    if (fullNameInput.trim().length === 0) {
+      return { field: "fullName", message: "Name can’t be empty." };
+    }
     return null;
   })();
 
@@ -227,6 +234,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          full_name: fullNameInput.trim(),
           skills: parseList(skills),
           experience_years: experienceYears ? parseInt(experienceYears, 10) : null,
           job_titles: parseList(jobTitles),
@@ -310,6 +318,19 @@ export function SettingsForm({ profile }: SettingsFormProps) {
           <p>Tell us about your background so we can match you to the right roles.</p>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+            <Field label="Full name" error={validationError?.field === "fullName" ? validationError.message : undefined}>
+              <input
+                type="text"
+                value={fullNameInput}
+                onChange={(e) => setFullNameInput(e.target.value)}
+                placeholder="Jane Doe"
+                className="form-input"
+              />
+              <p style={{ marginTop: 6, fontSize: 11.5, color: "var(--ink-3)" }}>
+                Used on tailored resumes and in email greetings.
+              </p>
+            </Field>
+
             <FieldChips
               label="Skills"
               value={skills}
