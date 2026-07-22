@@ -21,6 +21,7 @@
       "Bash(dir \"C:\\Users\\frelatorre\\Desktop\\Projects\\n8n\\match\\app\\api\\research\\company\" /s)",
       "Bash(echo:*)",
       "Bash(git checkout:*)",
+      "Bash(node -e:*)",
       "mcp__Neon__list_projects",
       "mcp__Neon__get_database_tables",
       "mcp__Neon__describe_table_schema",
