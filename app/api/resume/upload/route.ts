@@ -63,52 +63,35 @@ export async function POST(request: NextRequest) {
     // existing references (settings card, n8n templates) keep working.
     const viewUrl = '/api/resume/file';
 
-    // NOTE: `userId` is declared @unique on UserProfile in schema.prisma, but
-    // that constraint has not been migrated onto the live DB yet (tracked
-    // separately — the live DB currently has pre-existing duplicate rows for
-    // at least one user, which must be resolved before the migration can even
-    // run, since Postgres can't build a unique index over duplicate values).
-    // An upsert() with `where: { userId }` assumes the constraint exists and
-    // fails outright without it ("no unique or exclusion constraint matching
-    // the ON CONFLICT specification"), so we're back to findFirst + branch
-    // until the migration lands. `orderBy: updatedAt desc` at least makes the
-    // duplicate-row case deterministic (most-recently-edited profile wins)
-    // instead of depending on undefined Postgres scan order.
-    const existingProfile = await prisma.userProfile.findFirst({
+    // `userId` is @unique on UserProfile (migrated onto the live DB), so this
+    // upsert is race-safe against two concurrent uploads for the same user —
+    // unlike findFirst + conditional create/update, which had a window where
+    // both requests could see "no existing profile" and both insert a row.
+    await prisma.userProfile.upsert({
       where: { userId },
-      orderBy: { updatedAt: 'desc' },
+      update: {
+        baseResumeUrl: viewUrl,
+        baseResumeData: bytes,
+        baseResumeName: safeName,
+        baseResumeContentType: file.type,
+        baseResumeSize: file.size,
+        baseResumeUploadedAt: uploadedAt,
+        updatedAt: uploadedAt,
+      },
+      create: {
+        userId,
+        baseResumeUrl: viewUrl,
+        baseResumeData: bytes,
+        baseResumeName: safeName,
+        baseResumeContentType: file.type,
+        baseResumeSize: file.size,
+        baseResumeUploadedAt: uploadedAt,
+        skills: [],
+        jobTitles: [],
+        industries: [],
+        preferredLocations: [],
+      },
     });
-
-    if (existingProfile) {
-      await prisma.userProfile.update({
-        where: { id: existingProfile.id },
-        data: {
-          baseResumeUrl: viewUrl,
-          baseResumeData: bytes,
-          baseResumeName: safeName,
-          baseResumeContentType: file.type,
-          baseResumeSize: file.size,
-          baseResumeUploadedAt: uploadedAt,
-          updatedAt: uploadedAt,
-        },
-      });
-    } else {
-      await prisma.userProfile.create({
-        data: {
-          userId,
-          baseResumeUrl: viewUrl,
-          baseResumeData: bytes,
-          baseResumeName: safeName,
-          baseResumeContentType: file.type,
-          baseResumeSize: file.size,
-          baseResumeUploadedAt: uploadedAt,
-          skills: [],
-          jobTitles: [],
-          industries: [],
-          preferredLocations: [],
-        },
-      });
-    }
 
     return NextResponse.json({
       success: true,
