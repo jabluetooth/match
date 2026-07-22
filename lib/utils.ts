@@ -35,6 +35,17 @@ export function formatRelativeTime(date: Date | string): string {
   return formatDate(d);
 }
 
+/** Short "3h ago" / "2d ago" style age, for recency indicators like last-scan timestamps. */
+export function formatAge(iso: string | Date | null): string {
+  if (!iso) return "never";
+  const ms = Date.now() - new Date(iso).getTime();
+  const h = Math.floor(ms / 3_600_000);
+  if (h < 1) return "less than an hour ago";
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
 export function truncate(text: string, length = 100): string {
   if (text.length <= length) return text;
   return text.slice(0, length) + "…";

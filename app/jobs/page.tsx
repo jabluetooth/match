@@ -6,6 +6,7 @@ import { JobMatchesPaged } from '@/components/job-matches-paged';
 import { FindMatchesButton } from '@/components/find-matches-button';
 import { JobsSearch } from '@/components/jobs-search';
 import { Clock } from 'lucide-react';
+import { formatAge } from '@/lib/utils';
 
 export const revalidate = 60;
 
@@ -72,7 +73,14 @@ export default async function JobMatchesPage({
   if (!userId) redirect('/sign-in');
 
   const { q = '', location = '', sort = '' } = await searchParams;
-  const matches = await getJobMatches(userId, q, location, sort);
+  const [matches, lastScrapedJob] = await Promise.all([
+    getJobMatches(userId, q, location, sort),
+    prisma.job.findFirst({
+      where: { status: 'active' },
+      orderBy: { scrapedAt: 'desc' },
+      select: { scrapedAt: true },
+    }),
+  ]);
 
   return (
     <div className="shell">
@@ -85,7 +93,7 @@ export default async function JobMatchesPage({
           <FindMatchesButton />
           <div className="chip">
             <Clock size={13} />
-            Last scan · just now
+            Last scan · {formatAge(lastScrapedJob?.scrapedAt ?? null)}
           </div>
         </div>
       </div>

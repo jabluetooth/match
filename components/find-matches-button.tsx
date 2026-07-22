@@ -5,6 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { formatAge } from "@/lib/utils";
 
 const POLL_INTERVAL_MS = 4_000;
 const POLL_DEADLINE_MS = 150_000; // 2.5 min — n8n's match-job loop with rate-limit waits
@@ -39,16 +40,6 @@ async function getCount(): Promise<MatchCount | null> {
   const res = await fetch("/api/match/jobs/count", { cache: "no-store" });
   if (!res.ok) return null;
   return (await res.json()) as MatchCount;
-}
-
-function formatAge(iso: string | null): string {
-  if (!iso) return "never";
-  const ms = Date.now() - new Date(iso).getTime();
-  const h = Math.floor(ms / 3_600_000);
-  if (h < 1) return "less than an hour ago";
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
 }
 
 export function FindMatchesButton() {
