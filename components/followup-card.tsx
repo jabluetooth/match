@@ -71,7 +71,6 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
     <>
     <WorkflowLoader
       show={loading}
-      label="Logging response…"
       messages={[
         "Updating your follow-up status…",
         "Recalculating your response rate…",

@@ -74,7 +74,6 @@ function ToastCard({ toast }: { toast: ToastItem }) {
         backdropFilter: "blur(20px) saturate(1.4)",
         WebkitBackdropFilter: "blur(20px) saturate(1.4)",
         border: "1px solid var(--line)",
-        borderLeft: `3px solid ${accent}`,
         borderRadius: 12,
         boxShadow: "var(--shadow-pop)",
         pointerEvents: "auto",
@@ -90,6 +89,7 @@ function ToastCard({ toast }: { toast: ToastItem }) {
           borderRadius: 8,
           background: bg,
           color: iconColor,
+          boxShadow: `0 0 0 1px color-mix(in oklab, ${accent} 35%, transparent), 0 0 14px -3px color-mix(in oklab, ${accent} 65%, transparent)`,
           flexShrink: 0,
           marginTop: 1,
         }}

@@ -39,7 +39,6 @@ export function InterviewPrepButton({
     <>
       <WorkflowLoader
         show={loading}
-        label="Generating prep doc…"
         messages={[
           `Reading the job description for ${jobTitle}…`,
           `Researching ${companyName}'s culture and values…`,

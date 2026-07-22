@@ -5,14 +5,10 @@ import { BrandLoader } from "@/components/ui/brand-loader";
 
 interface WorkflowLoaderProps {
   show: boolean;
-  /** Optional headline describing the in-flight workflow. */
-  label?: string;
-  /** Hide the "Match…" brand title. Default false. */
-  hideTitle?: boolean;
   messages?: string[];
 }
 
-export function WorkflowLoader({ show, label, hideTitle, messages = [] }: WorkflowLoaderProps) {
+export function WorkflowLoader({ show, messages = [] }: WorkflowLoaderProps) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
@@ -41,8 +37,7 @@ export function WorkflowLoader({ show, label, hideTitle, messages = [] }: Workfl
   return (
     <BrandLoader
       withOrb
-      hideTitle={hideTitle}
-      label={label}
+      hideTitle
       message={messages[index]}
       messageVisible={visible}
     />

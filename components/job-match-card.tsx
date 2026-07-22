@@ -180,7 +180,6 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
     <>
     <WorkflowLoader
       show={tailoring}
-      hideTitle
       messages={[
         `Reading the job description for ${match.job.title}…`,
         "Identifying required skills and keywords…",
@@ -192,7 +191,6 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
     />
     <WorkflowLoader
       show={researching}
-      label="Researching company…"
       messages={[
         `Visiting ${match.job.companyName}'s website…`,
         "Scraping company overview and mission…",

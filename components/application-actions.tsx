@@ -124,7 +124,6 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
     <>
       <WorkflowLoader
         show={loading}
-        label="Scheduling interview…"
         messages={[
           "Saving interview details…",
           "Updating your application status…",
