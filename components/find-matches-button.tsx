@@ -153,8 +153,8 @@ export function FindMatchesButton() {
       }
 
       toast.info(
-        "Still scoring",
-        "n8n is taking longer than usual — refresh in a minute or check the execution log in n8n.",
+        "No update yet",
+        "n8n hasn't reported any new or scored matches. It may still be running, or it may have found nothing to do — check the execution log in n8n to see what happened.",
         9000,
       );
       router.refresh();
