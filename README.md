@@ -292,6 +292,13 @@ npm run db:studio      # Prisma Studio (DB inspector)
 
 ---
 
+## Changelog
+
+### 2026-07-29
+- Fixed interview-prep pipeline: request/response bodies now match Gemini's `generateContent` schema instead of an OpenAI-style payload. The prompt-builder node was also generating the wrong JSON shape (a leftover copy-paste from the company-research prompt) — it now asks for the interview-prep fields the parser actually expects.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
