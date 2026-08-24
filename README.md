@@ -5,7 +5,7 @@
 **An AI-powered career management dashboard.**
 Find matching roles, tailor your resume to each one, research the company, prep for the interview, and track every application - all in one place.
 
-**[Live demo →](https://match-nu-gold.vercel.app)**
+**[Live demo →](https://matchby.filheinzrelatorre.com)**
 
 ![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
@@ -23,7 +23,7 @@ Find matching roles, tailor your resume to each one, research the company, prep 
      "Find New Matches" -> the diagnostic toast appears -> a match card populates
      without a page reload. That sequence demonstrates the polling/no-blocking
      architecture described below, which a static screenshot can't. -->
-[![Match dashboard](public/dashboard.png)](https://match-nu-gold.vercel.app)
+[![Match dashboard](public/dashboard.png)](https://matchby.filheinzrelatorre.com)
 
 </div>
 
