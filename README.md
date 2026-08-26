@@ -3,23 +3,27 @@
 # Match
 
 **An AI-powered career management dashboard.**
-Find matching roles, tailor your resume to each one, research the company, prep for the interview, and track every application — all in one place.
+Find matching roles, tailor your resume to each one, research the company, prep for the interview, and track every application - all in one place.
 
-**[Live demo →](https://match-nu-gold.vercel.app)**
+**[Live demo →](https://matchby.filheinzrelatorre.com)**
 
-[![Live](https://img.shields.io/badge/Live-match--nu--gold.vercel.app-22c55e)](https://match-nu-gold.vercel.app)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19-149eca?logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)](https://www.typescriptlang.org)
-[![Prisma](https://img.shields.io/badge/Prisma-7-2d3748?logo=prisma)](https://www.prisma.io)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org)
-[![Clerk](https://img.shields.io/badge/Auth-Clerk-6c47ff?logo=clerk)](https://clerk.com)
-[![n8n](https://img.shields.io/badge/Workflows-n8n-ea4b71?logo=n8n)](https://n8n.io)
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000?logo=vercel)](https://vercel.com)
+![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
 <br />
 
-[![Match dashboard](public/dashboard.png)](https://match-nu-gold.vercel.app)
+<!-- HERO: currently a static dashboard screenshot. Consider upgrading to a short GIF
+     (10-15s) showing the actual async flow that's the point of this project: click
+     "Find New Matches" -> the diagnostic toast appears -> a match card populates
+     without a page reload. That sequence demonstrates the polling/no-blocking
+     architecture described below, which a static screenshot can't. -->
+[![Match dashboard](public/dashboard.png)](https://matchby.filheinzrelatorre.com)
 
 </div>
 
@@ -29,7 +33,7 @@ Find matching roles, tailor your resume to each one, research the company, prep 
 
 Job hunting is a manual, repetitive workflow: scrape boards, score fit, rewrite the resume to match each posting, research the company, prep for interviews, track every reply. Match automates the parts a computer should do and surfaces the parts you need to see.
 
-The interesting engineering problem isn't the dashboard — it's the **orchestration**: long-running AI tasks (resume tailoring, company research, interview prep) shouldn't block the UI, shouldn't lose state on a page refresh, and shouldn't silently fail when the LLM returns malformed JSON or a third-party API rate-limits you.
+The interesting engineering problem isn't the dashboard - it's the **orchestration**: long-running AI tasks (resume tailoring, company research, interview prep) shouldn't block the UI, shouldn't lose state on a page refresh, and shouldn't silently fail when the LLM returns malformed JSON or a third-party API rate-limits you.
 
 The solution is a thin Next.js app talking to an n8n workflow backend over signed webhooks, with the heavy lifting (scraping, AI calls, PDF rendering, email) running asynchronously in n8n. The app polls Postgres for completion and renders results when they land.
 
@@ -103,14 +107,14 @@ The solution is a thin Next.js app talking to an n8n workflow backend over signe
 
 Things I'd point a reviewer to:
 
-- **Pre-flight diagnostics, not stuck spinners.** `POST /api/match/jobs` runs an eligibility query before triggering n8n. When the daily scrape has produced zero new jobs, the user sees *"You're caught up — every job in the last 7 days has been scored"* instead of staring at a spinner for 2 minutes. The button now distinguishes four failure modes: `no_jobs_in_db`, `no_recent_scrape`, `all_jobs_already_matched`, `n8n_unreachable`. See [app/api/match/jobs/route.ts](app/api/match/jobs/route.ts).
-- **Polling that tracks the *right* signal.** The "Find New Matches" client originally watched only `count` of pending matches. If the AI rejected every candidate as `<70`, the count never moved and the user thought it was stuck. The current poller also watches `total` and `lastMatchAt`, so it correctly reports *"Scoring finished — no strong matches"*. See [components/find-matches-button.tsx](components/find-matches-button.tsx).
-- **Signed server-to-server callback.** n8n needs the user's original resume to preserve formatting during tailoring. Resume bytes live in Postgres BYTEA (not a public bucket), and n8n reads them via `GET /api/internal/resume/[userId]` authenticated by a shared `x-webhook-secret` header — same secret used to sign outbound webhook calls. See [app/api/internal/resume/[userId]/route.ts](app/api/internal/resume/[userId]/route.ts) and [lib/n8n-client.ts](lib/n8n-client.ts).
+- **Pre-flight diagnostics, not stuck spinners.** `POST /api/match/jobs` runs an eligibility query before triggering n8n. When the daily scrape has produced zero new jobs, the user sees *"You're caught up - every job in the last 7 days has been scored"* instead of staring at a spinner for 2 minutes. The button now distinguishes four failure modes: `no_jobs_in_db`, `no_recent_scrape`, `all_jobs_already_matched`, `n8n_unreachable`. See [app/api/match/jobs/route.ts](app/api/match/jobs/route.ts).
+- **Polling that tracks the *right* signal.** The "Find New Matches" client originally watched only `count` of pending matches. If the AI rejected every candidate as `<70`, the count never moved and the user thought it was stuck. The current poller also watches `total` and `lastMatchAt`, so it correctly reports *"Scoring finished - no strong matches"*. See [components/find-matches-button.tsx](components/find-matches-button.tsx).
+- **Signed server-to-server callback.** n8n needs the user's original resume to preserve formatting during tailoring. Resume bytes live in Postgres BYTEA (not a public bucket), and n8n reads them via `GET /api/internal/resume/[userId]` authenticated by a shared `x-webhook-secret` header - same secret used to sign outbound webhook calls. See [app/api/internal/resume/[userId]/route.ts](app/api/internal/resume/[userId]/route.ts) and [lib/n8n-client.ts](lib/n8n-client.ts).
 - **Resume storage in Postgres, not S3.** Files cap at 5 MB and live on the same row as the rest of the user profile. No public URL, no signed-URL plumbing, no extra dependency, and Vercel's read-only `/var/task/public` filesystem doesn't matter. See [prisma/migrations/resume_blob_columns.sql](prisma/migrations/resume_blob_columns.sql).
 - **Stacking-context-aware loaders.** The fullscreen loader uses `position: fixed`, but a `transform`ed ancestor in the paginated job-cards container created a new containing block and the loader was rendering inside the page slide. Fixed by rendering through `React.createPortal(content, document.body)`. See [components/ui/brand-loader.tsx](components/ui/brand-loader.tsx).
 - **Sandboxed third-party HTML.** n8n workflows emit interview-prep / research HTML that's user-influenced. It's rendered inside `<iframe sandbox="">` with a fresh document, so any reflected injection can't reach the parent DOM. See [components/prep-html-viewer.tsx](components/prep-html-viewer.tsx).
-- **Server-derived `user_id` everywhere.** Every API route derives `userId` from the Clerk session — the client never sends it, even when it's in the form body. Resource-bound routes (`/api/track/application`, etc.) additionally call `verifyOwnership()` before mutating. See [lib/auth.ts](lib/auth.ts) and [lib/validation.ts](lib/validation.ts).
-- **Defensive AI response handling.** LLM JSON parsing accepts both OpenAI-shape (`choices[0].message.content`) and Gemini-shape (`candidates[0].content.parts[0].text`), strips markdown fences, and on failure writes a placeholder row with `confidence_score = 10` + the raw response — so the UI degrades visibly instead of breaking. See the company-research and tailor-resume flows in [Match.json](Match.json).
+- **Server-derived `user_id` everywhere.** Every API route derives `userId` from the Clerk session - the client never sends it, even when it's in the form body. Resource-bound routes (`/api/track/application`, etc.) additionally call `verifyOwnership()` before mutating. See [lib/auth.ts](lib/auth.ts) and [lib/validation.ts](lib/validation.ts).
+- **Defensive AI response handling.** LLM JSON parsing accepts both OpenAI-shape (`choices[0].message.content`) and Gemini-shape (`candidates[0].content.parts[0].text`), strips markdown fences, and on failure writes a placeholder row with `confidence_score = 10` + the raw response - so the UI degrades visibly instead of breaking. See the company-research and tailor-resume flows in [Match.json](Match.json).
 - **Dev vs prod webhook routing.** `lib/n8n-client.ts` automatically targets `/webhook-test/...` in development (lets you click "Listen for test event" in the n8n editor) and `/webhook/...` in production. Overridable via `N8N_FORCE_TEST_WEBHOOKS` for the edge cases.
 
 ---
@@ -124,7 +128,7 @@ Things I'd point a reviewer to:
 | State        | Zustand (toast store), React `useState` everywhere else       |
 | Database     | **PostgreSQL 16** via **Prisma 7** (hosted on Neon)           |
 | Auth         | **Clerk** (session cookies, middleware-protected routes)      |
-| Workflows    | **n8n** — 6 webhooks orchestrating scraping, LLM calls, email |
+| Workflows    | **n8n** - 6 webhooks orchestrating scraping, LLM calls, email |
 | LLM          | **Groq** (Llama 3.1 8B for scoring + tailoring + research)    |
 | Job sources  | RapidAPI JSearch, Remotive RSS, We Work Remotely RSS          |
 | News         | NewsData.io                                                   |
@@ -155,7 +159,7 @@ Sign in with Clerk, drop a PDF resume in **Settings**, then click **Find New Mat
 - Node.js **18+**
 - A PostgreSQL database (Neon recommended)
 - A [Clerk](https://dashboard.clerk.com) application
-- An n8n instance — self-hosted or n8n Cloud free tier is enough
+- An n8n instance - self-hosted or n8n Cloud free tier is enough
 - *Optional:* a [PDFShift](https://pdfshift.io) API key (only needed for tailored-resume PDF downloads)
 
 ---
@@ -169,7 +173,7 @@ Sign in with Clerk, drop a PDF resume in **Settings**, then click **Find New Mat
 | `CLERK_SECRET_KEY` | ✅ | Clerk secret key. |
 | `N8N_BASE_URL` | ✅ | Root URL of the n8n instance, no trailing slash. |
 | `N8N_WEBHOOK_SECRET` | ✅ in prod | Shared secret sent as `x-webhook-secret` on every outbound n8n call and required on the `/api/internal/*` callbacks. Configure the same value on each n8n Webhook node (Authentication: Header Auth). |
-| `NEXT_PUBLIC_APP_URL` | ✅ in prod | Public origin of this app — used to build the callback URL n8n hits to fetch original-resume bytes. e.g. `https://match.example.com`. |
+| `NEXT_PUBLIC_APP_URL` | ✅ in prod | Public origin of this app - used to build the callback URL n8n hits to fetch original-resume bytes. e.g. `https://match.example.com`. |
 | `PDFSHIFT_API_KEY` | ⚪ | Needed for `/api/tailor/resume/[jobId]/download` to render tailored resumes to PDF. |
 | `N8N_API_KEY` | ⚪ | Only required for n8n execution-status polling. |
 | `N8N_FORCE_TEST_WEBHOOKS` | ⚪ | `true` to force `/webhook-test/` URLs in prod; `false` to force `/webhook/` in dev. Default is automatic (`NODE_ENV`-based). |
@@ -178,7 +182,7 @@ Clerk middleware ([middleware.ts](middleware.ts)) protects every route except `/
 
 ### Resume storage migration
 
-Base resumes are stored as BYTEA on `user_profiles` (`base_resume_data` + metadata columns). Before deploying, run [prisma/migrations/resume_blob_columns.sql](prisma/migrations/resume_blob_columns.sql) once against your Postgres — the migration is idempotent.
+Base resumes are stored as BYTEA on `user_profiles` (`base_resume_data` + metadata columns). Before deploying, run [prisma/migrations/resume_blob_columns.sql](prisma/migrations/resume_blob_columns.sql) once against your Postgres - the migration is idempotent.
 
 ---
 
@@ -210,7 +214,7 @@ app/
 
 components/                    # client components
 ├── ui/                        # toast, dock, brand-loader (shared primitives)
-├── job-match-card.tsx         # one match card — tailor / research / apply
+├── job-match-card.tsx         # one match card - tailor / research / apply
 ├── job-matches-paged.tsx      # paged carousel
 ├── find-matches-button.tsx    # "Find New Matches" trigger + diagnostic toasts
 ├── workflow-loader.tsx        # fullscreen overlay during n8n calls (portal'd)
@@ -258,7 +262,7 @@ The app is a plain Node + Postgres app, so it'll also run on Railway, Render, Fl
 - **Signed n8n traffic.** Every outbound webhook call carries `x-webhook-secret`. The n8n side enforces this via a Header Auth credential on each Webhook Trigger. The reverse `/api/internal/*` callback validates the same secret.
 - **Sandboxed third-party HTML.** Interview-prep and research HTML come from n8n + an LLM and are rendered inside `<iframe sandbox="">` with a fresh document.
 - **Security headers** set globally in [next.config.mjs](next.config.mjs): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
-- **File uploads** are Clerk-authed, MIME-whitelisted (PDF / DOC / DOCX), 5 MB capped, with the storage filename derived from the authenticated `userId` — never the client-supplied filename.
+- **File uploads** are Clerk-authed, MIME-whitelisted (PDF / DOC / DOCX), 5 MB capped, with the storage filename derived from the authenticated `userId` - never the client-supplied filename.
 
 **Known gaps (not yet shipped):** rate limiting, CSRF tokens on top of Clerk's `SameSite=Lax`, full Content-Security-Policy, Postgres row-level security (the policies are drafted in `prisma/rls-policies.sql` but not enabled).
 
@@ -292,6 +296,24 @@ npm run db:studio      # Prisma Studio (DB inspector)
 
 ---
 
+## Changelog
+
+### 2026-07-29
+- Fixed interview-prep pipeline: request/response bodies now match Gemini's `generateContent` schema instead of an OpenAI-style payload. The prompt-builder node was also generating the wrong JSON shape (a leftover copy-paste from the company-research prompt) - it now asks for the interview-prep fields the parser actually expects.
+
+---
+
+## About the developer
+
+**Fil Heinz O. Re La Torre** - Automation & AI Solutions Engineer, building integrations and AI-backed workflows that go from idea to production in days.
+
+[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://www.filheinzrelatorre.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://ph.linkedin.com/in/filheinzrelatorre)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/jabluetooth)
+[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:filheinz27@gmail.com)
+
+**Other projects:** [ZeroPress](https://github.com/jabluetooth/zeropress) · [Mimo](https://github.com/jabluetooth/mimo) · [Insight](https://github.com/jabluetooth/insight) · [Se7en](https://github.com/jabluetooth/se7en) · [see all →](https://github.com/jabluetooth)
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT - see [LICENSE](LICENSE).

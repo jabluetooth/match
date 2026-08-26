@@ -30,7 +30,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Match - AI-Powered Career Management",
+  title: "Match",
   description: "Automated job search, application tracking, and interview preparation",
 };
 
