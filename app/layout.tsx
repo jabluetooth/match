@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import "./globals.css";
 import { NavDock } from "@/components/nav-dock";
 import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/toast";
 
 const instrumentSerif = Instrument_Serif({
@@ -54,7 +53,6 @@ export default function RootLayout({
           <main className="pb-24">
             {children}
           </main>
-          <Footer />
           <Toaster />
           <NavDock />
         </body>
