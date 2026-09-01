@@ -18,12 +18,7 @@ Find matching roles, tailor your resume to each one, research the company, prep 
 
 <br />
 
-<!-- HERO: currently a static dashboard screenshot. Consider upgrading to a short GIF
-     (10-15s) showing the actual async flow that's the point of this project: click
-     "Find New Matches" -> the diagnostic toast appears -> a match card populates
-     without a page reload. That sequence demonstrates the polling/no-blocking
-     architecture described below, which a static screenshot can't. -->
-[![Match dashboard](public/dashboard.png)](https://matchby.filheinzrelatorre.com)
+[![Match demo](docs/demo.gif)](https://matchby.filheinzrelatorre.com)
 
 </div>
 
