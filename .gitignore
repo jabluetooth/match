@@ -45,6 +45,9 @@ nul
 # Uploaded files
 /public/uploads/**/*
 !/public/uploads/**/.gitkeep
+
+# Private engineering notes — not meant for the public repo
+/docs/notes/
 components/Match - Applications Kanban (1).html
 components/Match - Loading Animations.html
 components/Match Dashboard (2).html
