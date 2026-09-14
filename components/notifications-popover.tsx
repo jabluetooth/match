@@ -10,7 +10,7 @@ interface NotificationsPopoverProps {
 }
 
 const KIND_STYLE: Record<NotificationKind, { icon: LucideIcon; color: string; bg: string }> = {
-  interview: { icon: Calendar, color: "#6d28d9",            bg: "#ede9fe" },
+  interview: { icon: Calendar, color: "var(--interview)",   bg: "var(--interview-soft)" },
   followup:  { icon: Mail,     color: "var(--warning)",     bg: "var(--warning-soft)" },
   match:     { icon: Sparkles, color: "var(--accent-strong)", bg: "var(--primary-soft)" },
 };

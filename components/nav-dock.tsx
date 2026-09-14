@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Job Matches", href: "/jobs", icon: Target },
   { name: "Applications", href: "/applications", icon: FileText },
   { name: "Interviews", href: "/interviews", icon: Calendar },
@@ -76,7 +76,7 @@ export function NavDock() {
           ) : (
             <>
               <DockIcon>
-                <div className="flex h-full w-full items-center justify-center rounded-full text-indigo-400">
+                <div className="flex h-full w-full items-center justify-center rounded-full text-[var(--accent-c)]">
                   <Briefcase className="h-5 w-5" />
                 </div>
               </DockIcon>
@@ -84,10 +84,10 @@ export function NavDock() {
               <div className="mx-1 w-px self-center bg-white/10 h-8" />
 
               <DockIcon>
-                <SignInButton mode="modal">
+                <SignInButton mode="modal" forceRedirectUrl="/dashboard">
                   <button
                     title="Sign In"
-                    className="flex h-full w-full items-center justify-center rounded-full bg-indigo-500 text-white hover:bg-indigo-400 transition-colors text-xs font-semibold px-2"
+                    className="flex h-full w-full items-center justify-center rounded-full bg-[var(--accent-d)] text-[#1a1408] hover:bg-[var(--accent-c)] transition-colors text-xs font-semibold px-2"
                   >
                     Sign In
                   </button>

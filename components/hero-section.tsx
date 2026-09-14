@@ -52,7 +52,7 @@ export function HeroSection({ firstName, stats }: HeroSectionProps) {
             aspectRatio: "4 / 3",
             display: "grid",
             placeItems: "center",
-            filter: "drop-shadow(0 20px 40px rgba(99, 102, 241, 0.35))",
+            filter: "drop-shadow(0 20px 40px rgba(217, 164, 65, 0.35))",
           }}
         >
           <Image
@@ -82,7 +82,7 @@ export function HeroSection({ firstName, stats }: HeroSectionProps) {
               className="orb-badge"
               style={{ position: "absolute", bottom: 12, right: -8 }}
             >
-              <span className="orb-dot" style={{ background: '#4FC8A3' }} />
+              <span className="orb-dot" style={{ background: 'var(--success)' }} />
               {activeApplications} active
             </div>
           )}

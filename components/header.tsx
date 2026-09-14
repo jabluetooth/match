@@ -18,7 +18,7 @@ export async function Header() {
 
   return (
     <header className="topbar">
-      <Link href="/" className="logo">match</Link>
+      <Link href="/dashboard" className="logo">match</Link>
 
       <div className="topbar-right">
         <NotificationsPopover items={items} />

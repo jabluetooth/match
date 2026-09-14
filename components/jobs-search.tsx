@@ -117,7 +117,7 @@ export function JobsSearch({ resultCount }: JobsSearchProps) {
           }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = "var(--accent-c)";
-            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,.15), var(--shadow-card)";
+            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(217,164,65,.18), var(--shadow-card)";
           }}
           onBlur={(e) => {
             e.currentTarget.style.borderColor = "var(--line)";

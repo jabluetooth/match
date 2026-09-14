@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { Clock, Mail, Plus } from 'lucide-react';
+import { Mail, Plus } from 'lucide-react';
 import { FollowUpCard } from '@/components/followup-card';
 
 export const revalidate = 30;

@@ -4,62 +4,71 @@
 
 /* ─── Tailwind compat vars (HSL) — referenced by tailwind.config.ts so utilities
    like `border-border` keep working. App is dark-only; the values below match
-   the indigo glass theme. */
+   the flat obsidian theme with a single warm-amber accent. */
 @layer base {
   :root {
-    --background: 230 30% 5%;
-    --foreground: 220 20% 96%;
-    --card: 230 25% 8%;
-    --card-foreground: 220 20% 96%;
-    --popover: 230 25% 8%;
-    --popover-foreground: 220 20% 96%;
-    --primary: 239 84% 67%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 230 20% 14%;
-    --secondary-foreground: 220 20% 96%;
-    --muted: 230 20% 14%;
-    --muted-foreground: 220 10% 70%;
-    --accent: 239 84% 67%;
-    --accent-foreground: 220 20% 96%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 40 65% 55%;
+    --primary-foreground: 30 40% 8%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 40 65% 55%;
+    --accent-foreground: 30 40% 8%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 230 15% 16%;
-    --input: 230 15% 16%;
-    --ring: 239 84% 67%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 40 65% 55%;
     --radius: 0.5rem;
   }
 
   * { @apply border-border; }
 }
 
-/* ─── Design System Variables — dark theme with aurora background ─── */
+/* ─── Design System Variables — flat obsidian dark theme, single warm-amber accent ─── */
 :root {
-  /* Deep navy near-black with a slight blue cast — sits well under the
-     indigo aurora gradients without competing with them. */
-  --bg:       #08090f;
+  /* True neutral near-black — flat, no gradient wash behind it. */
+  --bg:       #0b0b0d;
+  --bg-alt:   #131315; /* one tonal step up — used to band marketing sections so
+                           the page isn't a single flat wall of black */
   --bg-2:     rgba(255, 255, 255, 0.04);
-  --ink:      #f1f3f8;
-  --ink-2:    #b8bcc9;
-  --ink-3:    #7c7f8c;
+  --ink:      #eeeef0;
+  --ink-2:    #a6a6af;
+  --ink-3:    #707078;
 
-  /* Glass surfaces: low-alpha white over the dark backdrop with
-     backdrop-filter producing the frosted look. */
-  --card:     rgba(255, 255, 255, 0.045);
-  --card-solid: rgba(20, 22, 30, 0.85);   /* opaque-ish for popovers, dropdowns */
+  /* Flat elevated surfaces: low-alpha white over the dark backdrop.
+     No backdrop-filter — elevation comes from lightness, not blur (law #47). */
+  --card:     rgba(255, 255, 255, 0.055);
+  --card-solid: rgba(19, 19, 22, 0.94);   /* opaque-ish for popovers, dropdowns */
   --line:     rgba(255, 255, 255, 0.08);
   --line-2:   rgba(255, 255, 255, 0.14);
 
-  /* Indigo accent scale. Brighter on dark backgrounds. */
-  --accent-a: rgba(99, 102, 241, 0.16);
-  --accent-b: rgba(129, 140, 248, 0.36);
-  --accent-c: #818cf8;
-  --accent-d: #6366f1;
-  --accent-e: #4f46e5;
-  --accent-strong: #6366f1;
-  --accent-deeper: #4f46e5;
-  --primary:        #6366f1;
-  --primary-soft:   rgba(99, 102, 241, 0.16);
-  --primary-ink:    #c7d2fe;
+  /* Warm amber accent scale — the single brand hue. Muted/brass rather than
+     a raw saturated gold, so it doesn't collide with the amber --warning tone. */
+  --accent-a: rgba(217, 164, 65, 0.14);
+  --accent-b: rgba(232, 181, 99, 0.32);
+  --accent-c: #e8b563;
+  --accent-d: #d9a441;
+  --accent-e: #b37e27;
+  --accent-strong: #d9a441;
+  --accent-deeper: #b37e27;
+  --primary:        #d9a441;
+  --primary-soft:   rgba(217, 164, 65, 0.14);
+  --primary-ink:    #f0c989;
+
+  /* Interview accent — a muted slate-violet reserved specifically for
+     interview-stage UI (funnel stage, calendar events, notification icon),
+     kept out of the general brand accent so it stays legible as its own signal. */
+  --interview:      #9c97d6;
+  --interview-soft: rgba(156, 151, 214, 0.16);
+  --interview-ink:  #cbc7ee;
 
   /* Status accents — saturated bright on dark, with low-alpha soft fills. */
   --success:        #22c55e;
@@ -83,7 +92,7 @@
                  0 8px 24px -8px rgba(0, 0, 0, 0.6),
                  0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-tile: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
-                 0 12px 32px -10px rgba(99, 102, 241, 0.4),
+                 0 12px 32px -10px rgba(0, 0, 0, 0.55),
                  0 2px 6px rgba(0, 0, 0, 0.5);
   --shadow-pop:  0 20px 50px -10px rgba(0, 0, 0, 0.7),
                  0 8px 16px -4px rgba(0, 0, 0, 0.5);
@@ -104,6 +113,17 @@ html, body {
   color: var(--ink);
 }
 
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* One-page marketing nav anchors — offsets the jump target below the
+   floating sticky pill (its own height + top gap) instead of tucking the
+   section head under it. */
+.mkt-anchor { scroll-margin-top: 104px; }
+
 body {
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
@@ -113,52 +133,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ─── Aurora background ─── three blurred indigo/cyan orbs that drift slowly. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(closest-side at 18% 22%, rgba(99, 102, 241, 0.55), transparent 70%),
-    radial-gradient(closest-side at 78% 16%, rgba(129, 140, 248, 0.40), transparent 72%),
-    radial-gradient(closest-side at 50% 110%, rgba(56, 189, 248, 0.30), transparent 70%),
-    radial-gradient(closest-side at 95% 75%, rgba(168, 85, 247, 0.28), transparent 72%);
-  background-size: 1400px 900px, 1100px 900px, 1600px 900px, 900px 800px;
-  background-repeat: no-repeat;
-  background-position: 0 0;
-  filter: blur(40px) saturate(1.1);
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 0;
-  animation: aurora-drift 22s ease-in-out infinite alternate;
-  will-change: transform;
-}
-
-/* A second dimmer layer adds depth and grain-free smoothness */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 50%, transparent 0%, rgba(8, 9, 15, 0.45) 70%, rgba(8, 9, 15, 0.85) 100%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes aurora-drift {
-  0%   { transform: translate3d(-2%, -1%, 0) scale(1); }
-  50%  { transform: translate3d(2%, 1%, 0)  scale(1.04); }
-  100% { transform: translate3d(-1%, 2%, 0) scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::before { animation: none; }
-}
-
-/* Ensure all children sit above the aurora */
-body > * { position: relative; z-index: 1; }
-
-/* ─── Topbar ─── dark glass to match the dock */
+/* ─── Topbar ─── the one sticky-over-content surface that earns backdrop-blur */
 .topbar {
   display: flex;
   align-items: center;
@@ -202,8 +177,8 @@ body > * { position: relative; z-index: 1; }
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #a78bfa, #6366f1);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, var(--accent-c), var(--accent-d));
+  box-shadow: 0 0 0 4px rgba(217, 164, 65, 0.2);
   flex-shrink: 0;
 }
 
@@ -259,7 +234,7 @@ body > * { position: relative; z-index: 1; }
 .g-matches  { grid-column: 2;          grid-row: 3; }
 .g-activity { grid-column: 3;          grid-row: 3; }
 
-/* ─── Cards ─── glass surface floating over the aurora */
+/* ─── Cards ─── flat elevated panels, hairline border, no blur (law #47/#81) */
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -268,12 +243,6 @@ body > * { position: relative; z-index: 1; }
   box-shadow: var(--shadow-card);
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  .card { background: rgba(20, 22, 30, 0.85); }
 }
 
 .card-head {
@@ -332,18 +301,18 @@ body > * { position: relative; z-index: 1; }
 
 .tile-peach {
   background:
-    radial-gradient(130% 120% at 0% 0%, rgba(168, 85, 247, 0.45) 0%, transparent 55%),
-    radial-gradient(120% 120% at 100% 100%, rgba(236, 72, 153, 0.25) 0%, transparent 60%),
-    linear-gradient(135deg, rgba(76, 29, 149, 0.5), rgba(124, 58, 237, 0.35));
+    radial-gradient(130% 120% at 0% 0%, rgba(217, 164, 65, 0.45) 0%, transparent 55%),
+    radial-gradient(120% 120% at 100% 100%, rgba(179, 126, 39, 0.3) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(120, 84, 20, 0.5), rgba(179, 126, 39, 0.35));
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f5f3ff;
+  color: #fdf3e0;
 }
 
 .tile-sky {
   background:
-    radial-gradient(130% 120% at 0% 0%, rgba(99, 102, 241, 0.5) 0%, transparent 55%),
+    radial-gradient(130% 120% at 0% 0%, rgba(59, 130, 246, 0.45) 0%, transparent 55%),
     radial-gradient(120% 120% at 100% 100%, rgba(56, 189, 248, 0.3) 0%, transparent 60%),
-    linear-gradient(135deg, rgba(30, 58, 138, 0.6), rgba(67, 56, 202, 0.4));
+    linear-gradient(135deg, rgba(30, 64, 138, 0.55), rgba(37, 99, 235, 0.35));
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #dbeafe;
 }
@@ -392,8 +361,6 @@ body > * { position: relative; z-index: 1; }
 .hero {
   min-height: 320px;
   background: var(--card);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--pad);
@@ -460,9 +427,8 @@ body > * { position: relative; z-index: 1; }
 .hero-right {
   width: 42%;
   background:
-    radial-gradient(120% 120% at 100% 0%, rgba(99, 102, 241, 0.35), transparent 60%),
-    radial-gradient(120% 120% at 0% 100%, rgba(168, 85, 247, 0.25), transparent 60%),
-    linear-gradient(160deg, rgba(79, 70, 229, 0.20), rgba(99, 102, 241, 0.12));
+    radial-gradient(120% 120% at 100% 0%, rgba(217, 164, 65, 0.22), transparent 60%),
+    linear-gradient(160deg, rgba(179, 126, 39, 0.14), rgba(217, 164, 65, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: calc(var(--radius-lg) - 8px);
   position: relative;
@@ -471,48 +437,6 @@ body > * { position: relative; z-index: 1; }
   place-items: center;
 }
 
-/* ─── Floating Orb ─── */
-.orb-wrap {
-  position: relative;
-  width: 220px;
-  height: 220px;
-  display: grid;
-  place-items: center;
-}
-
-.orb {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #fff, #a5b4fc 50%, #6366f1 100%);
-  box-shadow:
-    0 20px 60px -10px rgba(99, 102, 241, 0.6),
-    inset 0 -20px 40px rgba(255, 255, 255, 0.18),
-    inset 0 20px 30px rgba(255, 255, 255, 0.35);
-  position: relative;
-  animation: orb-float 5s ease-in-out infinite;
-}
-
-@keyframes orb-float { 50% { transform: translateY(-8px); } }
-
-.orb-ring {
-  position: absolute;
-  inset: 0;
-  border: 1.5px dashed rgba(255,255,255,.8);
-  border-radius: 50%;
-  animation: orb-spin 24s linear infinite;
-}
-
-.orb-ring.r2 {
-  inset: -20px;
-  border-color: rgba(255,255,255,.5);
-  border-style: dotted;
-  animation-duration: 36s;
-  animation-direction: reverse;
-}
-
-@keyframes orb-spin { to { transform: rotate(360deg); } }
-
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .btn-spinner {
@@ -520,10 +444,11 @@ body > * { position: relative; z-index: 1; }
   flex-shrink: 0;
 }
 
+/* ─── Floating badge (used over the brand mark in the hero) ─── */
 .orb-badge {
   position: absolute;
   padding: 6px 10px;
-  background: rgba(20, 22, 30, 0.8);
+  background: var(--card-solid);
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
   border-radius: 999px;
@@ -540,7 +465,7 @@ body > * { position: relative; z-index: 1; }
 .orb-badge.b1 { top: 16px; left: 8px; }
 .orb-badge.b2 { bottom: 36px; right: 4px; }
 .orb-badge.b3 { top: 40%; right: -10px; }
-.orb-dot { width: 6px; height: 6px; border-radius: 50%; background: #6366f1; flex-shrink: 0; }
+.orb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
 
 /* ─── Buttons ─── */
 .btn {
@@ -564,12 +489,12 @@ body > * { position: relative; z-index: 1; }
 .btn:hover { transform: translateY(-1px); }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-d), var(--accent-deeper));
-  color: #fff;
-  box-shadow: 0 8px 20px rgba(67,56,202,.32), inset 0 1px 0 rgba(255,255,255,.18);
+  background: linear-gradient(135deg, var(--accent-c), var(--accent-d));
+  color: #1a1408;
+  box-shadow: 0 8px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
 }
 
-.btn-primary:hover { box-shadow: 0 12px 28px rgba(67,56,202,.4), inset 0 1px 0 rgba(255,255,255,.18); }
+.btn-primary:hover { box-shadow: 0 12px 28px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25); }
 
 .btn-ghost {
   background: rgba(255, 255, 255, 0.04);
@@ -632,8 +557,8 @@ body > * { position: relative; z-index: 1; }
 .step.active .step-num {
   background: linear-gradient(135deg, var(--accent-c), var(--accent-deeper));
   border-color: transparent;
-  color: #fff;
-  box-shadow: 0 6px 14px rgba(79, 70, 229, .25);
+  color: #1a1408;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .3);
 }
 
 .step.done .step-title { color: var(--ink-2); }
@@ -665,7 +590,7 @@ body > * { position: relative; z-index: 1; }
 
 .step.active .step-action {
   background: var(--accent-strong);
-  color: #fff;
+  color: #1a1408;
   border-color: var(--accent-strong);
 }
 
@@ -732,7 +657,7 @@ body > * { position: relative; z-index: 1; }
 .stage-bar span {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #a5b4fc, #6366f1);
+  background: linear-gradient(90deg, var(--accent-c), var(--accent-d));
   border-radius: inherit;
   transition: width 0.6s ease;
 }
@@ -795,8 +720,6 @@ body > * { position: relative; z-index: 1; }
 
 .job-card {
   background: var(--card);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 20px;
@@ -808,7 +731,7 @@ body > * { position: relative; z-index: 1; }
 .job-card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 16px 40px -12px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 16px 40px -12px rgba(0, 0, 0, 0.5);
 }
 
 .job-title {
@@ -825,15 +748,15 @@ body > * { position: relative; z-index: 1; }
 .job-match {
   padding: 6px 10px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #a5b4fc, #6366f1);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-c), var(--accent-d));
+  color: #1a1408;
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.job-match.high { background: linear-gradient(135deg, #a5b4fc, #6366f1); }
+.job-match.high { background: linear-gradient(135deg, var(--accent-c), var(--accent-d)); }
 .job-match.med  { background: var(--bg-2); color: var(--ink-2); border: 1px solid var(--line-2); }
 
 .job-meta {
@@ -877,7 +800,7 @@ body > * { position: relative; z-index: 1; }
 .app-status.applied      { background: var(--success-soft); color: var(--success-ink); }
 .app-status.screened     { background: var(--primary-soft); color: var(--primary-ink); }
 .app-status.phone_screen { background: var(--primary-soft); color: var(--primary-ink); }
-.app-status.interview    { background: #ede9fe;             color: #5b21b6; }
+.app-status.interview    { background: var(--interview-soft); color: var(--interview-ink); }
 .app-status.offer        { background: var(--success-soft); color: var(--success-ink); }
 .app-status.rejected     { background: var(--danger-soft);  color: var(--danger-ink); }
 .app-status.accepted     { background: var(--success-soft); color: var(--success-ink); }
@@ -907,16 +830,15 @@ body > * { position: relative; z-index: 1; }
 
 .cal-day:hover { border-color: var(--primary); background: color-mix(in oklab, var(--primary) 10%, var(--bg-2)); }
 .cal-day.other { opacity: 0.4; }
-.cal-day.today { background: var(--primary); color: #fff; font-weight: 600; border-color: var(--primary); }
+.cal-day.today { background: var(--primary); color: #1a1408; font-weight: 600; border-color: var(--primary); }
 .cal-day.event {
-  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-  border-color: #6366f1;
+  background: linear-gradient(135deg, #d6d3f0, #b8b3e8);
+  border-color: var(--interview);
+  color: #2a2560;
 }
 
 .interview-card {
   background: var(--card);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 20px;
@@ -925,8 +847,8 @@ body > * { position: relative; z-index: 1; }
 }
 
 .interview-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 8px 24px rgba(99,102,241,.12);
+  border-color: var(--interview);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
 }
 
 .interview-type {
@@ -941,8 +863,8 @@ body > * { position: relative; z-index: 1; }
   font-weight: 600;
 }
 
-.interview-type.phone  { background: #e0e7ff; color: #4338ca; }
-.interview-type.video  { background: #ede9fe; color: #6d28d9; }
+.interview-type.phone  { background: var(--interview-soft); color: var(--interview-ink); }
+.interview-type.video  { background: var(--interview-soft); color: var(--interview-ink); }
 .interview-type.onsite { background: var(--bg-2); color: var(--ink-2); }
 
 .interview-time {
@@ -964,7 +886,7 @@ body > * { position: relative; z-index: 1; }
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(180deg, #c7d2fe, #6366f1);
+  background: linear-gradient(180deg, var(--accent-c), var(--accent-d));
 }
 
 .followup-item {
@@ -981,23 +903,21 @@ body > * { position: relative; z-index: 1; }
   height: 12px;
   border-radius: 50%;
   background: var(--bg-2);
-  border: 2px solid #6366f1;
+  border: 2px solid var(--accent-d);
 }
 
 .followup-item.pending::before {
-  background: #c7d2fe;
-  box-shadow: 0 0 0 3px rgba(99,102,241,.2);
+  background: var(--accent-c);
+  box-shadow: 0 0 0 3px rgba(217,164,65,.2);
 }
 
 .followup-item.done::before {
-  background: linear-gradient(135deg, #c7d2fe, #6366f1);
+  background: linear-gradient(135deg, var(--accent-c), var(--accent-d));
   border-color: transparent;
 }
 
 .followup-card {
   background: var(--card);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 16px;
@@ -1042,8 +962,6 @@ body > * { position: relative; z-index: 1; }
   gap: 4px;
   padding: 14px;
   background: var(--card);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -1125,7 +1043,7 @@ body > * { position: relative; z-index: 1; }
 .form-select:focus,
 .form-textarea:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+  box-shadow: 0 0 0 3px rgba(217,164,65,.18);
 }
 
 .form-textarea { resize: vertical; min-height: 100px; }
@@ -1157,7 +1075,7 @@ body > * { position: relative; z-index: 1; }
 
 .page-head h1 em {
   font-style: italic;
-  color: #6366f1;
+  color: var(--accent-c);
 }
 
 .page-head p { margin: 0; color: var(--ink-2); font-size: 15px; }
@@ -1178,4 +1096,898 @@ body > * { position: relative; z-index: 1; }
   .topbar { padding: 10px 14px; margin: 8px 12px; border-radius: 14px; }
   .page-head { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
   .page-head h1 { font-size: clamp(28px, 8vw, 38px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Marketing / Landing Page ("/") — public, unauthenticated.
+   Asymmetric layout (law #101), no aurora/glow, single amber accent,
+   real README content only — no filler copy (law #62).
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Same floating glass-pill treatment as the authenticated app's .topbar
+   (components/header.tsx) — one consistent header UI across marketing and
+   product, not two competing header designs. */
+.mkt-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  margin: 12px clamp(12px, 5%, 44px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(16, 18, 26, 0.55);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.6),
+    0 8px 16px -4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .mkt-nav { background: rgba(16, 18, 26, 0.94); }
+}
+
+.mkt-nav-links { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+
+.mkt-nav-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  text-decoration: none;
+  padding: 8px 12px;
+  position: relative;
+  transition: color 0.12s ease;
+}
+
+.mkt-nav-link:hover { color: var(--ink); }
+.mkt-nav-link.active { color: var(--ink); }
+
+.mkt-nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-d);
+}
+
+.mkt-nav-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--line-2);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+.mkt-link-ghost {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.mkt-link-ghost:hover { color: var(--ink); background: rgba(255, 255, 255, 0.05); border-color: var(--line-2); }
+
+.mkt-link-ghost:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--accent-c);
+  outline-offset: 2px;
+}
+
+/* Pure width-constrainer — no longer carries background or vertical rhythm,
+   both of which now live on the full-bleed .mkt-band that wraps it, so
+   tonal banding can run edge-to-edge instead of stopping at the content column. */
+.mkt-shell {
+  width: 90%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* Full-bleed section band. Vertical rhythm varies by relationship, not a
+   flat 96px everywhere (law #16): a full break between distinct topics, a
+   tighter "half" break between sections that continue the same thread
+   (Architecture -> Security). Tonal shade alternates deliberately per
+   section (see page components), not mechanically every-other, so sections
+   that continue one thread can share a shade. */
+.mkt-band {
+  padding: 112px 0;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.mkt-band:first-child { border-top: none; }
+.mkt-band.mkt-shade { background: var(--bg-alt); }
+.mkt-band.mkt-band-tight { padding-top: 56px; border-top: none; }
+.mkt-band.mkt-band-hero { padding: 48px 0 96px; border-top: none; position: relative; overflow: hidden; }
+
+/* ─── Band seams ─── a section whose shade actually differs from the one
+   before it gets a tonal blend instead of a flat 1px hairline cutting the
+   two colors apart. Driven by adjacency + shade state (not per-section IDs),
+   so it keeps working if bands get reordered or new ones added. A run of
+   same-shade bands (Architecture -> Security) is untouched on purpose —
+   that seam is meant to read as one continuous block, not a new topic. */
+.mkt-band:not(.mkt-shade) + .mkt-band.mkt-shade {
+  border-top: none;
+  background: linear-gradient(to bottom, var(--bg) 0, var(--bg-alt) 140px, var(--bg-alt) 100%);
+}
+
+.mkt-band.mkt-shade + .mkt-band:not(.mkt-shade) {
+  border-top: none;
+  background: linear-gradient(to bottom, var(--bg-alt) 0, var(--bg) 140px, var(--bg) 100%);
+}
+
+@media (max-width: 620px) {
+  .mkt-band:not(.mkt-shade) + .mkt-band.mkt-shade {
+    background: linear-gradient(to bottom, var(--bg) 0, var(--bg-alt) 84px, var(--bg-alt) 100%);
+  }
+  .mkt-band.mkt-shade + .mkt-band:not(.mkt-shade) {
+    background: linear-gradient(to bottom, var(--bg-alt) 0, var(--bg) 84px, var(--bg) 100%);
+  }
+}
+
+/* ─── Hero background texture ─── a fine dot-grid (blueprint / schematic
+   register, fits an automation product) plus true SVG-noise grain, both at
+   very low opacity — solid deep color kept, no aurora/glow blobs (AI tell
+   #24). Confined to the hero band and faded out toward its own bottom edge
+   so it never fights the flat bands below. */
+.mkt-band-hero::before,
+.mkt-band-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mkt-band-hero::before {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.09) 1px, transparent 0);
+  background-size: 28px 28px;
+  background-position: -4px -4px;
+  -webkit-mask-image: linear-gradient(180deg, black 0%, black 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, black 0%, black 55%, transparent 100%);
+}
+
+.mkt-band-hero::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.6'/></svg>");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+.mkt-band-hero .mkt-shell { position: relative; z-index: 1; }
+
+/* ─── Faint dot-grid on plain-list sections ─── Engineering and Security
+   are the only two sections with no card, no animation, nothing else
+   carrying visual weight — everywhere else on the page already has its
+   own interest (bento cards, the checklist, the drawing flow line, the
+   tech-stack grid, the CTA card), so it doesn't need this. Same motif as
+   the hero (not a new pattern), at roughly half the opacity, and faded
+   in/out at both edges instead of the hero's single top-to-bottom fade,
+   since these bands sit mid-page rather than opening it. */
+.mkt-band-textured {
+  position: relative;
+  overflow: hidden;
+}
+
+.mkt-band-textured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
+  background-size: 28px 28px;
+  background-position: -4px -4px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 18%, black 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, black 18%, black 82%, transparent 100%);
+}
+
+.mkt-band-textured .mkt-shell { position: relative; z-index: 1; }
+
+/* 62ch to match .mkt-flow-title/.mkt-flow-detail just below it — the
+   Engineering paragraph this was widened for is gone now (removed
+   entirely), and the two remaining users (How it works, Architecture) are
+   both short enough that going unconstrained stretched them into one
+   very long single line across the full shell width. */
+.mkt-section-intro {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 62ch;
+  margin: 14px 0 0;
+}
+
+/* Brutalist monospace tag, not a sparkle-pill / colored dot (AI tells #24,
+   #102) — brackets do the signalling, no accent color spent on a bullet
+   that says nothing. */
+.mkt-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mkt-eyebrow::before { content: "[ "; color: var(--line-2); }
+.mkt-eyebrow::after  { content: " ]"; color: var(--line-2); }
+
+/* ─── Hero ─── asymmetric two-column, not centered (law #101) */
+.mkt-hero {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 56px;
+  align-items: center;
+}
+
+.mkt-hero h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(42px, 5.2vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin: 18px 0 20px;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.mkt-hero h1 em { font-style: italic; color: var(--accent-c); }
+
+.mkt-hero-sub {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 46ch;
+  margin: 0 0 32px;
+}
+
+.mkt-cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.btn-lg { padding: 14px 24px; font-size: 14px; }
+
+/* ─── Live preview panel ─── real components, not a screenshot. Tilts in
+   true 3D (perspective on the wrap, rotateX/Y driven by Framer Motion on
+   the card, each child popped to its own translateZ) — see
+   components/hero-preview-3d.tsx. The literal product UI is the thing in
+   3D, not a decorative floating shape (AI tell #25). */
+.mkt-preview-wrap { perspective: 1400px; }
+
+.mkt-preview {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.mkt-preview-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.mkt-preview-tile {
+  border-radius: var(--radius-md);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.mkt-preview-tile .tile-lbl { font-size: 10.5px; }
+.mkt-preview-tile .tile-num { font-size: 32px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+
+.mkt-preview-funnel { display: flex; flex-direction: column; gap: 8px; }
+
+.mkt-preview-stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.mkt-preview-stage b {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Pull quote ─── editorial treatment (law #113), not a testimonial
+   card. Asymmetric two-column body (law #101): the quote carries a massive
+   decorative glyph + accent rule on the left, the plain-language
+   explanation sits on the right — not one centered stack of text. */
+.mkt-why {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 48px;
+  align-items: start;
+  margin-top: 40px;
+}
+
+.mkt-why-quote {
+  position: relative;
+  padding-left: 28px;
+  border-left: 2px solid var(--accent-d);
+}
+
+/* Zero-height + transformed up, so it floats above the quote as a
+   decorative flourish instead of occupying flow space — the actual
+   .mkt-quote text below it then starts at the exact same top offset as
+   .mkt-why-copy's paragraph, so the two columns' first lines align. */
+.mkt-why-mark {
+  display: block;
+  height: 0;
+  overflow: visible;
+  font-family: var(--font-display);
+  font-size: 60px;
+  line-height: 1;
+  color: var(--accent-d);
+  opacity: 0.6;
+  transform: translateY(-34px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.mkt-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.35;
+  color: var(--ink);
+  max-width: 24ch;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mkt-why-copy { padding-top: 0; }
+
+.mkt-quote-sub {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  max-width: 46ch;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .mkt-why { grid-template-columns: 1fr; gap: 24px; }
+}
+
+/* ─── Bento features ─── two homogeneous groups (law #15: feature the main
+   selling points prominently, list the rest minimally), each its own grid
+   with align-items: stretch — every card in a row is the same *kind* of
+   card, so matching heights actually reads as intentional instead of
+   forcing a short one-liner to stretch to match a long paragraph's height. */
+.mkt-bento {
+  display: grid;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.mkt-bento-primary {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 32px;
+}
+
+.mkt-bento-support {
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 14px;
+}
+
+/* ─── Cursor-tracking edge glow ─── shared by every card that wants it
+   (feature cards below, flow step cards further down). A masked ring
+   (padding-box minus content-box) carries a radial gradient pinned to
+   --spot-x/--spot-y (set from JS via lib/spotlight.ts, .mkt-spot on the
+   element + onMouseMove={handleSpotlightMove}), so color only ever paints
+   on the 1.5px stroke, never the interior — one definition, not one copy
+   per card type. */
+.mkt-spot {
+  position: relative;
+  --spot-x: 50%;
+  --spot-y: 50%;
+}
+
+.mkt-spot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: radial-gradient(140px circle at var(--spot-x) var(--spot-y), var(--accent-c), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.mkt-spot > * { position: relative; z-index: 1; }
+.mkt-spot:hover::before { opacity: 1; }
+
+/* Transparent card — the section's own band background shows through, the
+   1px hairline border is what defines the card. */
+.mkt-bento-item {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.mkt-bento-item:hover {
+  transform: translateY(-3px);
+  border-color: var(--line-2);
+}
+
+.mkt-bento-item > svg {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  flex-shrink: 0;
+}
+
+.mkt-bento-item h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.mkt-bento-item p { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); margin: 0; }
+
+/* Primary features carry more visual weight than the three supporting
+   cards — more padding, bigger icon badge, bigger italic heading — echoing
+   the hero's own italic-accent language instead of inventing a new one. */
+.mkt-bento-item.primary { padding: 32px; }
+
+.mkt-bento-item.primary > svg {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+}
+
+.mkt-bento-item.primary h3 {
+  font-size: 27px;
+  font-style: italic;
+}
+
+.mkt-bento-item.primary p { font-size: 14.5px; max-width: 52ch; }
+
+/* ─── Engineering highlights ─── stacked (not a 200px sidebar grid, which
+   wrapped the longer titles badly), with a hover affordance since each row
+   references a real file worth clicking through to. */
+.mkt-eng { display: flex; flex-direction: column; margin-top: 28px; }
+
+.mkt-eng-item {
+  padding: 22px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mkt-eng-item + .mkt-eng-item { margin-top: 4px; }
+
+.mkt-eng-item:hover {
+  background: var(--bg-2);
+  border-color: var(--line);
+}
+
+.mkt-eng-item h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.mkt-eng-item p { font-size: 13.5px; line-height: 1.65; color: var(--ink-2); margin: 8px 0 0; max-width: 68ch; }
+
+.mkt-eng-item code {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+/* ─── Architecture ─── a real vertical step-flow (HTML/CSS, not hand-spaced
+   ASCII art, which is impossible to keep aligned across fonts/zoom levels). */
+.mkt-flow {
+  margin-top: 28px;
+  position: relative;
+  padding-left: 32px;
+}
+
+/* A real element (components/architecture-flow.tsx animates its scaleY),
+   not a static pseudo-element — it draws downward as the steps reveal
+   instead of sitting fully visible from page load. Center is at
+   left(9px) + width(2px)/2 = 10px; the step dot below is sized to match. */
+.mkt-flow-line {
+  position: absolute;
+  left: 9px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent-c), var(--accent-d));
+  opacity: 0.4;
+}
+
+.mkt-flow-step { position: relative; padding-bottom: 28px; }
+.mkt-flow-step:last-child { padding-bottom: 0; }
+
+/* left: -27px, not -32px — the dot is 10px wide, so its center needs to
+   land on the line's own center (10px from .mkt-flow's edge): 10 - 5 = 5px
+   absolute, and .mkt-flow-step's own origin is already 32px in (the
+   parent's padding-left), so 5 - 32 = -27px relative to this element. The
+   previous -32px canceled the padding exactly instead of centering on the
+   line, landing the dot 5px left of where the line actually sits. */
+.mkt-flow-step::before {
+  content: "";
+  position: absolute;
+  left: -27px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-d);
+  box-shadow: 0 0 0 4px var(--bg);
+}
+
+/* The ring is a cutout matching whatever band the flow sits on — it has to
+   track the shade, not just the base --bg, or it shows as a mismatched halo. */
+.mkt-shade .mkt-flow-step::before { box-shadow: 0 0 0 4px var(--bg-alt); }
+
+.mkt-flow-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* max-width so a line doesn't stretch the full ~1100px shell width — was
+   rendering some sentences at 150+ characters per line, well past a
+   readable measure, on both this section and Architecture below. */
+.mkt-flow-detail {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin: 4px 0 0;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.mkt-flow-detail code {
+  font-family: var(--font-mono);
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ─── "How it works" checklist ─── an animated task-runner style list
+   instead of a static timeline: each row loads (spinner), then ticks done
+   and reveals its description — literal "automated checklist" imagery for
+   a product whose whole pitch is automation. Architecture keeps the plain
+   .mkt-flow dot-and-line list above; that's a dense technical read, not a
+   product walkthrough, so it doesn't need this treatment. */
+.mkt-checklist {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 62ch;
+}
+
+.mkt-checklist-row { padding: 10px 4px; }
+
+.mkt-checklist-head { display: flex; align-items: center; gap: 12px; }
+
+.mkt-checklist-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.mkt-checklist-icon {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+}
+
+.mkt-checklist-icon.pending { border: 1.5px solid var(--line-2); }
+.mkt-checklist-icon.active { color: var(--accent-c); }
+.mkt-checklist-icon.done { background: var(--accent-a); color: var(--accent-d); }
+
+.mkt-checklist-label {
+  font-size: 14px;
+  color: var(--ink-3);
+  transition: color 0.2s ease;
+}
+
+.mkt-checklist-label.active,
+.mkt-checklist-label.done { color: var(--ink); }
+
+.mkt-checklist-label.active {
+  background: linear-gradient(90deg, var(--ink-3) 38%, var(--ink) 50%, var(--ink-3) 62%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: mkt-shimmer 1.6s linear infinite;
+}
+
+@keyframes mkt-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-checklist-label.active {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--ink);
+  }
+}
+
+.mkt-checklist-body {
+  overflow: hidden;
+  margin-left: 30px;
+}
+
+.mkt-checklist-detail {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin: 6px 0 0;
+}
+
+.mkt-checklist-meta {
+  display: block;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  margin: 4px 0 0;
+}
+
+/* ─── Inline CTA banner ─── used for the closing "Ready when you are" band. */
+.mkt-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+}
+
+.mkt-teaser h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 14px 0 10px;
+  max-width: 32ch;
+}
+
+.mkt-teaser p { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 46ch; }
+
+/* ─── Tech stack grid ─── a bordered grid with plus-icon corner marks
+   instead of pill chips (components/tech-stack-grid.tsx). Sharp corners,
+   no radius — the schematic/blueprint register, same as the hero's
+   dot-grid texture. Each cell draws only its own right + bottom border so
+   shared edges never double up; the container supplies the top + left
+   edge for the whole grid. */
+.mkt-stack-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  margin-top: 28px;
+}
+
+.mkt-stack-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 26px 12px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-align: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.mkt-stack-icon { color: var(--ink-3); transition: color 0.15s ease; }
+
+/* Neutral tonal cycling, not new hues — same restraint as the rest of the
+   page (one accent color, spent only on hover). Index-based in the
+   component rather than nth-child, since the corner Plus icons are
+   siblings too and would throw off nth-child counting. */
+.mkt-stack-cell.shade-0 { background: transparent; }
+.mkt-stack-cell.shade-1 { background: rgba(255, 255, 255, 0.02); }
+.mkt-stack-cell.shade-2 { background: rgba(255, 255, 255, 0.035); }
+.mkt-stack-cell.shade-3 { background: rgba(255, 255, 255, 0.015); }
+
+.mkt-stack-cell:hover { color: var(--ink); background: var(--bg-2); }
+.mkt-stack-cell:hover .mkt-stack-icon { color: var(--accent-c); }
+
+/* Shared by tech-stack-grid and the closing CTA card
+   (components/corner-plus-marks.tsx) — a bookend motif, not a one-off. */
+.mkt-corner-plus {
+  position: absolute;
+  color: var(--line-2);
+  pointer-events: none;
+}
+
+.mkt-corner-plus.tl { top: -6px; left: -6px; }
+.mkt-corner-plus.tr { top: -6px; right: -6px; }
+.mkt-corner-plus.bl { bottom: -6px; left: -6px; }
+.mkt-corner-plus.br { bottom: -6px; right: -6px; }
+
+/* ─── Footer ─── family two-panel format shared with Mimo/Insight: an accent
+   brand panel + a flat links panel, both rounded top-only and flush at the
+   very bottom of the page rather than floating as closed rectangles. */
+.mkt-footer {
+  margin-top: 40px;
+  padding: 0 clamp(20px, 5%, 64px);
+}
+
+.mkt-footer-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 16px 24px;
+}
+
+.mkt-footer-brand {
+  flex: 1 1 240px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 24px 20px;
+  border-radius: 20px 20px 0 0;
+  background: linear-gradient(135deg, var(--accent-c), var(--accent-d));
+  color: #1a1408;
+}
+
+.mkt-footer-wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 23px;
+}
+
+.mkt-footer-brand-foot { display: flex; flex-direction: column; gap: 12px; }
+
+.mkt-footer-tagline {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.82;
+  max-width: 34ch;
+  margin: 0;
+}
+
+.mkt-footer-icon-row { display: flex; align-items: center; gap: 4px; }
+
+.mkt-footer-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #1a1408;
+  opacity: 0.75;
+  transition: opacity 0.12s ease;
+}
+
+.mkt-footer-icon-link:hover { opacity: 1; }
+
+.mkt-footer-copyright { font-size: 12px; opacity: 0.7; margin: 0; }
+
+.mkt-footer-links {
+  flex: 0 1 200px;
+  padding: 24px 24px 20px;
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  background: var(--card-solid);
+}
+
+.mkt-footer-col-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  margin: 0 0 12px;
+}
+
+.mkt-footer-col-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.mkt-footer-col-list a {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+
+.mkt-footer-col-list a:hover { color: var(--accent-c); }
+
+@media (max-width: 900px) {
+  .mkt-band.mkt-band-hero { padding-top: 32px; }
+  .mkt-hero { grid-template-columns: 1fr; }
+  .mkt-bento-support { grid-template-columns: 1fr 1fr; }
+  .mkt-teaser { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 620px) {
+  .mkt-shell { width: 100%; padding: 0 20px; }
+  .mkt-band { padding: 72px 0; }
+  .mkt-band.mkt-band-tight { padding-top: 40px; }
+  .mkt-band.mkt-band-hero { padding: 28px 0 56px; }
+  .mkt-bento-primary { grid-template-columns: 1fr; }
+  .mkt-bento-support { grid-template-columns: 1fr; }
+  .mkt-preview-tiles { grid-template-columns: 1fr; }
+  .mkt-nav { padding: 10px 14px; margin: 8px 12px; border-radius: 14px; }
+  .mkt-eng-item { padding: 18px 4px; }
+}
+
+@media (max-width: 480px) {
+  .mkt-footer-brand { min-height: 0; }
+  .mkt-footer-links { flex-basis: 100%; }
 }

@@ -47,7 +47,7 @@ function wrapWithBaseStyles(html: string): string {
     background: #fff;
   }
   h1, h2, h3 { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
-  a { color: #4f46e5; }
+  a { color: #9a6a1a; }
   pre, code { font-family: ui-monospace, SFMono-Regular, monospace; }
   img { max-width: 100%; }
 </style>

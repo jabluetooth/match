@@ -18,7 +18,7 @@ const STAGE_CONFIG: Record<string, StageStyle> = {
   draft:        { label: 'Draft',        sub: 'Not submitted yet',      icon: Pencil,       iconColor: 'var(--ink-2)',     iconBg: 'var(--bg-2)' },
   applied:      { label: 'Applied',      sub: 'Submitted applications', icon: FileText,     iconColor: 'var(--info)',      iconBg: 'var(--info-soft)' },
   phone_screen: { label: 'Phone Screen', sub: 'Initial screening',      icon: Phone,        iconColor: 'var(--accent-strong)', iconBg: 'var(--primary-soft)' },
-  interview:    { label: 'Interview',    sub: 'Active rounds',          icon: Calendar,     iconColor: '#6d28d9',          iconBg: '#ede9fe' },
+  interview:    { label: 'Interview',    sub: 'Active rounds',          icon: Calendar,     iconColor: 'var(--interview)', iconBg: 'var(--interview-soft)' },
   offer:        { label: 'Offer',        sub: 'Received an offer',      icon: Gift,         iconColor: 'var(--success)',   iconBg: 'var(--success-soft)' },
   accepted:     { label: 'Accepted',     sub: 'Offer accepted',         icon: CheckCircle2, iconColor: 'var(--success)',   iconBg: 'var(--success-soft)' },
   rejected:     { label: 'Rejected',     sub: 'No longer active',       icon: XCircle,      iconColor: 'var(--danger)',    iconBg: 'var(--danger-soft)' },

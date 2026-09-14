@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatRelativeTime, safeExternalUrl } from "@/lib/utils";
+import { safeExternalUrl } from "@/lib/utils";
 import { ArrowUpRight, Briefcase } from "lucide-react";
 
 interface Match {

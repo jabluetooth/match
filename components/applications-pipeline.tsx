@@ -18,7 +18,7 @@ interface ApplicationsPipelineProps {
 const STAGE_TINTS: Record<string, { color: string; bg: string }> = {
   applied:   { color: "var(--info)",          bg: "var(--info-soft)" },
   screened:  { color: "var(--accent-strong)", bg: "var(--primary-soft)" },
-  interview: { color: "#c4b5fd",              bg: "rgba(168, 85, 247, 0.18)" },
+  interview: { color: "var(--interview-ink)", bg: "var(--interview-soft)" },
   offer:     { color: "var(--success)",       bg: "var(--success-soft)" },
 };
 const FALLBACK_TINT = { color: "var(--ink-2)", bg: "var(--bg-2)" } as const;

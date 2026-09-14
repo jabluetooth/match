@@ -281,8 +281,8 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
               key={skill}
               className="tag"
               style={{
-                background: 'rgba(99, 102, 241, 0.18)',
-                borderColor: 'rgba(129, 140, 248, 0.4)',
+                background: 'var(--primary-soft)',
+                borderColor: 'rgba(232, 181, 99, 0.4)',
                 borderStyle: 'solid',
                 color: 'var(--primary-ink)',
                 fontWeight: 500,

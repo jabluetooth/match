@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
-import { Suspense } from "react";
 import "./globals.css";
-import { NavDock } from "@/components/nav-dock";
-import { Header } from "@/components/header";
-import { Toaster } from "@/components/ui/toast";
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
@@ -34,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#08090f",
+  themeColor: "#0b0b0d",
   colorScheme: "dark" as const,
 };
 
@@ -45,16 +41,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+      <html lang="en" className="dark" style={{ colorScheme: "dark" }} data-scroll-behavior="smooth">
         <body className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
-          <Suspense fallback={<div style={{ height: 65 }} />}>
-            <Header />
-          </Suspense>
-          <main className="pb-24">
-            {children}
-          </main>
-          <Toaster />
-          <NavDock />
+          {children}
         </body>
       </html>
     </ClerkProvider>

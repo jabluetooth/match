@@ -6,12 +6,12 @@
 >
   <defs>
     <linearGradient id="match-mark-fill" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#7c7af2" />
-      <stop offset="1" stop-color="#4f46e5" />
+      <stop offset="0" stop-color="#f0b45a" />
+      <stop offset="1" stop-color="#b37e27" />
     </linearGradient>
     <linearGradient id="match-mark-stroke" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#c4b5fd" />
-      <stop offset="1" stop-color="#a78bfa" />
+      <stop offset="0" stop-color="#f6d9a0" />
+      <stop offset="1" stop-color="#e8b563" />
     </linearGradient>
   </defs>
 
@@ -52,6 +52,6 @@
        L112 26
        L106 24
        L112 22 Z"
-    fill="#c4b5fd"
+    fill="#f6d9a0"
   />
 </svg>
