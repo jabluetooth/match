@@ -77,90 +77,62 @@ export function FollowUpCard({ followUp, onResponse }: FollowUpCardProps) {
         "Advancing application stage…",
       ]}
     />
-    <div className="followup-card">
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div>
-          <h3 className="followup-title">{followUp.application.job.companyName} · {followUp.application.job.title}</h3>
+    <article className="panel overflow-hidden">
+      <header className="flex flex-wrap items-start justify-between gap-3 px-5 pt-5">
+        <div className="min-w-0">
+          <h3 className="font-display text-xl leading-tight text-ink">{followUp.application.job.companyName}</h3>
+          <p className="mt-0.5 truncate text-[13px] text-ink-2">{followUp.application.job.title}</p>
         </div>
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 5,
-          padding: '4px 10px',
-          borderRadius: 999,
-          background: 'color-mix(in oklab, var(--accent-c) 20%, transparent)',
-          color: 'oklch(0.28 0.05 260)',
-          fontSize: 11,
-          fontWeight: 600,
-          flexShrink: 0,
-        }}>
-          <Mail size={11} />
-          Follow-up #{followUp.followupNumber}
-        </span>
-      </div>
+        <div className="flex shrink-0 items-center gap-2 font-mono text-[11px] text-ink-3">
+          <span className="inline-flex h-6 items-center gap-1.5 rounded border border-line px-2">
+            <Mail size={11} aria-hidden="true" />
+            #{followUp.followupNumber}
+          </span>
+          {daysSinceSent !== null && (
+            <span className="inline-flex h-6 items-center gap-1.5 rounded border border-warning/25 bg-warning/10 px-2 text-warning">
+              <Clock size={11} aria-hidden="true" />
+              {daysSinceSent}d waiting
+            </span>
+          )}
+        </div>
+      </header>
 
       {followUp.draftSubject && (
-        <div style={{
-          background: 'var(--bg-2)',
-          borderRadius: 'var(--radius-sm)',
-          padding: '10px 12px',
-          marginBottom: 10,
-          fontSize: 12.5,
-        }}>
-          <p style={{ fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>Subject:</p>
-          <p style={{ color: 'var(--ink-2)', margin: 0 }}>{followUp.draftSubject}</p>
+        <div className="mx-5 mt-4 overflow-hidden rounded border border-line bg-raised">
+          <p className="flex gap-3 border-b border-line px-3 py-2 text-[13px]">
+            <span className="w-14 shrink-0 font-mono text-[11px] leading-5 text-ink-3">subject</span>
+            <span className="min-w-0 text-ink">{followUp.draftSubject}</span>
+          </p>
           {followUp.draftBody && (
-            <>
-              <p style={{ fontWeight: 600, color: 'var(--ink)', margin: '8px 0 4px' }}>Body:</p>
-              <p style={{ color: 'var(--ink-2)', margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {followUp.draftBody}
-              </p>
-            </>
+            <details className="group px-3 py-2">
+              <summary className="flex cursor-pointer list-none gap-3 text-[13px] [&::-webkit-details-marker]:hidden">
+                <span className="w-14 shrink-0 font-mono text-[11px] leading-5 text-ink-3">body</span>
+                <span className="min-w-0 flex-1 text-ink-2">
+                  <span className="line-clamp-2 group-open:line-clamp-none group-open:whitespace-pre-line">{followUp.draftBody}</span>
+                  <span className="mt-1 inline-block font-mono text-[11px] text-accent-ink group-open:hidden">show full draft</span>
+                </span>
+              </summary>
+            </details>
           )}
         </div>
       )}
 
-      <div className="followup-meta">
-        {daysSinceSent !== null && (
-          <span><Clock size={12} /> Sent {daysSinceSent} {daysSinceSent === 1 ? 'day' : 'days'} ago</span>
-        )}
-      </div>
-
-      <p className="followup-next">Follow-up pending</p>
-
-      <div className="followup-actions">
-        <button
-          onClick={() => handleResponse('replied')}
-          disabled={loading}
-          className="btn btn-primary btn-sm"
-          type="button"
-          style={loading ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-        >
-          {loading ? <Loader2 size={12} className="btn-spinner" /> : <CheckCircle2 size={12} />}
-          They Replied
+      <footer className="mt-4 flex flex-wrap items-center gap-2 border-t border-line px-5 py-3">
+        <span className="mr-auto text-xs text-ink-3">Did they write back?</span>
+        <button onClick={() => handleResponse('replied')} disabled={loading} className="btn btn-primary btn-sm" type="button">
+          {loading ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <CheckCircle2 size={12} aria-hidden="true" />}
+          They replied
         </button>
-        <button
-          onClick={() => handleResponse('no_response')}
-          disabled={loading}
-          className="btn btn-ghost btn-sm"
-          type="button"
-          style={loading ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-        >
-          {loading ? <Loader2 size={12} className="btn-spinner" /> : <XCircle size={12} />}
-          No Response
+        <button onClick={() => handleResponse('no_response')} disabled={loading} className="btn btn-ghost btn-sm" type="button">
+          <XCircle size={12} aria-hidden="true" />
+          No response
         </button>
-        <button
-          onClick={() => handleResponse('bounced')}
-          disabled={loading}
-          className="btn btn-ghost btn-sm"
-          type="button"
-          style={{ color: 'var(--destructive, #ef4444)', ...(loading ? { opacity: 0.6, cursor: 'not-allowed' } : {}) }}
-        >
-          {loading ? <Loader2 size={12} className="btn-spinner" /> : <AlertCircle size={12} />}
+        <button onClick={() => handleResponse('bounced')} disabled={loading} className="btn btn-danger btn-sm" type="button">
+          <AlertCircle size={12} aria-hidden="true" />
           Bounced
         </button>
-      </div>
-    </div>
+      </footer>
+    </article>
     </>
   );
 }

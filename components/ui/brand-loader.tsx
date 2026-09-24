@@ -1,150 +1,85 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { STAGES, STAGE_LABEL } from "@/lib/status";
+import { Wordmark } from "@/components/system/wordmark";
+import { cn } from "@/lib/utils";
 
 interface BrandLoaderProps {
-  /** Fullscreen overlay that covers header + content + dock. Default true. */
+  /** Fullscreen overlay over the whole app. Default true. */
   fullScreen?: boolean;
-  /** Show the floating orb above the text. Default false. */
-  withOrb?: boolean;
-  /** Hide the "Match…" brand title. Default false. */
+  /** Hide the wordmark. Default false. */
   hideTitle?: boolean;
-  /** Optional secondary headline below "Match…" */
+  /** Optional headline under the rail. */
   label?: string;
-  /** Optional supporting message below the label */
+  /** Optional supporting message; cross-fades via messageVisible. */
   message?: string;
-  /** Whether the secondary message is fading in (for cross-fade callers) */
   messageVisible?: boolean;
-  /** Extra style for the overlay/root */
-  style?: CSSProperties;
 }
 
-export function BrandLoader({
-  fullScreen = true,
-  withOrb = false,
-  hideTitle = false,
-  label,
-  message,
-  messageVisible = true,
-  style,
-}: BrandLoaderProps) {
-  // For fullscreen overlays we portal to document.body so the `position: fixed`
-  // root is anchored to the viewport. Without this, a `transform`/`filter`/
-  // `contain` ancestor (e.g. the page-slide wrapper in job-matches-paged.tsx)
-  // creates a containing block and the loader renders inside the slide
-  // instead of over the whole screen.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+// Violet only on the interview stage, as everywhere else.
+const LIT = ["bg-accent", "bg-accent", "bg-interview", "bg-accent"] as const;
 
-  const root: CSSProperties = fullScreen
-    ? {
-        position: "fixed",
-        inset: 0,
-        zIndex: 9000,
-        background: "color-mix(in oklab, var(--bg) 86%, transparent)",
-        backdropFilter: "blur(18px) saturate(1.2)",
-        WebkitBackdropFilter: "blur(18px) saturate(1.2)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        gap: withOrb ? 28 : 0,
-        ...style,
-      }
-    : {
-        minHeight: "60vh",
-        display: "grid",
-        placeItems: "center",
-        ...style,
-      };
+/**
+ * The loader is the pipeline rail running: four stages light up in turn,
+ * Applied → Offer, then start over. No orb, no spinner.
+ */
+export function BrandLoader({ fullScreen = true, hideTitle = false, label, message, messageVisible = true }: BrandLoaderProps) {
+  // Fullscreen overlays portal to <body> so `position: fixed` is anchored to
+  // the viewport even inside a transformed ancestor (job-matches-paged.tsx).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const content = (
-    <div role="status" aria-live="polite" style={root}>
-      {withOrb && (
-        <div className="orb-wrap" style={{ width: 180, height: 180 }}>
-          <div className="orb" style={{ width: 110, height: 110 }} />
-          <div className="orb-ring" />
-          <div className="orb-ring r2" />
-        </div>
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "flex flex-col items-center justify-center px-6 text-center",
+        fullScreen ? "fixed inset-0 z-[9000] bg-bg/90 backdrop-blur-sm" : "min-h-[60vh]",
       )}
+    >
+      {!hideTitle && <Wordmark className="mb-8 text-5xl" />}
 
-      <div style={{ textAlign: "center", paddingInline: 24 }}>
-        {!hideTitle && (
-          <p
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: withOrb ? 38 : 42,
-              fontWeight: 400,
-              letterSpacing: "-0.02em",
-              color: "var(--ink)",
-              margin: 0,
-              lineHeight: 1,
-            }}
-          >
-            <span>Match</span>
-            <span aria-hidden style={{ marginLeft: 2 }}>
-              <span className="match-loader-dot" style={{ animationDelay: "0s" }}>.</span>
-              <span className="match-loader-dot" style={{ animationDelay: ".18s" }}>.</span>
-              <span className="match-loader-dot" style={{ animationDelay: ".36s" }}>.</span>
+      <div className="flex items-end gap-2" aria-hidden="true">
+        {STAGES.map((stage, i) => (
+          <div key={stage} className="flex w-[76px] flex-col items-center gap-2">
+            <span className="relative block h-1 w-full overflow-hidden rounded-full bg-line-strong">
+              <span
+                className={cn("absolute inset-0 origin-left animate-[loader-fill_2.4s_cubic-bezier(0.16,1,0.3,1)_infinite] rounded-full motion-reduce:animate-none", LIT[i])}
+                style={{ animationDelay: `${i * 0.3}s` }}
+              />
             </span>
-          </p>
-        )}
-
-        {label && (
-          <p
-            style={{
-              fontSize: 14,
-              color: "var(--ink-2)",
-              margin: "14px 0 0",
-              fontWeight: 500,
-              letterSpacing: "-0.005em",
-            }}
-          >
-            {label}
-          </p>
-        )}
-
-        {message && (
-          <p
-            style={{
-              fontSize: 12.5,
-              color: "var(--ink-3)",
-              margin: "6px auto 0",
-              maxWidth: "38ch",
-              lineHeight: 1.5,
-              opacity: messageVisible ? 1 : 0,
-              transform: messageVisible ? "translateY(0)" : "translateY(6px)",
-              transition: "opacity .4s ease, transform .4s ease",
-            }}
-          >
-            {message}
-          </p>
-        )}
+            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-3">{STAGE_LABEL[stage]}</span>
+          </div>
+        ))}
       </div>
 
+      {label && <p className="mt-6 text-sm font-medium text-ink-2">{label}</p>}
+      {message && (
+        <p
+          className={cn(
+            "mx-auto mt-6 max-w-[40ch] text-[13px] leading-relaxed text-ink-2 transition-[opacity,transform] duration-300",
+            messageVisible ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0",
+          )}
+        >
+          {message}
+        </p>
+      )}
+      <span className="sr-only">Loading</span>
+
       <style>{`
-        @keyframes match-loader-dot {
-          0%, 60%, 100% { opacity: 0.18; transform: translateY(0); }
-          20% { opacity: 1; transform: translateY(-4px); }
-          40% { opacity: 1; transform: translateY(0); }
-        }
-        .match-loader-dot {
-          display: inline-block;
-          color: var(--accent-strong);
-          font-family: var(--font-display);
-          animation: match-loader-dot 1.2s ease-in-out infinite;
-          will-change: transform, opacity;
+        @keyframes loader-fill {
+          0% { transform: scaleX(0); opacity: 1; }
+          40% { transform: scaleX(1); opacity: 1; }
+          80% { transform: scaleX(1); opacity: 0.25; }
+          100% { transform: scaleX(1); opacity: 0; }
         }
       `}</style>
     </div>
   );
 
-  if (fullScreen && mounted && typeof document !== "undefined") {
-    return createPortal(content, document.body);
-  }
-
+  if (fullScreen && mounted) return createPortal(content, document.body);
   return content;
 }

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatRelativeTime, formatCurrency, truncate, safeExternalUrl } from "@/lib/utils";
-import { ExternalLink, MapPin, Sparkles, Search, Loader2, Download } from "lucide-react";
+import { Check, Download, ExternalLink, Loader2, MapPin, Minus, Search, Sparkles } from "lucide-react";
+import { FitScore } from "@/components/system/fit-score";
 import { WorkflowLoader } from "@/components/workflow-loader";
 import { toast } from "@/hooks/use-toast";
 
@@ -40,7 +41,6 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
   const [applied, setApplied] = useState(false);
   const [researching, setResearching] = useState(false);
   const score = Math.round(Number(match.matchScore));
-  const matchClass = score >= 85 ? 'high' : score >= 75 ? 'med' : '';
   const sourceUrl = safeExternalUrl(match.job.sourceUrl);
 
   const handleDownload = async () => {
@@ -201,146 +201,104 @@ export function JobMatchCard({ match }: JobMatchCardProps) {
         "Finalising your research brief…",
       ]}
     />
-    <div className="job-card">
-      {/* Header */}
-      <div className="job-header">
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 className="job-title">{match.job.title}</h3>
-          <p className="job-company">{match.job.companyName}</p>
+    <article className="panel group flex h-full flex-col transition-colors hover:border-line-strong">
+      <header className="flex gap-5 p-5">
+        <FitScore score={score} />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-[1.45rem] leading-[1.1] text-ink">{match.job.title}</h3>
+          <p className="mt-1 truncate text-sm text-ink-2">{match.job.companyName}</p>
+          {/* workType is suppressed when it duplicates the location string
+              (e.g. location="Remote" + workType="Remote"). */}
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-ink-3">
+            {match.job.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={11} aria-hidden="true" />
+                {match.job.location}
+              </span>
+            )}
+            {(match.job.salaryMin || match.job.salaryMax) && (
+              <span>
+                {match.job.salaryMin ? formatCurrency(match.job.salaryMin) : ''}
+                {match.job.salaryMin && match.job.salaryMax ? '–' : ''}
+                {match.job.salaryMax ? formatCurrency(match.job.salaryMax) : ''}
+              </span>
+            )}
+            {match.job.workType &&
+              match.job.workType.toLowerCase() !== (match.job.location ?? '').toLowerCase() && (
+              <span className="capitalize">{match.job.workType}</span>
+            )}
+          </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <span className={`job-match ${matchClass}`}>{score}%</span>
-          <button
-            onClick={handleResearch}
-            disabled={researching}
-            className="btn btn-ghost btn-sm"
-            style={researching ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-            type="button"
-          >
-            {researching ? <Loader2 size={12} className="btn-spinner" /> : <Search size={12} />}
-            {researching ? 'Researching…' : 'Research'}
+      </header>
+
+      <div className="flex-1 space-y-4 px-5 pb-5">
+        {match.aiReasoning ? (
+          <p className="border-l-2 border-accent/60 pl-3 text-[13px] leading-relaxed text-ink-2">
+            <span className="sr-only">Why it matched: </span>
+            {match.aiReasoning}
+          </p>
+        ) : match.job.description ? (
+          <p className="text-[13px] leading-relaxed text-ink-3">{truncate(match.job.description, 160)}</p>
+        ) : null}
+
+        {((match.skillsMatched?.length ?? 0) > 0 || (match.skillsMissing?.length ?? 0) > 0) && (
+          <ul className="flex flex-wrap gap-1.5" aria-label="Skills">
+            {match.skillsMatched?.map((skill) => (
+              <li key={skill} className="inline-flex h-6 items-center gap-1 rounded border border-accent/25 bg-accent/10 px-2 font-mono text-[11px] text-accent-ink">
+                <Check size={10} aria-label="you have" />
+                {skill}
+              </li>
+            ))}
+            {match.skillsMissing?.slice(0, 4).map((skill) => (
+              <li key={skill} className="inline-flex h-6 items-center gap-1 rounded border border-dashed border-line-strong px-2 font-mono text-[11px] text-ink-3">
+                <Minus size={10} aria-label="gap" />
+                {skill}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <footer className="flex flex-wrap items-center gap-2 border-t border-line px-5 py-3">
+        <span className="mr-auto font-mono text-[11px] text-ink-3">matched {formatRelativeTime(match.createdAt).toLowerCase()}</span>
+        <button onClick={handleResearch} disabled={researching} className="btn btn-quiet btn-sm" type="button">
+          {researching ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <Search size={12} aria-hidden="true" />}
+          {researching ? 'Researching…' : 'Research'}
+        </button>
+        <button
+          onClick={handleApply}
+          disabled={applying || applied}
+          className={applied ? 'btn btn-sm text-success disabled:opacity-100' : 'btn btn-ghost btn-sm'}
+          type="button"
+        >
+          {applying && <Loader2 size={12} className="animate-spin" aria-hidden="true" />}
+          {applied && <Check size={12} aria-hidden="true" />}
+          {applied ? 'Applied' : applying ? 'Saving…' : 'Apply'}
+        </button>
+        {hasResume ? (
+          <button onClick={handleDownload} disabled={downloading} className="btn btn-primary btn-sm" type="button">
+            {downloading ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <Download size={12} aria-hidden="true" />}
+            {downloading ? 'Downloading…' : 'Resume'}
           </button>
-          {sourceUrl && (
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-              style={{ color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}>
-              <ExternalLink size={14} />
-            </a>
-          )}
-        </div>
-      </div>
-
-      {/* Meta — workType is suppressed when it duplicates the location string
-          (e.g. location="Remote" + workType="Remote"). */}
-      <div className="job-meta">
-        {match.job.location && (
-          <span><MapPin size={12} />{match.job.location}</span>
-        )}
-        {(match.job.salaryMin || match.job.salaryMax) && (
-          <span>
-            {match.job.salaryMin ? formatCurrency(match.job.salaryMin) : ''}
-            {match.job.salaryMin && match.job.salaryMax ? ' – ' : ''}
-            {match.job.salaryMax ? formatCurrency(match.job.salaryMax) : ''}
-          </span>
-        )}
-        {match.job.workType &&
-          match.job.workType.toLowerCase() !== (match.job.location ?? '').toLowerCase() && (
-          <span>{match.job.workType}</span>
-        )}
-      </div>
-
-      {/* Description */}
-      {match.job.description && (
-        <p style={{ fontSize: 12.5, color: 'var(--ink-3)', margin: '10px 0', lineHeight: 1.5 }}>
-          {truncate(match.job.description, 130)}
-        </p>
-      )}
-
-      {/* AI Reasoning */}
-      {match.aiReasoning && (
-        <div style={{
-          background: 'color-mix(in oklab, var(--accent-d) 15%, transparent)',
-          border: '1px dashed var(--line-2)',
-          borderRadius: 'var(--radius-sm)',
-          padding: '10px 12px',
-          marginBottom: 12,
-          display: 'flex',
-          gap: 8,
-          fontSize: 12,
-          color: 'var(--ink-2)',
-        }}>
-          <Sparkles size={13} color="var(--accent-d)" style={{ flexShrink: 0, marginTop: 1 }} />
-          <span>{match.aiReasoning}</span>
-        </div>
-      )}
-
-      {/* Skill tags */}
-      {(match.skillsMatched?.length ?? 0) > 0 && (
-        <div className="job-tags" style={{ marginBottom: 0 }}>
-          {match.skillsMatched!.map(skill => (
-            <span
-              key={skill}
-              className="tag"
-              style={{
-                background: 'var(--primary-soft)',
-                borderColor: 'rgba(232, 181, 99, 0.4)',
-                borderStyle: 'solid',
-                color: 'var(--primary-ink)',
-                fontWeight: 500,
-              }}
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="job-cta" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>
-          Matched {formatRelativeTime(match.createdAt)}
-        </span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {hasResume ? (
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="btn btn-primary btn-sm"
-              style={downloading ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-              type="button"
-            >
-              {downloading ? <Loader2 size={12} className="btn-spinner" /> : <Download size={12} />}
-              {downloading ? 'Downloading…' : 'Download Resume'}
-            </button>
-          ) : (
-            <button
-              onClick={handleTailorResume}
-              disabled={tailoring}
-              className="btn btn-primary btn-sm"
-              style={tailoring ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-              type="button"
-            >
-              {tailoring ? <Loader2 size={12} className="btn-spinner" /> : <Sparkles size={12} />}
-              {tailoring ? 'Tailoring…' : 'Tailor Resume'}
-            </button>
-          )}
-          <button
-            onClick={handleApply}
-            disabled={applying || applied}
-            className="btn btn-ghost btn-sm"
-            style={applied ? { color: 'var(--accent-e, #16a34a)' } : applying ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-            type="button"
-          >
-            {applying && <Loader2 size={12} className="btn-spinner" />}
-            {applied ? '✓ Applied' : applying ? 'Saving…' : 'Apply'}
+        ) : (
+          <button onClick={handleTailorResume} disabled={tailoring} className="btn btn-primary btn-sm" type="button">
+            {tailoring ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <Sparkles size={12} aria-hidden="true" />}
+            {tailoring ? 'Tailoring…' : 'Tailor resume'}
           </button>
-          {sourceUrl && (
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-              View
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
+        )}
+        {sourceUrl && (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open the ${match.job.title} posting`}
+            className="grid size-8 place-items-center rounded text-ink-3 hover:bg-raised hover:text-ink"
+          >
+            <ExternalLink size={13} aria-hidden="true" />
+          </a>
+        )}
+      </footer>
+    </article>
     </>
   );
 }

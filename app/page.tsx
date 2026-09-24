@@ -1,206 +1,303 @@
-import { MarketingNav } from "@/components/marketing-nav";
-import { MarketingFooter } from "@/components/marketing-footer";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { SiteHeader } from "@/components/marketing/site-header";
+import { SiteFooter } from "@/components/marketing/site-footer";
+import { HeroTicket } from "@/components/marketing/hero-ticket";
+import { Loop } from "@/components/marketing/loop";
+import { FeatureRows } from "@/components/marketing/feature-rows";
+import { Architecture } from "@/components/marketing/architecture";
 import { MarketingSignInButton } from "@/components/marketing-sign-in-button";
-import { HeroPreview3D } from "@/components/hero-preview-3d";
-import { WhyThisExists } from "@/components/why-this-exists";
-import { FeaturesBento } from "@/components/features-bento";
-import { HowItWorksFlow } from "@/components/how-it-works-flow";
-import { ArchitectureFlow } from "@/components/architecture-flow";
-import { TechStackGrid } from "@/components/tech-stack-grid";
-import { FinalCta } from "@/components/final-cta";
-import { Reveal, RevealStagger, RevealItem } from "@/components/scroll-reveal";
-import { ArrowUpRight, Sparkles } from "lucide-react";
-import { GITHUB_URL } from "@/lib/marketing";
+import { SectionLabel } from "@/components/system/section-label";
+import { DrawLine, LineReveal, Rise } from "@/components/system/motion";
+import { GITHUB_URL, sourceUrl } from "@/lib/marketing";
 
-const ENGINEERING_HIGHLIGHTS = [
+const ENGINEERING = [
   {
     title: "Pre-flight diagnostics, not stuck spinners",
-    body: "POST /api/match/jobs runs an eligibility query before triggering n8n. When the daily scrape has produced zero new jobs, the user sees “you're caught up” instead of staring at a spinner for 2 minutes — the button distinguishes four failure modes.",
+    body: "POST /api/match/jobs runs an eligibility query before it triggers n8n. When the daily scrape found nothing new, you see “you’re caught up” instead of a two-minute spinner. The button tells four failure modes apart.",
     code: "app/api/match/jobs/route.ts",
   },
   {
     title: "Polling that tracks the right signal",
-    body: "The matching poller originally watched only the count of pending matches. If the AI rejected every candidate as a low score, the count never moved and the UI looked stuck. It now also watches total and lastMatchAt.",
+    body: "The matching poller used to watch only the count of pending matches. If the model rejected every candidate, the count never moved and the UI looked stuck. It now also watches the total and the last match time.",
     code: "components/find-matches-button.tsx",
   },
   {
-    title: "Signed server-to-server callback",
-    body: "n8n needs the user's original resume to preserve formatting during tailoring. Resume bytes live in Postgres BYTEA, not a public bucket — n8n reads them via a shared x-webhook-secret header, the same secret used to sign outbound calls.",
+    title: "A signed server-to-server callback",
+    body: "n8n needs your original resume to keep its formatting while tailoring. Resume bytes live in Postgres, not a public bucket, and n8n reads them with a shared x-webhook-secret header, the same secret that signs outbound calls.",
     code: "lib/n8n-client.ts",
   },
   {
-    title: "Sandboxed third-party HTML",
-    body: "Interview-prep and research HTML come from n8n and an LLM, and are user-influenced. It's rendered inside an iframe sandbox=\"\" with a fresh document, so any reflected injection can't reach the parent DOM.",
+    title: "Third-party HTML stays sandboxed",
+    body: "Prep guides and research come from n8n and an LLM, and can carry user-influenced text. They render inside an iframe with sandbox=\"\" and a fresh document, so nothing injected can reach the page around it.",
     code: "components/prep-html-viewer.tsx",
   },
 ] as const;
 
-const SECURITY_HIGHLIGHTS = [
+const SECURITY = [
   {
-    title: "Server-derived user identity, everywhere",
-    body: "Every API route derives the user ID from the Clerk session server-side — the client never sends it, even when it's present in the form body. Resource-bound routes additionally verify row ownership before mutating anything.",
+    title: "Identity comes from the session",
+    body: "Every API route reads the user ID from the Clerk session on the server. The client never sends it, and routes that touch a record check you own it first.",
     code: "lib/auth.ts",
   },
   {
-    title: "Zod-validated request bodies",
-    body: "Every POST body is parsed through a schema before it reaches Prisma. String fields are HTML-escaped, neutralising reflected XSS that could otherwise ride in through downstream LLM output.",
+    title: "Validated request bodies",
+    body: "Every POST body goes through a Zod schema before it reaches Prisma, and string fields are HTML-escaped.",
     code: "lib/validation.ts",
   },
   {
-    title: "Security headers set globally",
-    body: "X-Content-Type-Options: nosniff, X-Frame-Options: DENY, a strict Referrer-Policy, and a locked-down Permissions-Policy apply to every response, not just the pages that seemed to need them.",
+    title: "Headers on every response",
+    body: "nosniff, DENY framing, a strict referrer policy, a locked-down permissions policy and a content security policy, set globally.",
     code: "next.config.mjs",
   },
   {
-    title: "Constrained file uploads",
-    body: "Resume uploads are Clerk-authed, MIME-whitelisted (PDF/DOC/DOCX), capped at 5 MB, and verified by magic-byte signature, not just declared MIME type. The original filename is sanitized and length-capped before it's stored as a database column, not a filesystem path.",
+    title: "Uploads are checked, not trusted",
+    body: "PDF, DOC or DOCX only, 5 MB max, verified by magic bytes rather than the declared type. The filename is sanitised and stored as a column, never used as a path.",
     code: "app/api/resume/upload/route.ts",
   },
+] as const;
+
+const STACK = [
+  ["frontend", "Next.js 16 · React 19 · TypeScript · Tailwind"],
+  ["auth", "Clerk"],
+  ["data", "PostgreSQL on Neon · Prisma 7"],
+  ["workflows", "n8n · Groq"],
+  ["hosting", "Vercel"],
 ] as const;
 
 export default function LandingPage() {
   return (
     <>
-      <MarketingNav />
+      <SiteHeader />
 
-      {/* ─── Hero ─── */}
-      <section id="top" className="mkt-band mkt-band-hero mkt-anchor">
-        <div className="mkt-shell mkt-hero">
-          <Reveal>
-            <div className="mkt-eyebrow">Personal project — open source</div>
-            <h1>
-              Job hunting,<br /><em>automated</em>.
-            </h1>
-            <p className="mkt-hero-sub">
-              Find matching roles, tailor your resume to each one, research the
-              company, prep for the interview, and track every application
-              &mdash; all in one place.
-            </p>
-            <div className="mkt-cta-row">
-              <MarketingSignInButton className="btn btn-primary btn-lg">
-                <Sparkles size={15} />
-                Sign In
-              </MarketingSignInButton>
-              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-lg">
-                View source
-                <ArrowUpRight size={15} />
-              </a>
+      <main id="top">
+        {/* HERO — serif statement left, a real-shaped match ticket right */}
+        <section className="px-[5vw] pb-[clamp(4rem,8vw,8rem)] pt-[clamp(3rem,7vw,7rem)]">
+          <div className="grid items-start gap-[clamp(3rem,6vw,6rem)] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+            <div>
+              <Rise inView={false}>
+                <SectionLabel index="00">open source · personal project</SectionLabel>
+              </Rise>
+              <LineReveal
+                as="h1"
+                inView={false}
+                delay={0.1}
+                className="mt-7 font-display text-[clamp(3.5rem,9vw,9.5rem)] leading-[0.9] tracking-[-0.025em] text-ink"
+                lines={[
+                  "Job hunting,",
+                  <em key="a" className="text-accent-ink">
+                    automated.
+                  </em>,
+                ]}
+              />
+              <Rise inView={false} delay={0.5}>
+                <p className="mt-8 max-w-[50ch] text-lg leading-relaxed text-ink-2">
+                  Match scores open roles against your profile, rewrites your resume for each one, researches the
+                  company, preps you for the interview and tracks every application, all in one place.
+                </p>
+                <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+                  <MarketingSignInButton className="btn btn-primary btn-lg group">
+                    Sign in to start
+                    <ArrowRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-1" />
+                  </MarketingSignInButton>
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-ink-2 underline decoration-line-strong underline-offset-8 transition-colors hover:text-ink hover:decoration-accent"
+                  >
+                    Read the source
+                    <ArrowUpRight size={14} aria-hidden="true" />
+                  </a>
+                </div>
+              </Rise>
             </div>
-          </Reveal>
 
-          {/* Live preview — real component styles, not a screenshot; tilts
-              in 3D under the cursor via components/hero-preview-3d.tsx */}
-          <Reveal>
-            <HeroPreview3D />
-          </Reveal>
-        </div>
-      </section>
+            <Rise inView={false} delay={0.35} y={28} className="lg:mt-24">
+              <HeroTicket />
+            </Rise>
+          </div>
+        </section>
 
-      {/* ─── Why this exists ─── asymmetric two-column pull-quote: quote
-          slides in from the left, explanation from the right. */}
-      <section className="mkt-band mkt-shade">
-        <div className="mkt-shell">
-          <Reveal>
-            <div className="mkt-eyebrow">Why this exists</div>
-          </Reveal>
-          <WhyThisExists />
-        </div>
-      </section>
+        {/* WHY — one sentence, given the room */}
+        <section className="border-y border-line bg-surface px-[5vw] py-[clamp(4rem,9vw,9rem)]">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:items-end lg:gap-16">
+            <div>
+              <SectionLabel index="01">why this exists</SectionLabel>
+              <LineReveal
+                className="mt-6 font-display text-[clamp(2.25rem,5vw,4.75rem)] leading-[1.02] tracking-[-0.015em] text-ink"
+                lines={[
+                  "Match does the parts",
+                  "a computer should do,",
+                  <span key="b" className="text-ink-3">
+                    and shows you the rest.
+                  </span>,
+                ]}
+              />
+            </div>
+            <Rise delay={0.2}>
+              <p className="max-w-[40ch] leading-relaxed text-ink-2">
+                Job hunting is a loop of repetitive work: scrape the boards, judge fit, rewrite the resume for each
+                posting, research the company, prep, chase replies. Match automates the loop and stops wherever a
+                human decision is needed.
+              </p>
+            </Rise>
+          </div>
+        </section>
 
-      {/* ─── Features ─── two homogeneous bento groups (see
-          components/features-bento.tsx): 2 primary cards, then 3
-          supporting ones, not 5 equal cards mixed into one grid. */}
-      <section id="features" className="mkt-band mkt-anchor">
-        <div className="mkt-shell">
-          <Reveal>
-            <div className="mkt-eyebrow">What it does</div>
-          </Reveal>
-          <FeaturesBento />
-        </div>
-      </section>
+        {/* THE LOOP — sticky heading, scroll-driven rail */}
+        <section id="loop" className="px-[5vw] pt-[clamp(6rem,12vw,12rem)]">
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <SectionLabel index="02">how it works</SectionLabel>
+              <LineReveal
+                className="mt-6 font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[1] tracking-[-0.015em] text-ink"
+                lines={["Five steps,", <em key="c" className="text-accent-ink">start to offer.</em>]}
+              />
+              <Rise delay={0.2}>
+                <p className="mt-6 max-w-[38ch] leading-relaxed text-ink-2">
+                  Anything slow runs as an n8n workflow in the background. The app polls Postgres for the result, so a
+                  refresh never loses your place.
+                </p>
+              </Rise>
+            </div>
+            <Loop />
+          </div>
+        </section>
 
-      {/* ─── How it works ─── plain-language flow, before the technical dive */}
-      <section id="how-it-works" className="mkt-band mkt-shade mkt-anchor">
-        <div className="mkt-shell">
-          <Reveal>
-            <div className="mkt-eyebrow">How it works</div>
-            <p className="mkt-section-intro">
-              No onboarding call, no template to fill in by hand. Five steps,
-              start to offer.
-            </p>
-          </Reveal>
-          <HowItWorksFlow />
-        </div>
-      </section>
+        {/* FEATURES — expanding editorial rows */}
+        <section id="features" className="px-[5vw] pt-[clamp(6rem,12vw,12rem)]">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <SectionLabel index="03">what it does</SectionLabel>
+              <LineReveal
+                className="mt-6 font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[1] tracking-[-0.015em] text-ink"
+                lines={["Five tools,", "one pipeline."]}
+              />
+            </div>
+            <Rise delay={0.15}>
+              <p className="max-w-[36ch] text-sm leading-relaxed text-ink-3">Open a row for the detail.</p>
+            </Rise>
+          </div>
+          <FeatureRows />
+        </section>
 
-      {/* ─── Engineering ─── the technical version of the flow above */}
-      <section id="engineering" className="mkt-band mkt-band-textured mkt-anchor">
-        <div className="mkt-shell">
-          <Reveal>
-            <div className="mkt-eyebrow">Engineering</div>
-          </Reveal>
-          <RevealStagger className="mkt-eng">
-            {ENGINEERING_HIGHLIGHTS.map((item) => (
-              <RevealItem className="mkt-eng-item" key={item.title}>
-                <h4>{item.title}</h4>
-                <p>{item.body}</p>
-                <code>{item.code}</code>
-              </RevealItem>
+        {/* ENGINEERING — sticky heading, numbered notes, each linked to its file */}
+        <section id="engineering" className="px-[5vw] pt-[clamp(6rem,12vw,12rem)]">
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-20">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <SectionLabel index="04">engineering</SectionLabel>
+              <LineReveal
+                className="mt-6 font-display text-[clamp(2.25rem,4.4vw,4rem)] leading-[1] tracking-[-0.015em] text-ink"
+                lines={["Built for the", "slow parts."]}
+              />
+              <Rise delay={0.2}>
+                <p className="mt-6 max-w-[34ch] text-sm leading-relaxed text-ink-3">
+                  Each note links to the file it describes.
+                </p>
+              </Rise>
+            </div>
+            <ol>
+              {ENGINEERING.map((item, i) => (
+                <li key={item.title}>
+                  <DrawLine delay={i * 0.06} />
+                  <Rise delay={i * 0.06} className="grid gap-3 py-8 md:grid-cols-[3rem_minmax(0,1fr)]">
+                    <span className="font-mono text-xs text-accent">0{i + 1}</span>
+                    <div>
+                      <h3 className="text-xl font-medium tracking-[-0.01em] text-ink">{item.title}</h3>
+                      <p className="mt-3 max-w-[62ch] leading-relaxed text-ink-2">{item.body}</p>
+                      <a
+                        href={sourceUrl(item.code)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-ink-3 transition-colors hover:text-accent-ink"
+                      >
+                        {item.code}
+                        <ArrowUpRight size={12} aria-hidden="true" />
+                      </a>
+                    </div>
+                  </Rise>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ARCHITECTURE — the round trip, then the stack as a ledger */}
+        <section className="px-[5vw] pt-[clamp(6rem,12vw,12rem)]">
+          <SectionLabel index="05">architecture</SectionLabel>
+          <LineReveal
+            className="mb-14 mt-6 font-display text-[clamp(2.25rem,4.4vw,4rem)] leading-[1] tracking-[-0.015em] text-ink"
+            lines={["One round trip,", <span key="d" className="text-ink-3">no websockets.</span>]}
+          />
+          <Architecture />
+          <dl className="mt-16 max-w-[44rem] font-mono text-sm">
+            {STACK.map(([k, v], i) => (
+              <div key={k}>
+                <DrawLine delay={i * 0.06} />
+                <Rise delay={i * 0.06} y={8}>
+                  <div className="flex gap-6 py-3.5">
+                    <dt className="w-24 shrink-0 text-ink-3">{k}</dt>
+                    <dd className="text-ink">{v}</dd>
+                  </div>
+                </Rise>
+              </div>
             ))}
-          </RevealStagger>
-        </div>
-      </section>
+            <DrawLine delay={0.35} />
+          </dl>
+        </section>
 
-      <section className="mkt-band mkt-shade">
-        <div className="mkt-shell">
-          <Reveal>
-            <div className="mkt-eyebrow">Architecture</div>
-            <p className="mkt-section-intro">
-              A thin Next.js frontend, an n8n workflow engine for everything
-              long-running, and Postgres as the source of truth in between.
-            </p>
-          </Reveal>
+        {/* SECURITY — statement left, a ruled table right */}
+        <section id="security" className="px-[5vw] pt-[clamp(6rem,12vw,12rem)]">
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+            <div>
+              <SectionLabel index="06">security</SectionLabel>
+              <LineReveal
+                className="mt-6 font-display text-[clamp(2.5rem,5.6vw,5.5rem)] leading-[0.95] tracking-[-0.02em] text-ink"
+                lines={["Your resume.", "Your session.", <em key="e" className="text-accent-ink">Your data.</em>]}
+              />
+            </div>
+            <ul className="border-t border-line">
+              {SECURITY.map((item, i) => (
+                <li key={item.title} className="border-b border-line">
+                  <Rise delay={i * 0.06} className="py-6">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                      <h3 className="font-medium text-ink">{item.title}</h3>
+                      <a
+                        href={sourceUrl(item.code)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-[11px] text-ink-3 transition-colors hover:text-accent-ink"
+                      >
+                        {item.code}
+                      </a>
+                    </div>
+                    <p className="mt-2 max-w-[60ch] text-sm leading-relaxed text-ink-2">{item.body}</p>
+                  </Rise>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
-          <ArchitectureFlow />
+        {/* CLOSE */}
+        <section className="px-[5vw] pt-[clamp(7rem,14vw,14rem)]">
+          <div className="flex flex-col gap-10 border-t border-line pt-12 lg:flex-row lg:items-end lg:justify-between">
+            <LineReveal
+              className="font-display text-[clamp(2.75rem,6.4vw,6.5rem)] leading-[0.95] tracking-[-0.02em] text-ink"
+              lines={["Sign in.", <span key="f" className="text-ink-3">Drop in a resume.</span>]}
+            />
+            <Rise delay={0.2} className="shrink-0">
+              <MarketingSignInButton className="btn btn-primary btn-lg group">
+                Sign in to start
+                <ArrowRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-1" />
+              </MarketingSignInButton>
+              <p className="mt-3 font-mono text-[11px] text-ink-3">Scoring a batch of roles takes 30 to 90 seconds.</p>
+            </Rise>
+          </div>
+        </section>
+      </main>
 
-          <Reveal>
-            <TechStackGrid />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Own full section, same weight as Engineering highlights above it —
-          not a cramped tight/no-border continuation of Architecture, which
-          made sense back when this was a single item but reads as
-          under-weighted now that it's an equally substantial 4-item list.
-          Unshaded (bg) continues the page's alternating rhythm against
-          Architecture's shaded band; Final CTA right after is also bg, so
-          Security now flows straight into the closing CTA. */}
-      <section className="mkt-band mkt-band-textured">
-        <div className="mkt-shell">
-          <Reveal>
-            <div className="mkt-eyebrow">Security</div>
-          </Reveal>
-          <RevealStagger className="mkt-eng">
-            {SECURITY_HIGHLIGHTS.map((item) => (
-              <RevealItem className="mkt-eng-item" key={item.title}>
-                <h4>{item.title}</h4>
-                <p>{item.body}</p>
-                <code>{item.code}</code>
-              </RevealItem>
-            ))}
-          </RevealStagger>
-        </div>
-      </section>
-
-      {/* ─── Final CTA ─── */}
-      <section className="mkt-band mkt-band-tight">
-        <div className="mkt-shell">
-          <FinalCta />
-        </div>
-      </section>
-
-      <MarketingFooter />
+      <SiteFooter />
     </>
   );
 }

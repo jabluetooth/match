@@ -2,6 +2,9 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { SettingsForm } from '@/components/settings-form';
+import { PageHead } from '@/components/system/page-head';
+
+export const metadata = { title: 'Settings' };
 
 // Cache settings page for 5 minutes (profile data changes rarely)
 export const revalidate = 300;
@@ -40,15 +43,13 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="shell">
-      <div className="page-head">
-        <div>
-          <h1><em>Profile</em> &amp; settings</h1>
-          <p>Manage your preferences and job search criteria</p>
-        </div>
-      </div>
-
+    <>
+      <PageHead
+        kicker="06 · settings"
+        title={<><em>Profile</em> &amp; preferences</>}
+        lead="What the matcher knows about you. Every score, tailored resume and prep guide starts here."
+      />
       <SettingsForm profile={profile} fullName={user?.fullName ?? null} userId={userId} />
-    </div>
+    </>
   );
 }

@@ -37,7 +37,7 @@ interface JobMatchesPagedProps {
  * so React doesn't re-mount cards between pages — keeps any in-flight async
  * work on individual cards intact.
  */
-export function JobMatchesPaged({ matches, pageSize = 9 }: JobMatchesPagedProps) {
+export function JobMatchesPaged({ matches, pageSize = 8 }: JobMatchesPagedProps) {
   const [page, setPage] = useState(0);
 
   const pages = useMemo(() => {
@@ -53,37 +53,32 @@ export function JobMatchesPaged({ matches, pageSize = 9 }: JobMatchesPagedProps)
   const start = safePage * pageSize;
   const end = Math.min(start + pageSize, matches.length);
 
+  const pad = (n: number) => String(n).padStart(2, "0");
+
   return (
     <div>
-      <div
-        style={{
-          overflow: "hidden",
-          width: "100%",
-          position: "relative",
-        }}
-      >
+      {/* Every page carries the same right gutter; the negative margin pulls
+          it past the column edge so cards line up with the rest of the page. */}
+      <div className="relative -mr-6 overflow-hidden">
         <div
+          className="flex transition-transform duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] will-change-transform motion-reduce:transition-none"
           style={{
-            display: "flex",
             width: `${totalPages * 100}%`,
             transform: `translateX(-${(safePage * 100) / totalPages}%)`,
-            transition: "transform .55s cubic-bezier(.22, 1, .36, 1)",
-            willChange: "transform",
           }}
         >
           {pages.map((slice, idx) => (
             <div
               key={idx}
+              className="shrink-0 pr-6"
               style={{
                 width: `${100 / totalPages}%`,
-                flexShrink: 0,
-                paddingRight: idx === totalPages - 1 ? 0 : "var(--gap)",
-                /* hide non-active pages from a11y tree to prevent off-screen tab traps */
+                /* hide non-active pages from the a11y tree to prevent off-screen tab traps */
                 visibility: idx === safePage ? "visible" : "hidden",
               }}
               aria-hidden={idx !== safePage}
             >
-              <div className="grid-2">
+              <div className="grid gap-4 lg:grid-cols-2">
                 {slice.map((match) => (
                   <JobMatchCard key={match.id} match={match} />
                 ))}
@@ -94,76 +89,50 @@ export function JobMatchesPaged({ matches, pageSize = 9 }: JobMatchesPagedProps)
       </div>
 
       {totalPages > 1 && (
-        <nav
-          aria-label="Job matches pagination"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: 24,
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <p style={{ margin: 0, fontSize: 13, color: "var(--ink-3)" }}>
-            Showing <span style={{ color: "var(--ink)", fontWeight: 600 }}>{start + 1}–{end}</span>{" "}
-            of <span style={{ color: "var(--ink)", fontWeight: 600 }}>{matches.length}</span>
+        <nav aria-label="Job matches pagination" className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+          <p className="font-mono text-xs text-ink-3">
+            <span className="text-ink">
+              {pad(start + 1)}–{pad(end)}
+            </span>{" "}
+            / {pad(matches.length)}
           </p>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={safePage === 0}
               aria-label="Previous page"
-              className="btn btn-ghost btn-sm"
-              style={{
-                padding: "8px 10px",
-                opacity: safePage === 0 ? 0.4 : 1,
-                cursor: safePage === 0 ? "not-allowed" : "pointer",
-              }}
+              className="btn btn-quiet btn-sm px-2"
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={14} aria-hidden="true" />
             </button>
-
-            <div role="group" aria-label="Pages" style={{ display: "flex", gap: 4 }}>
-              {Array.from({ length: totalPages }).map((_, idx) => {
-                const active = idx === safePage;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setPage(idx)}
-                    aria-current={active ? "page" : undefined}
-                    aria-label={`Page ${idx + 1}`}
-                    style={{
-                      width: active ? 28 : 8,
-                      height: 8,
-                      borderRadius: 999,
-                      border: "none",
-                      cursor: "pointer",
-                      background: active ? "var(--accent-strong)" : "rgba(255, 255, 255, 0.18)",
-                      transition: "width .25s ease, background .12s ease",
-                      padding: 0,
-                    }}
-                  />
-                );
-              })}
-            </div>
-
+            {Array.from({ length: totalPages }).map((_, idx) => {
+              const active = idx === safePage;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setPage(idx)}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={`Page ${idx + 1}`}
+                  className={
+                    "grid size-8 place-items-center rounded font-mono text-xs transition-colors " +
+                    (active ? "border border-accent/50 bg-accent/10 text-accent-ink" : "text-ink-3 hover:bg-raised hover:text-ink")
+                  }
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
             <button
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={safePage === totalPages - 1}
               aria-label="Next page"
-              className="btn btn-ghost btn-sm"
-              style={{
-                padding: "8px 10px",
-                opacity: safePage === totalPages - 1 ? 0.4 : 1,
-                cursor: safePage === totalPages - 1 ? "not-allowed" : "pointer",
-              }}
+              className="btn btn-quiet btn-sm px-2"
             >
-              <ChevronRight size={14} />
+              <ChevronRight size={14} aria-hidden="true" />
             </button>
           </div>
         </nav>

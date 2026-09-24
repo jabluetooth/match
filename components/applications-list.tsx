@@ -1,8 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Briefcase, ExternalLink, MapPin, Search, X } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Briefcase, ExternalLink, MapPin, Search, SearchX, X } from "lucide-react";
 import { ApplicationRowActions } from "@/components/application-actions";
+import { EmptyState } from "@/components/system/empty-state";
+import { StatusPill } from "@/components/system/status-pill";
+import { StageTicks } from "@/components/system/stage-rail";
+import { statusMeta } from "@/lib/status";
 import { safeExternalUrl } from "@/lib/utils";
 
 interface ApplicationListItem {
@@ -24,36 +30,6 @@ interface ApplicationsListProps {
   applications: ApplicationListItem[];
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: "Draft",
-  interested: "Interested",
-  applied: "Applied",
-  submitted: "Applied",
-  phone_screen: "Phone screen",
-  screening: "Phone screen",
-  interview: "Interview",
-  final_round: "Final round",
-  offer: "Offer",
-  rejected: "Rejected",
-  withdrawn: "Withdrawn",
-  accepted: "Accepted",
-};
-
-const STATUS_CSS: Record<string, string> = {
-  draft: "draft",
-  interested: "interested",
-  applied: "applied",
-  submitted: "applied",
-  phone_screen: "phone_screen",
-  screening: "phone_screen",
-  interview: "interview",
-  final_round: "interview",
-  offer: "offer",
-  rejected: "rejected",
-  withdrawn: "rejected",
-  accepted: "accepted",
-};
-
 const STATUS_BUCKETS = [
   { key: "all", label: "All" },
   { key: "active", label: "Active", match: (s: string) => !["rejected", "withdrawn", "accepted"].includes(s) },
@@ -61,6 +37,8 @@ const STATUS_BUCKETS = [
   { key: "offer", label: "Offers", match: (s: string) => ["offer", "accepted"].includes(s) },
   { key: "closed", label: "Closed", match: (s: string) => ["rejected", "withdrawn"].includes(s) },
 ] as const;
+
+type BucketKey = (typeof STATUS_BUCKETS)[number]["key"];
 
 function formatRelative(date: Date): string {
   const diff = Date.now() - new Date(date).getTime();
@@ -75,7 +53,7 @@ function formatRelative(date: Date): string {
 
 export function ApplicationsList({ applications }: ApplicationsListProps) {
   const [query, setQuery] = useState("");
-  const [bucket, setBucket] = useState<(typeof STATUS_BUCKETS)[number]["key"]>("all");
+  const [bucket, setBucket] = useState<BucketKey>("all");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -99,79 +77,15 @@ export function ApplicationsList({ applications }: ApplicationsListProps) {
     return out;
   }, [applications]);
 
-  return (
-    <>
-      {/* Filter / search row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-          marginBottom: 14,
-        }}
-      >
-        <label
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            flex: "1 1 280px",
-            minWidth: 240,
-            height: 40,
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid var(--line)",
-            borderRadius: 12,
-            boxShadow: "var(--shadow-card)",
-            paddingInline: "12px 8px",
-          }}
-        >
-          <Search size={14} style={{ color: "var(--ink-3)", flexShrink: 0 }} aria-hidden />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter by company or role…"
-            aria-label="Filter applications"
-            style={{
-              flex: 1,
-              minWidth: 0,
-              height: "100%",
-              marginLeft: 8,
-              fontSize: 13.5,
-              color: "var(--ink)",
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              aria-label="Clear filter"
-              style={{
-                width: 20,
-                height: 20,
-                display: "grid",
-                placeItems: "center",
-                borderRadius: 6,
-                border: "none",
-                background: "var(--bg-2)",
-                color: "var(--ink-3)",
-                cursor: "pointer",
-              }}
-            >
-              <X size={11} />
-            </button>
-          )}
-        </label>
+  const isFiltered = query.length > 0 || bucket !== "all";
 
-        <div role="tablist" aria-label="Status filter" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+  return (
+    <section aria-label="Applications">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        {/* Underlined tabs, Linear-style, with the count in mono. */}
+        <div role="tablist" aria-label="Status filter" className="-mb-px flex gap-1 overflow-x-auto border-b border-line">
           {STATUS_BUCKETS.map((b) => {
             const active = bucket === b.key;
-            const count = counts[b.key] ?? 0;
             return (
               <button
                 key={b.key}
@@ -179,227 +93,139 @@ export function ApplicationsList({ applications }: ApplicationsListProps) {
                 aria-selected={active}
                 type="button"
                 onClick={() => setBucket(b.key)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 12px",
-                  fontSize: 12.5,
-                  fontWeight: active ? 600 : 500,
-                  color: active ? "var(--primary-ink)" : "var(--ink-2)",
-                  background: active ? "var(--primary-soft)" : "transparent",
-                  border: `1px solid ${active ? "color-mix(in oklab, var(--accent-c) 50%, transparent)" : "var(--line)"}`,
-                  borderRadius: 999,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "background .12s ease, color .12s ease, border-color .12s ease",
-                }}
+                className={
+                  "relative flex h-10 shrink-0 items-center gap-2 px-3 text-[13px] transition-colors " +
+                  (active ? "text-ink" : "text-ink-3 hover:text-ink-2")
+                }
               >
                 {b.label}
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    minWidth: 18,
-                    padding: "1px 6px",
-                    background: active ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.06)",
-                    borderRadius: 999,
-                  }}
-                >
-                  {count}
-                </span>
+                <span className="font-mono text-[11px] text-ink-3">{counts[b.key] ?? 0}</span>
+                {active && (
+                  <motion.span
+                    layoutId="app-tab"
+                    className="absolute inset-x-2 -bottom-px h-0.5 bg-accent"
+                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                  />
+                )}
               </button>
             );
           })}
         </div>
+
+        <label className="flex h-9 items-center rounded border border-line bg-raised px-3 transition-colors focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/20 lg:w-72">
+          <Search size={14} className="shrink-0 text-ink-3" aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter by company or role"
+            aria-label="Filter applications"
+            className="h-full min-w-0 flex-1 bg-transparent px-2 text-[13px] text-ink placeholder:text-ink-3 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear filter"
+              className="grid size-5 place-items-center rounded text-ink-3 hover:text-ink"
+            >
+              <X size={11} aria-hidden="true" />
+            </button>
+          )}
+        </label>
       </div>
 
-      {/* Result rows */}
       {filtered.length === 0 ? (
-        <EmptyState
-          query={query}
-          bucket={bucket}
-          totalApplications={applications.length}
-          onClear={() => {
-            setQuery("");
-            setBucket("all");
-          }}
-        />
+        applications.length === 0 ? (
+          <EmptyState
+            icon={Briefcase}
+            title="No applications yet"
+            body="Find a role on the Job matches page and press Apply to start tracking it."
+            action={
+              <Link href="/jobs" className="btn btn-primary">
+                Browse matches
+              </Link>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={SearchX}
+            title="Nothing here"
+            body={isFiltered ? "No application matches this filter." : "No applications."}
+            action={
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => {
+                  setQuery("");
+                  setBucket("all");
+                }}
+              >
+                Clear filters
+              </button>
+            }
+          />
+        )
       ) : (
-        <ul
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-          }}
-        >
-          {filtered.map((app) => (
-            <ApplicationRowCard key={app.id} app={app} />
-          ))}
-        </ul>
+        <div className="panel overflow-hidden">
+          {/* Column header, desktop only. */}
+          <div className="hidden grid-cols-[minmax(0,1fr)_88px_140px_150px_32px] items-center gap-4 border-b border-line px-5 py-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-3 md:grid">
+            <span>Role</span>
+            <span>Progress</span>
+            <span>Status</span>
+            <span>Move to</span>
+            <span className="sr-only">Posting</span>
+          </div>
+          <ul className="divide-y divide-line">
+            {filtered.map((app) => (
+              <ApplicationRow key={app.id} app={app} />
+            ))}
+          </ul>
+        </div>
       )}
-    </>
+    </section>
   );
 }
 
-function ApplicationRowCard({ app }: { app: ApplicationListItem }) {
-  const label = STATUS_LABEL[app.status] ?? app.status;
-  const cssBucket = STATUS_CSS[app.status] ?? "draft";
-  const updated = formatRelative(app.updatedAt);
+function ApplicationRow({ app }: { app: ApplicationListItem }) {
+  const meta = statusMeta(app.status);
   const sourceUrl = safeExternalUrl(app.job.sourceUrl);
 
   return (
-    <li
-      style={{
-        display: "grid",
-        gridTemplateColumns: "auto 1fr auto auto",
-        alignItems: "center",
-        gap: 16,
-        padding: "14px 18px",
-        background: "rgba(255, 255, 255, 0.04)",
-        border: "1px solid var(--line)",
-        borderRadius: 14,
-        boxShadow: "var(--shadow-card)",
-        transition: "border-color .15s ease, transform .15s ease",
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          width: 36,
-          height: 36,
-          display: "grid",
-          placeItems: "center",
-          background: "var(--bg-2)",
-          border: "1px solid var(--line)",
-          borderRadius: 10,
-          color: "var(--ink-2)",
-          flexShrink: 0,
-        }}
-      >
-        <Briefcase size={15} />
-      </span>
-
-      <div style={{ minWidth: 0 }}>
-        <p
-          style={{
-            margin: 0,
-            fontSize: 14,
-            fontWeight: 600,
-            color: "var(--ink)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {app.job.title}
-        </p>
-        <p
-          style={{
-            margin: "2px 0 0",
-            fontSize: 12.5,
-            color: "var(--ink-3)",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          <span>{app.job.companyName}</span>
+    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 px-5 py-4 transition-colors hover:bg-raised/40 md:grid-cols-[minmax(0,1fr)_88px_140px_150px_32px]">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-ink">{app.job.title}</p>
+        <p className="mt-0.5 flex min-w-0 items-center gap-2 truncate text-xs text-ink-3">
+          <span className="truncate text-ink-2">{app.job.companyName}</span>
           {app.job.location && (
-            <>
-              <span aria-hidden style={{ opacity: 0.4 }}>·</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <MapPin size={11} /> {app.job.location}
-              </span>
-            </>
+            <span className="hidden items-center gap-1 sm:inline-flex">
+              <MapPin size={11} aria-hidden="true" />
+              {app.job.location}
+            </span>
           )}
-          <span aria-hidden style={{ opacity: 0.4 }}>·</span>
-          <span>Updated {updated}</span>
+          <span className="shrink-0 font-mono text-[11px]">· {formatRelative(app.updatedAt)}</span>
         </p>
       </div>
-
-      <span
-        className={`app-status ${cssBucket}`}
-        style={{ justifySelf: "end" }}
-      >
-        <span className="dot" />
-        {label}
-      </span>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 6, justifySelf: "end" }}>
+      <StageTicks reached={meta.stage} closed={meta.closed} className="hidden md:inline-flex" />
+      <div>
+        <StatusPill status={app.status} />
+      </div>
+      <div className="col-span-2 flex items-center gap-2 md:col-span-1">
         <ApplicationRowActions applicationId={app.id} currentStatus={app.status} />
+      </div>
+      <div className="hidden md:block">
         {sourceUrl && (
           <a
             href={sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Open ${app.job.companyName} posting`}
-            style={{
-              width: 32,
-              height: 32,
-              display: "grid",
-              placeItems: "center",
-              border: "1px solid var(--line)",
-              borderRadius: 8,
-              color: "var(--ink-3)",
-              background: "rgba(255, 255, 255, 0.04)",
-              textDecoration: "none",
-            }}
+            className="grid size-8 place-items-center rounded text-ink-3 hover:bg-raised hover:text-ink"
           >
-            <ExternalLink size={13} />
+            <ExternalLink size={13} aria-hidden="true" />
           </a>
         )}
       </div>
     </li>
-  );
-}
-
-function EmptyState({
-  query,
-  bucket,
-  totalApplications,
-  onClear,
-}: {
-  query: string;
-  bucket: string;
-  totalApplications: number;
-  onClear: () => void;
-}) {
-  const isFiltered = query.length > 0 || bucket !== "all";
-  return (
-    <div
-      className="card"
-      style={{
-        textAlign: "center",
-        padding: "56px var(--pad)",
-      }}
-    >
-      <p style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
-        {totalApplications === 0
-          ? "No applications yet."
-          : isFiltered
-            ? "No applications match this filter."
-            : "Nothing here."}
-      </p>
-      <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "var(--ink-3)" }}>
-        {totalApplications === 0
-          ? "Find a role on the Jobs page and click Apply to start tracking it."
-          : "Try clearing the filter or picking a different bucket."}
-      </p>
-      {isFiltered && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="btn btn-ghost btn-sm"
-          style={{ marginTop: 14 }}
-        >
-          Clear filters
-        </button>
-      )}
-    </div>
   );
 }

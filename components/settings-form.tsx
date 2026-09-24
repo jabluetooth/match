@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Upload,
   FileText,
@@ -10,9 +10,6 @@ import {
   Save,
   Loader2,
   AlertCircle,
-  Briefcase,
-  User,
-  Sliders,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -34,9 +31,9 @@ interface SettingsFormProps {
 }
 
 const SECTIONS = [
-  { id: "resume", label: "Resume", icon: FileText },
-  { id: "profile", label: "Profile", icon: User },
-  { id: "preferences", label: "Job preferences", icon: Sliders },
+  { id: "resume", label: "Resume" },
+  { id: "profile", label: "Profile" },
+  { id: "preferences", label: "Job preferences" },
 ] as const;
 
 const ACCEPTED_TYPES = ".pdf,.doc,.docx";
@@ -266,28 +263,30 @@ export function SettingsForm({ profile, fullName }: SettingsFormProps) {
   const locationsChips = parseList(preferredLocations);
 
   return (
-    <form onSubmit={handleSave} className="settings-grid" style={{ alignItems: "start" }}>
-      {/* ─── Left nav ─── */}
-      <nav className="settings-nav" aria-label="Settings sections">
-        {SECTIONS.map(({ id, label, icon: Icon }) => (
-          <a
-            key={id}
-            href={`#${id}`}
-            className={`settings-nav-item${activeSection === id ? " active" : ""}`}
-            style={{ display: "flex", alignItems: "center", gap: 10 }}
-          >
-            <Icon size={14} />
-            {label}
-          </a>
-        ))}
+    <form onSubmit={handleSave} className="grid items-start gap-8 lg:grid-cols-[180px_minmax(0,1fr)]">
+      {/* Section index: sticky on desktop, a scrolling row on mobile. */}
+      <nav aria-label="Settings sections" className="-mx-1 flex gap-1 overflow-x-auto lg:sticky lg:top-[calc(var(--topbar-h)+32px)] lg:mx-0 lg:flex-col">
+        {SECTIONS.map(({ id, label }, i) => {
+          const active = activeSection === id;
+          return (
+            <a
+              key={id}
+              href={`#${id}`}
+              aria-current={active ? "true" : undefined}
+              className={
+                "flex shrink-0 items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors " +
+                (active ? "bg-raised text-ink" : "text-ink-3 hover:text-ink-2")
+              }
+            >
+              <span className={"font-mono text-[11px] " + (active ? "text-accent" : "text-ink-3")}>0{i + 1}</span>
+              {label}
+            </a>
+          );
+        })}
       </nav>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* ─── Resume ─── */}
-        <section id="resume" className="card settings-section" style={{ scrollMarginTop: 90, marginBottom: 0 }}>
-          <h3>Resume</h3>
-          <p>Your base resume powers job matching, AI tailoring, and interview prep.</p>
-
+      <div className="min-w-0 space-y-6">
+        <Section id="resume" title="Resume" lead="Your base resume powers matching, tailoring and interview prep.">
           {resume ? (
             <ResumeCard meta={resume} onRemove={handleRemoveResume} onReplace={() => fileInputRef.current?.click()} uploading={uploading} />
           ) : (
@@ -300,7 +299,6 @@ export function SettingsForm({ profile, fullName }: SettingsFormProps) {
               onDragLeave={() => setDragOver(false)}
             />
           )}
-
           <input
             ref={fileInputRef}
             type="file"
@@ -308,117 +306,53 @@ export function SettingsForm({ profile, fullName }: SettingsFormProps) {
             onChange={handleFileChange}
             disabled={uploading}
             className="sr-only"
-            style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", border: 0 }}
+            tabIndex={-1}
+            aria-hidden="true"
           />
-        </section>
+        </Section>
 
-        {/* ─── Profile ─── */}
-        <section id="profile" className="card settings-section" style={{ scrollMarginTop: 90, marginBottom: 0 }}>
-          <h3>Profile</h3>
-          <p>Tell us about your background so we can match you to the right roles.</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
-            <Field label="Full name" error={validationError?.field === "fullName" ? validationError.message : undefined}>
-              <input
-                type="text"
-                value={fullNameInput}
-                onChange={(e) => setFullNameInput(e.target.value)}
-                placeholder="Jane Doe"
-                className="form-input"
-              />
-              <p style={{ marginTop: 6, fontSize: 11.5, color: "var(--ink-3)" }}>
-                Used on tailored resumes and in email greetings.
-              </p>
+        <Section id="profile" title="Profile" lead="Your background, so the matcher can tell a good fit from a near miss.">
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Full name" helper="Used on tailored resumes and in email greetings." error={validationError?.field === "fullName" ? validationError.message : undefined}>
+              {(id) => (
+                <input id={id} type="text" value={fullNameInput} onChange={(e) => setFullNameInput(e.target.value)} placeholder="Jane Doe" className="field" />
+              )}
             </Field>
-
-            <FieldChips
-              label="Skills"
-              value={skills}
-              chips={skillsChips}
-              onChange={setSkills}
-              placeholder="React, TypeScript, Node.js"
-              helper="Comma-separated. Press save to apply."
-            />
-
             <Field label="Years of experience">
-              <input
-                type="number"
-                min={0}
-                max={80}
-                value={experienceYears}
-                onChange={(e) => setExperienceYears(e.target.value)}
-                placeholder="5"
-                className="form-input"
-              />
+              {(id) => (
+                <input id={id} type="number" min={0} max={80} value={experienceYears} onChange={(e) => setExperienceYears(e.target.value)} placeholder="5" className="field font-mono" />
+              )}
             </Field>
-
-            <FieldChips
-              label="Job titles"
-              value={jobTitles}
-              chips={titlesChips}
-              onChange={setJobTitles}
-              placeholder="Software Engineer, Frontend Developer"
-            />
-
-            <FieldChips
-              label="Industries"
-              value={industries}
-              chips={industriesChips}
-              onChange={setIndustries}
-              placeholder="Tech, Finance, Healthcare"
-            />
+            <FieldChips label="Skills" value={skills} chips={skillsChips} onChange={setSkills} placeholder="React, TypeScript, Node.js" helper="Comma-separated." wide />
+            <FieldChips label="Job titles" value={jobTitles} chips={titlesChips} onChange={setJobTitles} placeholder="Software Engineer, Frontend Developer" />
+            <FieldChips label="Industries" value={industries} chips={industriesChips} onChange={setIndustries} placeholder="Tech, Finance, Healthcare" />
           </div>
-        </section>
+        </Section>
 
-        {/* ─── Job preferences ─── */}
-        <section id="preferences" className="card settings-section" style={{ scrollMarginTop: 90, marginBottom: 0 }}>
-          <h3>Job preferences</h3>
-          <p>Filters used by the matcher when scoring roles for you.</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+        <Section id="preferences" title="Job preferences" lead="Filters the matcher applies when it scores roles for you.">
+          <div className="grid gap-5 md:grid-cols-2">
             <Field label="Minimum salary (USD)" error={validationError?.field === "salary" ? validationError.message : undefined}>
-              <input
-                type="number"
-                min={0}
-                value={minSalary}
-                onChange={(e) => setMinSalary(e.target.value)}
-                placeholder="80000"
-                className="form-input"
-              />
+              {(id) => (
+                <input id={id} type="number" min={0} value={minSalary} onChange={(e) => setMinSalary(e.target.value)} placeholder="80000" className="field font-mono" />
+              )}
             </Field>
-
             <Field label="Maximum salary (USD)" error={validationError?.field === "salary" ? validationError.message : undefined}>
-              <input
-                type="number"
-                min={0}
-                value={maxSalary}
-                onChange={(e) => setMaxSalary(e.target.value)}
-                placeholder="150000"
-                className="form-input"
-              />
+              {(id) => (
+                <input id={id} type="number" min={0} value={maxSalary} onChange={(e) => setMaxSalary(e.target.value)} placeholder="150000" className="field font-mono" />
+              )}
             </Field>
-
-            <FieldChips
-              label="Preferred locations"
-              value={preferredLocations}
-              chips={locationsChips}
-              onChange={setPreferredLocations}
-              placeholder="Remote, New York, San Francisco"
-            />
-
+            <FieldChips label="Preferred locations" value={preferredLocations} chips={locationsChips} onChange={setPreferredLocations} placeholder="Remote, New York, San Francisco" />
             <Field label="Work type">
-              <select
-                value={workType}
-                onChange={(e) => setWorkType(e.target.value)}
-                className="form-select"
-              >
-                <option value="remote">Remote</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="onsite">On-site</option>
-              </select>
+              {(id) => (
+                <select id={id} value={workType} onChange={(e) => setWorkType(e.target.value)} className="field">
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="onsite">On-site</option>
+                </select>
+              )}
             </Field>
           </div>
-        </section>
+        </Section>
       </div>
 
       <SaveBar dirty={dirty} saving={saving} hasError={!!validationError} />
@@ -428,25 +362,40 @@ export function SettingsForm({ profile, fullName }: SettingsFormProps) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+function Section({ id, title, lead, children }: { id: string; title: string; lead: string; children: React.ReactNode }) {
+  return (
+    <section id={id} className="panel p-5 sm:p-6" aria-labelledby={`${id}-title`}>
+      <h2 id={`${id}-title`} className="font-display text-2xl text-ink">{title}</h2>
+      <p className="mb-5 mt-1 text-[13px] text-ink-3">{lead}</p>
+      {children}
+    </section>
+  );
+}
+
 function Field({
   label,
   error,
+  helper,
   children,
 }: {
   label: string;
   error?: string;
-  children: React.ReactNode;
+  helper?: string;
+  children: (id: string) => React.ReactNode;
 }) {
+  const id = useId();
   return (
-    <div className="form-group" style={{ marginBottom: 0 }}>
-      <label className="form-label">{label}</label>
-      {children}
-      {error && (
-        <p style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 12, color: "var(--danger)" }}>
-          <AlertCircle size={12} />
+    <div>
+      <label htmlFor={id} className="field-label">{label}</label>
+      {children(id)}
+      {error ? (
+        <p role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs text-danger">
+          <AlertCircle size={12} aria-hidden="true" />
           {error}
         </p>
-      )}
+      ) : helper ? (
+        <p className="mt-1.5 text-xs text-ink-3">{helper}</p>
+      ) : null}
     </div>
   );
 }
@@ -458,6 +407,7 @@ function FieldChips({
   onChange,
   placeholder,
   helper,
+  wide,
 }: {
   label: string;
   value: string;
@@ -465,40 +415,24 @@ function FieldChips({
   onChange: (v: string) => void;
   placeholder?: string;
   helper?: string;
+  wide?: boolean;
 }) {
+  const id = useId();
   return (
-    <div className="form-group" style={{ marginBottom: 0 }}>
-      <label className="form-label">{label}</label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="form-input"
-      />
-      {chips.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+    <div className={wide ? "md:col-span-2" : undefined}>
+      <label htmlFor={id} className="field-label">{label}</label>
+      <input id={id} type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="field" />
+      {chips.length > 0 ? (
+        <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={`${label} as entered`}>
           {chips.map((c) => (
-            <span
-              key={c}
-              style={{
-                fontSize: 11.5,
-                fontWeight: 500,
-                color: "var(--primary-ink)",
-                background: "var(--primary-soft)",
-                padding: "4px 9px",
-                borderRadius: 999,
-                border: "1px solid color-mix(in oklab, var(--accent-c) 50%, transparent)",
-              }}
-            >
+            <li key={c} className="inline-flex h-6 items-center rounded border border-accent/25 bg-accent/10 px-2 font-mono text-[11px] text-accent-ink">
               {c}
-            </span>
+            </li>
           ))}
-        </div>
-      )}
-      {helper && chips.length === 0 && (
-        <p style={{ marginTop: 6, fontSize: 11.5, color: "var(--ink-3)" }}>{helper}</p>
-      )}
+        </ul>
+      ) : helper ? (
+        <p className="mt-1.5 text-xs text-ink-3">{helper}</p>
+      ) : null}
     </div>
   );
 }
@@ -515,79 +449,35 @@ function ResumeCard({
   onRemove: () => void;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        padding: 16,
-        background: "var(--primary-soft)",
-        border: "1px solid color-mix(in oklab, var(--accent-c) 50%, transparent)",
-        borderRadius: "var(--radius-md)",
-      }}
-    >
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: 12,
-          background: "rgba(255, 255, 255, 0.04)",
-          border: "1px solid var(--line)",
-          color: "var(--accent-strong)",
-          flexShrink: 0,
-        }}
-      >
-        <FileText size={18} />
-      </div>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <CheckCircle2 size={14} style={{ color: "var(--success)", flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {meta.fileName}
-          </p>
-        </div>
-        <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--ink-3)" }}>
+    <div className="flex flex-wrap items-center gap-4 rounded-md border border-line bg-raised p-4">
+      <span className="grid size-10 shrink-0 place-items-center rounded border border-line bg-surface text-accent">
+        <FileText size={17} aria-hidden="true" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-2 text-sm font-medium text-ink">
+          <CheckCircle2 size={14} className="shrink-0 text-success" aria-label="On file" />
+          <span className="truncate">{meta.fileName}</span>
+        </p>
+        <p className="mt-0.5 font-mono text-[11px] text-ink-3">
           {[
             meta.size != null ? formatBytes(meta.size) : null,
-            meta.uploadedAt ? `Uploaded ${meta.uploadedAt.toLocaleDateString()}` : "On file",
+            meta.uploadedAt ? `uploaded ${meta.uploadedAt.toLocaleDateString()}` : "on file",
           ]
             .filter(Boolean)
             .join(" · ")}
         </p>
       </div>
-
-      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-        <a
-          href={meta.viewUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-ghost btn-sm"
-          style={{ textDecoration: "none" }}
-        >
-          <ExternalLink size={12} />
+      <div className="flex shrink-0 gap-1">
+        <a href={meta.viewUrl} target="_blank" rel="noopener noreferrer" className="btn btn-quiet btn-sm">
+          <ExternalLink size={12} aria-hidden="true" />
           View
         </a>
-        <button
-          type="button"
-          onClick={onReplace}
-          disabled={uploading}
-          className="btn btn-ghost btn-sm"
-        >
-          {uploading ? <Loader2 size={12} className="btn-spinner" /> : <Upload size={12} />}
+        <button type="button" onClick={onReplace} disabled={uploading} className="btn btn-ghost btn-sm">
+          {uploading ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <Upload size={12} aria-hidden="true" />}
           {uploading ? "Uploading…" : "Replace"}
         </button>
-        <button
-          type="button"
-          onClick={onRemove}
-          disabled={uploading}
-          className="btn btn-ghost btn-sm"
-          style={{ color: "var(--danger)" }}
-          aria-label="Remove resume"
-        >
-          <Trash2 size={12} />
+        <button type="button" onClick={onRemove} disabled={uploading} className="btn btn-danger btn-sm px-2" aria-label="Remove resume">
+          <Trash2 size={13} aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -623,47 +513,21 @@ function Dropzone({
           onPick();
         }
       }}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        padding: "32px 24px",
-        background: dragOver ? "var(--primary-soft)" : "var(--bg-2)",
-        border: `2px dashed ${dragOver ? "var(--accent-strong)" : "var(--line-2)"}`,
-        borderRadius: "var(--radius-md)",
-        cursor: uploading ? "wait" : "pointer",
-        transition: "background 0.15s ease, border-color 0.15s ease",
-        textAlign: "center",
-      }}
+      className={
+        "flex flex-col items-center justify-center gap-3 rounded-md border border-dashed px-6 py-10 text-center transition-colors " +
+        (dragOver ? "border-accent bg-accent/[0.06]" : "border-line-strong bg-raised/40 hover:border-ink-3") +
+        (uploading ? " cursor-wait" : " cursor-pointer")
+      }
     >
-      <div
-        style={{
-          width: 48,
-          height: 48,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: 12,
-          background: "rgba(255, 255, 255, 0.04)",
-          border: "1px solid var(--line)",
-          color: "var(--accent-strong)",
-        }}
-      >
-        {uploading ? (
-          <Loader2 size={20} className="btn-spinner" />
-        ) : (
-          <Upload size={20} />
-        )}
-      </div>
-      <div>
-        <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>
+      <span className="grid size-10 place-items-center rounded border border-line bg-surface text-accent">
+        {uploading ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <Upload size={17} aria-hidden="true" />}
+      </span>
+      <span>
+        <span className="block text-sm font-medium text-ink">
           {uploading ? "Uploading your resume…" : "Drop your resume here, or click to browse"}
-        </p>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--ink-3)" }}>
-          PDF, DOC, or DOCX · up to 5 MB
-        </p>
-      </div>
+        </span>
+        <span className="mt-1 block font-mono text-[11px] text-ink-3">PDF, DOC or DOCX · up to 5 MB</span>
+      </span>
     </label>
   );
 }
@@ -672,39 +536,17 @@ function SaveBar({ dirty, saving, hasError }: { dirty: boolean; saving: boolean;
   return (
     <div
       aria-hidden={!dirty}
-      style={{
-        gridColumn: "1 / -1",
-        position: "sticky",
-        bottom: 16,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 12,
-        padding: "12px 16px",
-        background: "color-mix(in oklab, var(--card) 96%, transparent)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        border: "1px solid var(--line)",
-        borderRadius: 14,
-        boxShadow: "var(--shadow-pop)",
-        opacity: dirty ? 1 : 0,
-        transform: dirty ? "translateY(0)" : "translateY(12px)",
-        pointerEvents: dirty ? "auto" : "none",
-        transition: "opacity .2s ease, transform .2s ease",
-        marginTop: 4,
-      }}
+      className={
+        "sticky bottom-4 flex items-center justify-between gap-3 rounded-lg border border-line-strong bg-raised px-4 py-3 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.6)] transition-[opacity,transform] duration-200 motion-reduce:transition-none lg:col-start-2 " +
+        (dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0")
+      }
     >
-      <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)", display: "flex", alignItems: "center", gap: 8 }}>
-        <Briefcase size={13} />
-        You have unsaved changes.
+      <p className="flex items-center gap-2 text-[13px] text-ink-2">
+        <span aria-hidden="true" className="size-1.5 animate-stage-pulse rounded-full bg-accent" />
+        Unsaved changes
       </p>
-      <button
-        type="submit"
-        disabled={saving || hasError}
-        className="btn btn-primary btn-sm"
-        style={saving || hasError ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
-      >
-        {saving ? <Loader2 size={13} className="btn-spinner" /> : <Save size={13} />}
+      <button type="submit" disabled={saving || hasError} tabIndex={dirty ? 0 : -1} className="btn btn-primary btn-sm">
+        {saving ? <Loader2 size={13} className="animate-spin" aria-hidden="true" /> : <Save size={13} aria-hidden="true" />}
         {saving ? "Saving…" : "Save changes"}
       </button>
     </div>

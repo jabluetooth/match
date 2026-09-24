@@ -1,12 +1,16 @@
+import Link from 'next/link';
+import { ArrowRight, Target } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { requireUserWithSync } from '@/lib/auth';
-import { HeroSection } from '@/components/hero-section';
-import { OnboardingSteps, type OnboardingStep } from '@/components/onboarding-steps';
-import { StatTile } from '@/components/stats-grid';
-import { RecentMatches } from '@/components/recent-matches';
-import { ApplicationFunnel } from '@/components/application-funnel';
-import { ActivityFeed } from '@/components/activity-feed';
-import { Calendar, TrendingUp } from 'lucide-react';
+import { PageHead } from '@/components/system/page-head';
+import { PipelineRail } from '@/components/system/stage-rail';
+import { Readings } from '@/components/dashboard/readings';
+import { SetupChecklist, type OnboardingStep } from '@/components/dashboard/setup-checklist';
+import { RecentApplications } from '@/components/dashboard/recent-applications';
+import { ActivityTimeline } from '@/components/dashboard/activity-timeline';
+import { pipelineStages } from '@/lib/status';
+
+export const metadata = { title: 'Dashboard' };
 
 export const revalidate = 30;
 
@@ -15,21 +19,18 @@ const ACTIVE_STATUSES = ['applied', 'submitted', 'phone_screen', 'screening', 'i
 const INTERVIEW_OR_LATER = ['phone_screen', 'screening', 'interview', 'final_round', 'offer', 'accepted'];
 
 async function getDashboardData(userId: string) {
-  const [allApplications, applicationStats, recentActivity, profile, rawMatches] = await Promise.all([
+  const [allApplications, recentActivity, profile, rawMatches] = await Promise.all([
     prisma.application.findMany({
       where: { userId },
       include: { job: true },
       orderBy: { createdAt: 'desc' },
     }),
-    prisma.application.groupBy({
-      by: ['status'],
-      where: { userId },
-      _count: true,
-    }),
     prisma.applicationEvent.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: 10,
+      // The workflow writes empty metadata, so name the job from the row itself.
+      include: { application: { select: { job: { select: { title: true, companyName: true } } } } },
     }),
     prisma.userProfile.findFirst({ where: { userId } }),
     // Pending matches that the jobs page would actually surface.
@@ -72,16 +73,10 @@ async function getDashboardData(userId: string) {
       (profile.skills.length > 0 || profile.jobTitles.length > 0 || profile.baseResumeUrl),
   );
 
-  const recentMatches = allApplications.slice(0, 6).map((app) => ({
-    ...app,
-    matchScore:
-      app.status === 'offer' ? 100 :
-      app.status === 'interview' ? 90 :
-      app.status === 'phone_screen' ? 80 : 75,
-    aiReasoning: null,
-    skillsMatched: [],
-    skillsMissing: [],
-  }));
+  // Most recently touched first, so a status change floats an application up.
+  const recentApplications = [...allApplications]
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .slice(0, 6);
 
   return {
     stats: {
@@ -98,8 +93,8 @@ async function getDashboardData(userId: string) {
       hasApplied: hasReachedAppliedStage,
       hasInterview: hasReachedInterviewStage,
     },
-    recentMatches,
-    applicationStats,
+    recentApplications,
+    stages: pipelineStages(allApplications.map((a) => a.status)),
     recentActivity,
   };
 }
@@ -131,43 +126,81 @@ export default async function DashboardPage() {
   const data = await getDashboardData(user.id);
   const firstName = user.fullName?.split(' ')[0] ?? null;
   const onboardingSteps = buildOnboardingSteps(data.onboarding);
+  const { stats } = data;
+  const next = stats.nextInterview;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
   return (
-    <div className="shell">
-      <div className="dash-grid">
-        {/* Row 1: hero (span 2) + peach stat tile */}
-        <HeroSection firstName={firstName} stats={data.stats} />
-        <StatTile
-          placement="g-stat-a"
-          variant="peach"
-          label="Active Applications"
-          value={data.stats.activeApplications}
-          sub={`of ${data.stats.totalApplications} total application${data.stats.totalApplications === 1 ? '' : 's'}`}
-          icon={<TrendingUp size={16} />}
+    <>
+      <PageHead
+        kicker="01 · dashboard"
+        title={firstName ? <>Good to see you, <em>{firstName}</em>.</> : <>Your job search, <em>at a glance</em>.</>}
+        lead={
+          stats.jobMatchCount > 0
+            ? `${plural(stats.jobMatchCount, 'match')} waiting for a look and ${plural(stats.activeApplications, 'application')} in flight.`
+            : 'Find matches, apply with a tailored resume, and every step lands here.'
+        }
+        actions={
+          <>
+            <Link href="/applications" className="btn btn-ghost">Applications</Link>
+            <Link href="/jobs" className="btn btn-primary">
+              <Target size={14} aria-hidden="true" />
+              View matches
+            </Link>
+          </>
+        }
+      />
+
+      <div className="space-y-6">
+        <Readings
+          items={[
+            {
+              label: 'Matches waiting',
+              value: stats.jobMatchCount,
+              sub: stats.jobMatchCount > 0 ? 'Scored against your profile' : 'Run a scan from Job matches',
+              href: '/jobs',
+            },
+            {
+              label: 'Active',
+              value: stats.activeApplications,
+              sub: `of ${plural(stats.totalApplications, 'application')}`,
+              href: '/applications',
+            },
+            {
+              label: 'Interviews',
+              value: stats.interviews,
+              sub: next
+                ? `Next: ${next.interviewDate!.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, ${next.job.companyName}`
+                : 'None scheduled',
+              href: '/interviews',
+              interview: true,
+            },
+            {
+              label: 'Offers',
+              value: stats.offers,
+              sub: stats.offers > 0 ? 'Congratulations' : 'Not yet',
+              href: '/applications',
+            },
+          ]}
         />
 
-        {/* Row 2: onboarding steps (span 2) + sky stat tile */}
-        <OnboardingSteps steps={onboardingSteps} />
-        <StatTile
-          placement="g-stat-b"
-          variant="sky"
-          label="Upcoming Interviews"
-          value={data.stats.interviews}
-          sub={
-            data.stats.nextInterview
-              ? `Next: ${data.stats.nextInterview.interviewDate!.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} — ${data.stats.nextInterview.job.companyName}`
-              : data.stats.offers > 0
-                ? `${data.stats.offers} offer${data.stats.offers === 1 ? '' : 's'} received`
-                : 'Schedule your first interview'
-          }
-          icon={<Calendar size={16} />}
-        />
+        <section className="panel p-5 sm:p-6" aria-labelledby="pipeline-title">
+          <div className="mb-6 flex items-baseline justify-between gap-4">
+            <h2 id="pipeline-title" className="eyebrow">Pipeline</h2>
+            <Link href="/applications" className="inline-flex items-center gap-1 font-mono text-[11px] text-ink-3 hover:text-accent-ink">
+              open <ArrowRight size={12} aria-hidden="true" />
+            </Link>
+          </div>
+          <PipelineRail stages={data.stages} />
+        </section>
 
-        {/* Row 3: funnel + matches + activity */}
-        <ApplicationFunnel data={data.applicationStats} />
-        <RecentMatches matches={data.recentMatches} />
-        <ActivityFeed activities={data.recentActivity} />
+        <SetupChecklist steps={onboardingSteps} />
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+          <RecentApplications items={data.recentApplications} />
+          <ActivityTimeline activities={data.recentActivity} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X, ChevronDown } from "lucide-react";
+import { motion } from "framer-motion";
+import { Search, X } from "lucide-react";
 
 const LOCATION_OPTIONS = [
   { value: "", label: "All work types" },
@@ -83,183 +84,74 @@ export function JobsSearch({ resultCount }: JobsSearchProps) {
   const hasActive = activeFilters.length > 0 || query.length > 0;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-        marginBottom: 20,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        {/* Search input */}
-        <label
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            flex: "1 1 320px",
-            minWidth: 240,
-            height: 44,
-            background: "rgba(255, 255, 255, 0.04)",
-            border: "1px solid var(--line)",
-            borderRadius: 12,
-            boxShadow: "var(--shadow-card)",
-            paddingInline: "14px 12px",
-            transition: "border-color .15s ease, box-shadow .15s ease",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = "var(--accent-c)";
-            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(217,164,65,.18), var(--shadow-card)";
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = "var(--line)";
-            e.currentTarget.style.boxShadow = "var(--shadow-card)";
-          }}
-        >
-          <Search size={16} style={{ color: "var(--ink-3)", flexShrink: 0 }} aria-hidden />
+    <div className="mb-6 space-y-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <label className="relative flex h-10 min-w-0 flex-1 items-center rounded border border-line bg-raised px-3 transition-colors focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/20 hover:border-line-strong">
+          <Search size={15} className="shrink-0 text-ink-3" aria-hidden="true" />
           <input
             type="search"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Search jobs, companies, skills…"
+            placeholder="Search by role or company"
             aria-label="Search jobs"
             enterKeyHint="search"
             autoComplete="off"
-            style={{
-              flex: 1,
-              minWidth: 0,
-              height: "100%",
-              marginLeft: 10,
-              fontSize: 14,
-              color: "var(--ink)",
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
+            className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
               type="button"
               onClick={handleClearQuery}
               aria-label="Clear search"
-              style={{
-                width: 22,
-                height: 22,
-                display: "grid",
-                placeItems: "center",
-                borderRadius: 6,
-                border: "none",
-                background: "var(--bg-2)",
-                color: "var(--ink-3)",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
+              className="grid size-6 shrink-0 place-items-center rounded text-ink-3 hover:bg-surface hover:text-ink"
             >
-              <X size={12} />
+              <X size={12} aria-hidden="true" />
             </button>
           )}
         </label>
 
-        {/* Filter pills */}
-        <FilterPill
-          label={LOCATION_OPTIONS.find((o) => o.value === location)?.label ?? "All work types"}
-          active={!!location}
-          value={location}
-          options={LOCATION_OPTIONS}
-          onChange={(v) => pushParam("location", v)}
-        />
-        <FilterPill
-          label={sort && sort !== "score" ? (SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Sort") : "Highest match"}
-          active={!!sort && sort !== "score"}
-          value={sort}
-          options={SORT_OPTIONS}
-          onChange={(v) => pushParam("sort", v)}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Segmented
+            label="Work type"
+            id="worktype"
+            value={location}
+            options={LOCATION_OPTIONS.map((o) => (o.value === "" ? { ...o, label: "All" } : o))}
+            onChange={(v) => pushParam("location", v)}
+          />
+          <Segmented
+            label="Sort"
+            id="sort"
+            value={sort === "score" ? "" : sort}
+            options={[
+              { value: "", label: "Best fit" },
+              { value: "date", label: "Newest" },
+            ]}
+            onChange={(v) => pushParam("sort", v)}
+          />
+        </div>
       </div>
 
-      {/* Active filter chips + result count */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 8,
-          minHeight: 22,
-          fontSize: 12,
-        }}
-      >
+      <div className="flex min-h-[22px] flex-wrap items-center gap-2 font-mono text-[11px] text-ink-3">
         {resultCount != null && (
-          <span style={{ color: "var(--ink-3)" }}>
+          <span>
             {resultCount} result{resultCount === 1 ? "" : "s"}
           </span>
         )}
-
-        {activeFilters.length > 0 && resultCount != null && (
-          <span aria-hidden style={{ color: "var(--ink-3)", opacity: 0.5 }}>·</span>
-        )}
-
         {activeFilters.map((f) => (
           <button
             key={f.key}
             type="button"
             onClick={f.clear}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "3px 6px 3px 10px",
-              fontSize: 11.5,
-              fontWeight: 500,
-              color: "var(--primary-ink)",
-              background: "var(--primary-soft)",
-              border: "1px solid color-mix(in oklab, var(--accent-c) 50%, transparent)",
-              borderRadius: 999,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
+            aria-label={`Remove filter ${f.label}`}
+            className="inline-flex h-6 items-center gap-1.5 rounded border border-accent/30 bg-accent/10 px-2 text-accent-ink hover:border-accent/60"
           >
             {f.label}
-            <span
-              aria-hidden
-              style={{
-                display: "grid",
-                placeItems: "center",
-                width: 16,
-                height: 16,
-                borderRadius: 8,
-                background: "rgba(255,255,255,.7)",
-              }}
-            >
-              <X size={10} />
-            </span>
+            <X size={10} aria-hidden="true" />
           </button>
         ))}
-
         {hasActive && (
-          <button
-            type="button"
-            onClick={clearAll}
-            style={{
-              padding: "3px 8px",
-              fontSize: 11.5,
-              color: "var(--ink-2)",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              textDecoration: "underline",
-            }}
-          >
-            Clear all
+          <button type="button" onClick={clearAll} className="underline decoration-line-strong underline-offset-4 hover:text-ink">
+            clear all
           </button>
         )}
       </div>
@@ -267,61 +159,60 @@ export function JobsSearch({ resultCount }: JobsSearchProps) {
   );
 }
 
-function FilterPill({
+/**
+ * A segmented control instead of a dropdown: three or four options fit on
+ * screen, so there's nothing to hide behind a click. Arrow keys move
+ * between options, as in a native radio group.
+ */
+function Segmented({
   label,
-  active,
+  id,
   value,
   options,
   onChange,
 }: {
   label: string;
-  active: boolean;
+  id: string;
   value: string;
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
 }) {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    e.preventDefault();
+    const i = options.findIndex((o) => o.value === value);
+    const next = options[(i + (e.key === "ArrowRight" ? 1 : options.length - 1)) % options.length];
+    onChange(next.value);
+  };
+
   return (
-    <div
-      style={{
-        position: "relative",
-        height: 44,
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "0 12px 0 14px",
-        background: active ? "var(--primary-soft)" : "rgba(255, 255, 255, 0.04)",
-        border: `1px solid ${active ? "color-mix(in oklab, var(--accent-c) 50%, transparent)" : "var(--line)"}`,
-        color: active ? "var(--primary-ink)" : "var(--ink-2)",
-        borderRadius: 12,
-        fontSize: 13,
-        fontWeight: 500,
-        boxShadow: "var(--shadow-card)",
-        cursor: "pointer",
-      }}
-    >
-      <span style={{ whiteSpace: "nowrap" }}>{label}</span>
-      <ChevronDown size={14} style={{ opacity: 0.6 }} />
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={label}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          opacity: 0,
-          cursor: "pointer",
-          fontSize: 14,
-          fontFamily: "inherit",
-        }}
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+    <div role="radiogroup" aria-label={label} onKeyDown={onKeyDown} className="flex h-10 items-center gap-0.5 rounded border border-line bg-surface p-1">
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <button
+            key={o.value || "all"}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onChange(o.value)}
+            className={
+              "relative h-full rounded-[4px] px-3 text-xs transition-colors " +
+              (active ? "text-ink" : "text-ink-3 hover:text-ink-2")
+            }
+          >
+            {active && (
+              <motion.span
+                layoutId={`seg-${id}`}
+                className="absolute inset-0 rounded-[4px] border border-line-strong bg-raised"
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+              />
+            )}
+            <span className="relative">{o.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

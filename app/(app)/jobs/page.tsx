@@ -5,10 +5,13 @@ import { prisma } from '@/lib/prisma';
 import { JobMatchesPaged } from '@/components/job-matches-paged';
 import { FindMatchesButton } from '@/components/find-matches-button';
 import { JobsSearch } from '@/components/jobs-search';
-import { Clock } from 'lucide-react';
+import { Clock, SearchX, Target } from 'lucide-react';
+import { PageHead } from '@/components/system/page-head';
+import { EmptyState } from '@/components/system/empty-state';
 import { formatAge } from '@/lib/utils';
 
 export const revalidate = 60;
+export const metadata = { title: 'Job matches' };
 
 async function getJobMatches(userId: string, q: string, location: string, sort: string) {
   const matches = await prisma.jobMatch.findMany({
@@ -82,37 +85,44 @@ export default async function JobMatchesPage({
     }),
   ]);
 
-  return (
-    <div className="shell">
-      <div className="page-head">
-        <div>
-          <h1>New <em>opportunities</em></h1>
-          <p>{matches.length} role{matches.length === 1 ? '' : 's'} match your profile · sorted by fit</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <FindMatchesButton />
-          <div className="chip">
-            <Clock size={13} />
-            Last scan · {formatAge(lastScrapedJob?.scrapedAt ?? null)}
-          </div>
-        </div>
-      </div>
+  const filtered = Boolean(q || location || sort);
 
-      <Suspense fallback={<div style={{ height: 70 }} />}>
+  return (
+    <>
+      <PageHead
+        kicker="02 · job matches"
+        title={<>New <em>opportunities</em></>}
+        lead={
+          <>
+            {matches.length} role{matches.length === 1 ? '' : 's'} scored against your profile
+            <span className="mx-2 text-line-strong" aria-hidden="true">/</span>
+            <span className="font-mono text-xs text-ink-3">
+              <Clock size={11} className="-mt-0.5 mr-1 inline" aria-hidden="true" />
+              last scan {formatAge(lastScrapedJob?.scrapedAt ?? null)}
+            </span>
+          </>
+        }
+        actions={<FindMatchesButton />}
+      />
+
+      <Suspense fallback={<div className="mb-6 h-[74px]" />}>
         <JobsSearch resultCount={matches.length} />
       </Suspense>
 
       {matches.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '64px var(--pad)' }}>
-          <p style={{ color: 'var(--ink-3)', fontSize: 14 }}>
-            {q || location || sort
-              ? 'No matches fit your filters. Try clearing them or running Find New Matches.'
-              : <>No matches yet — use <strong>Find New Matches</strong> to get started.</>}
-          </p>
-        </div>
+        <EmptyState
+          icon={filtered ? SearchX : Target}
+          title={filtered ? 'Nothing fits those filters' : 'No matches yet'}
+          body={
+            filtered
+              ? 'Clear a filter, or run a new scan to score fresh roles.'
+              : 'Run a scan and Match will score the latest roles against your skills, titles and preferences.'
+          }
+          action={filtered ? undefined : <FindMatchesButton />}
+        />
       ) : (
-        <JobMatchesPaged matches={matches} pageSize={9} />
+        <JobMatchesPaged matches={matches} pageSize={8} />
       )}
-    </div>
+    </>
   );
 }

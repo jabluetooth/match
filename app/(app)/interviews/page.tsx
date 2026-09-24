@@ -1,12 +1,16 @@
 import { prisma } from '@/lib/prisma';
 import { requireUserWithSync } from '@/lib/auth';
-import { Clock, MapPin, User, ExternalLink, FileText } from 'lucide-react';
+import { Building2, CalendarDays, ExternalLink, FileText, MapPin, Phone, User, Video } from 'lucide-react';
+import { PageHead } from '@/components/system/page-head';
+import { EmptyState } from '@/components/system/empty-state';
+import { StatusPill } from '@/components/system/status-pill';
 import { InterviewPrepButton } from '@/components/interview-prep-button';
 import { ScheduleInterviewModal } from '@/components/application-actions';
 import { safeExternalUrl } from '@/lib/utils';
 import Link from 'next/link';
 
 export const revalidate = 60;
+export const metadata = { title: 'Interviews' };
 
 export default async function InterviewsPage() {
   const user = await requireUserWithSync();
@@ -36,142 +40,149 @@ export default async function InterviewsPage() {
   const past     = applications.filter(app => app.interviewDate && app.interviewDate <= now);
 
   return (
-    <div className="shell">
-      <div className="page-head">
-        <div>
-          <h1>Interview <em>calendar</em></h1>
-          <p>{upcoming.length} upcoming · with prep guides and AI coaching</p>
-        </div>
-        <ScheduleInterviewModal
-          applications={schedulable.map(a => ({
-            id: a.id,
-            jobTitle: a.job.title,
-            companyName: a.job.companyName,
-          }))}
-        />
-      </div>
+    <>
+      <PageHead
+        kicker="04 · interviews"
+        title={<>Interview <em>calendar</em></>}
+        lead={`${upcoming.length} upcoming, each with a prep guide on request.`}
+        actions={
+          <ScheduleInterviewModal
+            applications={schedulable.map(a => ({
+              id: a.id,
+              jobTitle: a.job.title,
+              companyName: a.job.companyName,
+            }))}
+          />
+        }
+      />
 
-      {/* Upcoming */}
-      <section style={{ marginBottom: 36 }}>
-        <p className="card-title" style={{ marginBottom: 16 }}>Upcoming — {upcoming.length}</p>
+      <section aria-labelledby="upcoming-title" className="mb-12">
+        <h2 id="upcoming-title" className="eyebrow mb-4">
+          Upcoming <span className="text-ink-2">{upcoming.length}</span>
+        </h2>
 
         {upcoming.length === 0 ? (
-          <div className="card" style={{ textAlign: 'center', padding: '48px var(--pad)' }}>
-            <p style={{ color: 'var(--ink-3)', fontSize: 14 }}>No upcoming interviews scheduled</p>
-          </div>
+          <EmptyState
+            icon={CalendarDays}
+            title="Nothing on the calendar"
+            body={
+              schedulable.length > 0
+                ? 'Got a callback? Schedule it and Match will offer a prep guide for it.'
+                : 'When an application gets a callback, schedule it here.'
+            }
+          />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <ol className="space-y-4">
             {upcoming.map(app => {
               const sourceUrl = safeExternalUrl(app.job.sourceUrl);
+              const date = new Date(app.interviewDate!);
+              const prep = prepByAppId.get(app.id);
               return (
-              <div key={app.id} className="interview-card">
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, letterSpacing: '-0.015em', color: 'var(--ink)' }}>
-                      {app.job.title}
-                    </h3>
-                    <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '4px 0 0' }}>
-                      {app.job.companyName}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {app.interviewType && (
-                      <span className={`interview-type ${app.interviewType}`}>
-                        {app.interviewType.charAt(0).toUpperCase() + app.interviewType.slice(1)}
-                      </span>
-                    )}
-                    {sourceUrl && (
-                      <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}>
-                        <ExternalLink size={15} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {app.interviewDate && (
-                  <p className="interview-time">
-                    {new Date(app.interviewDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                    {' · '}
-                    {new Date(app.interviewDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                  </p>
-                )}
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', marginTop: 10, fontSize: 12, color: 'var(--ink-3)' }}>
-                  {app.interviewLocation && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><MapPin size={12} />{app.interviewLocation}</span>
-                  )}
-                  {app.interviewerName && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <User size={12} />{app.interviewerName}{app.interviewerRole ? ` — ${app.interviewerRole}` : ''}
+                <li key={app.id} className="panel grid overflow-hidden sm:grid-cols-[120px_minmax(0,1fr)]">
+                  {/* Date block: the one place violet leads, because this is the interview. */}
+                  <div className="flex items-center gap-4 border-b border-line bg-interview/[0.06] px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-0 sm:border-b-0 sm:border-r sm:border-l-2 sm:border-l-interview">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-interview-ink">
+                      {date.toLocaleDateString('en-US', { weekday: 'short' })}
                     </span>
-                  )}
-                </div>
-
-                {app.notes && (
-                  <div style={{ marginTop: 12, padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--ink-2)' }}>
-                    {app.notes}
+                    <span className="font-mono text-4xl font-medium leading-none tracking-tight text-ink sm:mt-1">
+                      {date.toLocaleDateString('en-US', { day: 'numeric' })}
+                    </span>
+                    <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-3 sm:mt-1">
+                      {date.toLocaleDateString('en-US', { month: 'short' })}
+                    </span>
+                    <span className="ml-auto font-mono text-xs text-ink-2 sm:ml-0 sm:mt-3">
+                      {date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </span>
                   </div>
-                )}
 
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px dashed var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {prepByAppId.has(app.id) ? (
-                    <Link
-                      href={`/interview-prep/${prepByAppId.get(app.id)!.id}`}
-                      className="btn btn-ghost btn-sm"
-                      style={{ alignSelf: 'flex-start' }}
-                    >
-                      <FileText size={13} />
-                      View Prep Guide
-                    </Link>
-                  ) : (
-                    <InterviewPrepButton
-                      applicationId={app.id}
-                      jobTitle={app.job.title}
-                      companyName={app.job.companyName}
-                      interviewerName={app.interviewerName}
-                      interviewerRole={app.interviewerRole}
-                    />
-                  )}
-                </div>
-              </div>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-display text-2xl leading-tight text-ink">{app.job.title}</h3>
+                        <p className="mt-0.5 text-sm text-ink-2">{app.job.companyName}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        {app.interviewType && (
+                          <span className="inline-flex h-6 items-center gap-1.5 rounded border border-interview/30 bg-interview/15 px-2 font-mono text-[11px] capitalize text-interview-ink">
+                            {app.interviewType === 'phone' ? <Phone size={11} aria-hidden="true" /> : app.interviewType === 'onsite' ? <Building2 size={11} aria-hidden="true" /> : <Video size={11} aria-hidden="true" />}
+                            {app.interviewType === 'onsite' ? 'On-site' : app.interviewType}
+                          </span>
+                        )}
+                        {sourceUrl && (
+                          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open the ${app.job.title} posting`}
+                            className="grid size-8 place-items-center rounded text-ink-3 hover:bg-raised hover:text-ink">
+                            <ExternalLink size={13} aria-hidden="true" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {(app.interviewLocation || app.interviewerName) && (
+                      <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-ink-3">
+                        {app.interviewLocation && (
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <dt><MapPin size={12} aria-label="Where" /></dt>
+                            <dd className="truncate">{app.interviewLocation}</dd>
+                          </div>
+                        )}
+                        {app.interviewerName && (
+                          <div className="flex items-center gap-1.5">
+                            <dt><User size={12} aria-label="With" /></dt>
+                            <dd>{app.interviewerName}{app.interviewerRole ? `, ${app.interviewerRole}` : ''}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    )}
+
+                    {app.notes && (
+                      <p className="mt-3 rounded border border-line bg-raised px-3 py-2 text-[13px] leading-relaxed text-ink-2">{app.notes}</p>
+                    )}
+
+                    <div className="mt-4 border-t border-dashed border-line pt-4">
+                      {prep ? (
+                        <Link href={`/interview-prep/${prep.id}`} className="btn btn-ghost btn-sm">
+                          <FileText size={13} aria-hidden="true" />
+                          Open prep guide
+                        </Link>
+                      ) : (
+                        <InterviewPrepButton
+                          applicationId={app.id}
+                          jobTitle={app.job.title}
+                          companyName={app.job.companyName}
+                          interviewerName={app.interviewerName}
+                          interviewerRole={app.interviewerRole}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </li>
               );
             })}
-          </div>
+          </ol>
         )}
       </section>
 
-      {/* Past */}
       {past.length > 0 && (
-        <section>
-          <p className="card-title" style={{ marginBottom: 16 }}>Past — {past.length}</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+        <section aria-labelledby="past-title">
+          <h2 id="past-title" className="eyebrow mb-4">
+            Past <span className="text-ink-2">{past.length}</span>
+          </h2>
+          <ul className="panel divide-y divide-line">
             {past.map(app => (
-              <div key={app.id} className="interview-card" style={{ opacity: 0.65 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 400, letterSpacing: '-0.015em', color: 'var(--ink)' }}>
-                      {app.job.title}
-                    </h3>
-                    <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '3px 0 0' }}>
-                      {app.job.companyName}
-                    </p>
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 999, background: 'var(--bg-2)', color: 'var(--ink-3)' }}>
-                    {app.status}
-                  </span>
+              <li key={app.id} className="flex items-center gap-4 px-5 py-3">
+                <time className="w-24 shrink-0 font-mono text-xs text-ink-3" dateTime={app.interviewDate!.toISOString()}>
+                  {new Date(app.interviewDate!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </time>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-ink-2">{app.job.title}</p>
+                  <p className="truncate text-xs text-ink-3">{app.job.companyName}</p>
                 </div>
-                {app.interviewDate && (
-                  <p className="interview-time" style={{ marginTop: 8, opacity: 0.8 }}>
-                    <Clock size={12} style={{ display: 'inline', marginRight: 5 }} />
-                    {new Date(app.interviewDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                )}
-              </div>
+                <StatusPill status={app.status} />
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       )}
-    </div>
+    </>
   );
 }
