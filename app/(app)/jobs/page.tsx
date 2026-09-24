@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
 import { JobMatchesPaged } from '@/components/job-matches-paged';
 import { FindMatchesButton } from '@/components/find-matches-button';
+import { ScanProgress } from '@/components/scan-progress';
 import { JobsSearch } from '@/components/jobs-search';
 import { Clock, SearchX, Target } from 'lucide-react';
 import { PageHead } from '@/components/system/page-head';
@@ -104,6 +105,8 @@ export default async function JobMatchesPage({
         }
         actions={<FindMatchesButton />}
       />
+
+      <ScanProgress />
 
       <Suspense fallback={<div className="mb-6 h-[74px]" />}>
         <JobsSearch resultCount={matches.length} />
