@@ -1,10 +1,13 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { ApplicationsPipeline, DEFAULT_PIPELINE_STAGES } from '@/components/applications-pipeline';
+import { PageHead } from '@/components/system/page-head';
+import { PipelineRail } from '@/components/system/stage-rail';
+import { pipelineStages } from '@/lib/status';
 import { ApplicationsList } from '@/components/applications-list';
 
 export const revalidate = 30;
+export const metadata = { title: 'Applications' };
 
 async function getApplications(userId: string) {
   return prisma.application.findMany({
@@ -20,35 +23,7 @@ export default async function ApplicationsPage() {
 
   const applications = await getApplications(userId);
 
-  const stageCount = (statuses: readonly string[]) =>
-    applications.filter((a) => statuses.includes(a.status)).length;
-
-  const stages = [
-    {
-      key: 'applied',
-      label: DEFAULT_PIPELINE_STAGES.applied.label,
-      icon: DEFAULT_PIPELINE_STAGES.applied.icon,
-      count: stageCount(DEFAULT_PIPELINE_STAGES.applied.statuses),
-    },
-    {
-      key: 'screened',
-      label: DEFAULT_PIPELINE_STAGES.screened.label,
-      icon: DEFAULT_PIPELINE_STAGES.screened.icon,
-      count: stageCount(DEFAULT_PIPELINE_STAGES.screened.statuses),
-    },
-    {
-      key: 'interview',
-      label: DEFAULT_PIPELINE_STAGES.interview.label,
-      icon: DEFAULT_PIPELINE_STAGES.interview.icon,
-      count: stageCount(DEFAULT_PIPELINE_STAGES.interview.statuses),
-    },
-    {
-      key: 'offer',
-      label: DEFAULT_PIPELINE_STAGES.offer.label,
-      icon: DEFAULT_PIPELINE_STAGES.offer.icon,
-      count: stageCount(DEFAULT_PIPELINE_STAGES.offer.statuses),
-    },
-  ];
+  const stages = pipelineStages(applications.map((a) => a.status));
 
   const listItems = applications.map((a) => ({
     id: a.id,
@@ -65,20 +40,26 @@ export default async function ApplicationsPage() {
     },
   }));
 
-  return (
-    <div className="shell">
-      <div className="page-head">
-        <div>
-          <h1>Your <em>pipeline</em></h1>
-          <p>
-            {applications.length} application{applications.length === 1 ? '' : 's'} · tracked from submit to offer
-          </p>
-        </div>
-      </div>
+  const plural = applications.length === 1 ? '' : 's';
 
-      <ApplicationsPipeline stages={stages} total={applications.length} />
+  return (
+    <>
+      <PageHead
+        kicker="03 · applications"
+        title={<>Your <em>pipeline</em></>}
+        lead={`${applications.length} application${plural}, tracked from submit to offer.`}
+      />
+
+      {applications.length > 0 && (
+        <section className="panel mb-8 p-5 sm:p-6" aria-label="Pipeline">
+          <PipelineRail stages={stages} />
+          <p className="mt-6 font-mono text-[11px] text-ink-3">
+            Counts are cumulative: an application in its final round also counts as applied and screened.
+          </p>
+        </section>
+      )}
 
       <ApplicationsList applications={listItems} />
-    </div>
+    </>
   );
 }

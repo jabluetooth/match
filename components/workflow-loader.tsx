@@ -36,7 +36,6 @@ export function WorkflowLoader({ show, messages = [] }: WorkflowLoaderProps) {
 
   return (
     <BrandLoader
-      withOrb
       hideTitle
       message={messages[index]}
       messageVisible={visible}

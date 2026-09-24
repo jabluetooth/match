@@ -1,80 +1,68 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
+
+// Every colour is a CSS variable holding bare RGB channels (see
+// app/globals.css), so Tailwind's /opacity modifiers work on all of them.
+const rgb = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
 
 const config = {
   darkMode: ["class"],
-  content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
-  prefix: "",
+  content: ["./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./hooks/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+        bg: rgb("bg"),
+        surface: rgb("surface"),
+        raised: rgb("raised"),
+        line: rgb("line"),
+        "line-strong": rgb("line-strong"),
+        ink: {
+          DEFAULT: rgb("ink"),
+          2: rgb("ink-2"),
+          3: rgb("ink-3"),
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: rgb("accent"),
+          strong: rgb("accent-strong"),
+          deep: rgb("accent-deep"),
+          ink: rgb("accent-ink"),
+          fg: rgb("accent-fg"),
         },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+        interview: {
+          DEFAULT: rgb("interview"),
+          ink: rgb("interview-ink"),
         },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        success: rgb("success"),
+        warning: rgb("warning"),
+        danger: rgb("danger"),
+        info: rgb("info"),
+      },
+      fontFamily: {
+        display: ["var(--font-instrument)", "Georgia", "serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        DEFAULT: "6px",
+        md: "8px",
+        lg: "12px",
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+        "stage-pulse": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.35" },
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+        shimmer: {
+          from: { backgroundPosition: "200% 0" },
+          to: { backgroundPosition: "-200% 0" },
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "stage-pulse": "stage-pulse 1.6s ease-in-out infinite",
+        shimmer: "shimmer 1.8s linear infinite",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;

@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Loader2, X } from 'lucide-react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { CalendarPlus, Loader2, X } from 'lucide-react';
+import { statusMeta } from '@/lib/status';
 import { WorkflowLoader } from '@/components/workflow-loader';
 import { toast } from '@/hooks/use-toast';
 
@@ -46,19 +48,16 @@ export function ApplicationRowActions({ applicationId, currentStatus }: Applicat
       value={currentStatus}
       onChange={(e) => handleStatusChange(e.target.value)}
       disabled={loading}
-      style={{
-        fontSize: 12,
-        padding: '3px 6px',
-        borderRadius: 6,
-        border: '1px solid var(--line-2)',
-        background: 'var(--bg)',
-        color: 'var(--ink)',
-        cursor: loading ? 'not-allowed' : 'pointer',
-        opacity: loading ? 0.6 : 1,
-      }}
+      aria-label="Change status"
+      aria-busy={loading}
+      className="field h-8 w-full pl-2.5 text-xs disabled:cursor-wait disabled:opacity-60 md:w-[150px]"
     >
+      {/* Keep a status the list doesn't offer (e.g. "submitted") selectable. */}
+      {!(STATUSES as readonly string[]).includes(currentStatus) && (
+        <option value={currentStatus}>{statusMeta(currentStatus).label}</option>
+      )}
       {STATUSES.map(s => (
-        <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+        <option key={s} value={s}>{statusMeta(s).label}</option>
       ))}
     </select>
   );
@@ -131,97 +130,81 @@ export function ScheduleInterviewModal({ applications }: ScheduleInterviewModalP
           "Almost done…",
         ]}
       />
-      <button className="btn btn-primary" type="button" onClick={() => setOpen(true)}>
-        <Calendar size={14} />
-        Schedule new
-      </button>
-
-      {open && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 50,
-          background: 'rgba(0,0,0,0.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          paddingBottom: 80,
-        }}>
-          <form
-            onSubmit={handleSubmit}
-            style={{
-              background: 'var(--bg)',
-              borderRadius: 'var(--radius)',
-              padding: 28,
-              width: '100%',
-              maxWidth: 440,
-              maxHeight: 'calc(100vh - 120px)',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-            }}
+      <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Trigger asChild>
+          <button className="btn btn-primary" type="button">
+            <CalendarPlus size={14} aria-hidden="true" />
+            Schedule interview
+          </button>
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-bg/80 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+          <Dialog.Content
+            className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-48px)] w-[calc(100vw-32px)] max-w-[480px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-line-strong bg-surface shadow-[0_32px_64px_-16px_rgba(0,0,0,0.7)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98]"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 20 }}>Schedule interview</h2>
-              <button type="button" onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>
-                <X size={18} />
-              </button>
-            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
+                <div>
+                  <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-interview-ink">
+                    <span aria-hidden="true" className="size-1.5 rounded-full bg-interview" />
+                    interview
+                  </p>
+                  <Dialog.Title className="mt-1 font-display text-2xl text-ink">Schedule an interview</Dialog.Title>
+                  <Dialog.Description className="mt-1 text-xs text-ink-3">
+                    Saves the details, moves the application to Interview and emails you a confirmation.
+                  </Dialog.Description>
+                </div>
+                <Dialog.Close className="grid size-8 shrink-0 place-items-center rounded text-ink-3 hover:bg-raised hover:text-ink" aria-label="Close">
+                  <X size={16} aria-hidden="true" />
+                </Dialog.Close>
+              </div>
 
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}>
-              Application
-              <select value={form.application_id} onChange={e => field('application_id', e.target.value)}
-                style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--line-2)', fontSize: 13 }}>
-                {applications.map(a => (
-                  <option key={a.id} value={a.id}>{a.jobTitle} — {a.companyName}</option>
-                ))}
-              </select>
-            </label>
+              <div className="grid gap-4 px-6 py-5 sm:grid-cols-2">
+                <label className="sm:col-span-2">
+                  <span className="field-label">Application</span>
+                  <select className="field" value={form.application_id} onChange={e => field('application_id', e.target.value)}>
+                    {applications.map(a => (
+                      <option key={a.id} value={a.id}>{a.jobTitle} · {a.companyName}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span className="field-label">Date and time</span>
+                  <input className="field" type="datetime-local" required value={form.interview_date} onChange={e => field('interview_date', e.target.value)} />
+                </label>
+                <label>
+                  <span className="field-label">Format</span>
+                  <select className="field" value={form.interview_type} onChange={e => field('interview_type', e.target.value)}>
+                    <option value="video">Video call</option>
+                    <option value="phone">Phone</option>
+                    <option value="onsite">On-site</option>
+                  </select>
+                </label>
+                <label className="sm:col-span-2">
+                  <span className="field-label">Location or meeting link</span>
+                  <input className="field" type="text" value={form.interview_location} onChange={e => field('interview_location', e.target.value)} placeholder="https://zoom.us/j/…" />
+                </label>
+                <label>
+                  <span className="field-label">Interviewer</span>
+                  <input className="field" type="text" value={form.interviewer_name} onChange={e => field('interviewer_name', e.target.value)} placeholder="Jane Doe" />
+                </label>
+                <label>
+                  <span className="field-label">Their role</span>
+                  <input className="field" type="text" value={form.interviewer_role} onChange={e => field('interviewer_role', e.target.value)} placeholder="Hiring manager" />
+                </label>
+              </div>
 
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}>
-              Date &amp; time *
-              <input type="datetime-local" required value={form.interview_date} onChange={e => field('interview_date', e.target.value)}
-                style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--line-2)', fontSize: 13 }} />
-            </label>
-
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}>
-              Format
-              <select value={form.interview_type} onChange={e => field('interview_type', e.target.value)}
-                style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--line-2)', fontSize: 13 }}>
-                <option value="video">Video call</option>
-                <option value="phone">Phone</option>
-                <option value="onsite">On-site</option>
-              </select>
-            </label>
-
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}>
-              Location / meeting link
-              <input type="text" value={form.interview_location} onChange={e => field('interview_location', e.target.value)}
-                placeholder="https://zoom.us/j/…"
-                style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--line-2)', fontSize: 13 }} />
-            </label>
-
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}>
-              Interviewer name
-              <input type="text" value={form.interviewer_name} onChange={e => field('interviewer_name', e.target.value)}
-                placeholder="Jane Doe"
-                style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--line-2)', fontSize: 13 }} />
-            </label>
-
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}>
-              Interviewer role
-              <input type="text" value={form.interviewer_role} onChange={e => field('interviewer_role', e.target.value)}
-                placeholder="Hiring Manager"
-                style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--line-2)', fontSize: 13 }} />
-            </label>
-
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-              <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost">Cancel</button>
-              <button type="submit" disabled={loading} className="btn btn-primary">
-                {loading ? <><Loader2 size={14} className="btn-spinner" /> Scheduling…</> : <><Calendar size={14} /> Schedule</>}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+              <div className="flex justify-end gap-2 border-t border-line px-6 py-4">
+                <Dialog.Close className="btn btn-ghost" type="button">Cancel</Dialog.Close>
+                <button type="submit" disabled={loading} className="btn btn-primary">
+                  {loading ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <CalendarPlus size={14} aria-hidden="true" />}
+                  {loading ? 'Scheduling…' : 'Schedule'}
+                </button>
+              </div>
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }
-

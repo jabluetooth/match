@@ -1,42 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import { useEffect, useState, type ElementType } from "react";
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 import { useToasts, toast as toastApi, type ToastItem } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-const VARIANT_STYLES: Record<
-  ToastItem["variant"],
-  {
-    icon: React.ElementType;
-    iconColor: string;
-    accent: string;
-    bg: string;
-  }
-> = {
-  success: {
-    icon: CheckCircle2,
-    iconColor: "var(--success)",
-    accent: "var(--success)",
-    bg: "var(--success-soft)",
-  },
-  error: {
-    icon: AlertCircle,
-    iconColor: "var(--danger)",
-    accent: "var(--danger)",
-    bg: "var(--danger-soft)",
-  },
-  info: {
-    icon: Info,
-    iconColor: "var(--info)",
-    accent: "var(--info)",
-    bg: "var(--info-soft)",
-  },
+// Literal classes per variant (Tailwind can't see strings built at runtime).
+const VARIANT: Record<ToastItem["variant"], { icon: ElementType; bar: string; icon_: string }> = {
+  success: { icon: CheckCircle2, bar: "bg-success", icon_: "text-success" },
+  error: { icon: AlertCircle, bar: "bg-danger", icon_: "text-danger" },
+  info: { icon: Info, bar: "bg-info", icon_: "text-info" },
 };
 
 function ToastCard({ toast }: { toast: ToastItem }) {
   const [open, setOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const { icon: Icon, iconColor, accent, bg } = VARIANT_STYLES[toast.variant];
+  const { icon: Icon, bar, icon_ } = VARIANT[toast.variant];
 
   useEffect(() => {
     const r = requestAnimationFrame(() => setOpen(true));
@@ -55,93 +34,30 @@ function ToastCard({ toast }: { toast: ToastItem }) {
     setTimeout(() => toastApi.dismiss(toast.id), 220);
   };
 
+  const shown = open && !leaving;
+
   return (
     <div
       role={toast.variant === "error" ? "alert" : "status"}
       aria-live={toast.variant === "error" ? "assertive" : "polite"}
-      style={{
-        opacity: open && !leaving ? 1 : 0,
-        transform: open && !leaving ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.98)",
-        transition: "opacity .22s ease, transform .22s cubic-bezier(.32,.72,.4,1)",
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 12,
-        minWidth: 320,
-        maxWidth: 440,
-        padding: "14px 16px",
-        paddingLeft: 18,
-        background: "rgba(20, 22, 30, 0.92)",
-        backdropFilter: "blur(20px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(20px) saturate(1.4)",
-        border: "1px solid var(--line)",
-        borderRadius: 12,
-        boxShadow: "var(--shadow-pop)",
-        pointerEvents: "auto",
-      }}
+      className={cn(
+        "pointer-events-auto relative flex w-full max-w-[400px] items-start gap-3 overflow-hidden rounded-md border border-line-strong bg-raised py-3 pl-4 pr-3 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.6)] transition-[opacity,transform] duration-200 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+        shown ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0",
+      )}
     >
-      <span
-        aria-hidden
-        style={{
-          display: "grid",
-          placeItems: "center",
-          width: 28,
-          height: 28,
-          borderRadius: 8,
-          background: bg,
-          color: iconColor,
-          boxShadow: `0 0 0 1px color-mix(in oklab, ${accent} 35%, transparent), 0 0 14px -3px color-mix(in oklab, ${accent} 65%, transparent)`,
-          flexShrink: 0,
-          marginTop: 1,
-        }}
-      >
-        <Icon size={16} strokeWidth={2.4} />
-      </span>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p
-          style={{
-            margin: 0,
-            fontSize: 13.5,
-            fontWeight: 600,
-            color: "var(--ink)",
-            lineHeight: 1.35,
-          }}
-        >
-          {toast.title}
-        </p>
-        {toast.description && (
-          <p
-            style={{
-              margin: "4px 0 0",
-              fontSize: 12.5,
-              color: "var(--ink-2)",
-              lineHeight: 1.45,
-            }}
-          >
-            {toast.description}
-          </p>
-        )}
+      <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-[3px]", bar)} />
+      <Icon size={16} aria-hidden="true" className={cn("mt-0.5 shrink-0", icon_)} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-medium leading-snug text-ink">{toast.title}</p>
+        {toast.description && <p className="mt-1 text-xs leading-relaxed text-ink-2">{toast.description}</p>}
       </div>
-
       <button
         type="button"
         onClick={handleClose}
         aria-label="Dismiss notification"
-        style={{
-          border: "none",
-          background: "transparent",
-          color: "var(--ink-3)",
-          cursor: "pointer",
-          padding: 4,
-          marginRight: -4,
-          marginTop: -2,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: 6,
-          flexShrink: 0,
-        }}
+        className="-mr-1 -mt-0.5 grid size-6 shrink-0 place-items-center rounded text-ink-3 hover:bg-surface hover:text-ink"
       >
-        <X size={14} />
+        <X size={13} aria-hidden="true" />
       </button>
     </div>
   );
@@ -157,19 +73,7 @@ export function Toaster() {
   return (
     <div
       aria-live="polite"
-      style={{
-        position: "fixed",
-        top: "calc(var(--header-h, 76px) + 16px)",
-        left: 0,
-        right: 0,
-        zIndex: 9999,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 10,
-        pointerEvents: "none",
-        padding: "0 16px",
-      }}
+      className="pointer-events-none fixed right-0 top-[calc(var(--topbar-h)+12px)] z-[9999] flex w-full flex-col items-end gap-2 px-4 sm:w-auto sm:px-6"
     >
       {toasts.map((t) => (
         <ToastCard key={t.id} toast={t} />

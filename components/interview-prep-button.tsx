@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useInterviewPrep } from "@/hooks/useInterviewPrep";
-import { FileText, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { WorkflowLoader } from "@/components/workflow-loader";
 
 interface InterviewPrepButtonProps {
@@ -50,65 +50,80 @@ export function InterviewPrepButton({
         ]}
       />
       {result ? (
-      <div style={{ background: 'var(--accent-a)', border: '1px solid var(--accent-b)', borderRadius: 'var(--radius-md)', padding: '14px 16px', display: 'flex', gap: 10 }}>
-        <FileText size={16} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
-        <div style={{ flex: 1 }}>
-          <p style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)', margin: '0 0 4px' }}>
-            Interview prep ready for {result.company}
-          </p>
-          <p style={{ fontSize: 12.5, color: 'var(--ink-2)', margin: 0 }}>
-            PDF {result.pdf_generated ? 'generated and ' : ''}sent to your email.
-          </p>
-          {result.linkedin_scraped && (
-            <p style={{ fontSize: 12.5, color: 'var(--ink-2)', margin: '4px 0 0' }}>LinkedIn profile included.</p>
-          )}
-          <button onClick={() => { setShowForm(false); router.refresh(); }}
-            style={{ marginTop: 8, fontSize: 12, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline' }}>
-            Generate again
-          </button>
+        <div className="flex gap-3 rounded border border-success/25 bg-success/[0.06] px-4 py-3">
+          <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
+          <div className="min-w-0 flex-1 text-[13px]">
+            <p className="font-medium text-ink">Prep guide ready for {result.company}</p>
+            <p className="mt-0.5 text-xs text-ink-2">
+              {[
+                result.pdf_generated ? 'PDF generated' : null,
+                result.email_sent ? 'emailed to you' : null,
+                result.linkedin_scraped ? 'interviewer LinkedIn included' : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || 'Saved to this interview.'}
+            </p>
+            {/* Refreshing swaps this panel for the "Open prep guide" link. */}
+            <button
+              type="button"
+              onClick={() => { setShowForm(false); router.refresh(); }}
+              className="mt-2 text-xs text-accent-ink underline decoration-accent/40 underline-offset-4 hover:decoration-accent"
+            >
+              Show the guide
+            </button>
+          </div>
         </div>
-      </div>
       ) : (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button onClick={() => setShowForm(!showForm)} disabled={loading} className="btn btn-ghost btn-sm">
-          {loading ? <Loader2 size={13} className="btn-spinner" /> : <Sparkles size={13} />}
-          {loading ? 'Generating…' : 'Generate Interview Prep'}
-        </button>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowForm(!showForm)}
+            disabled={loading}
+            aria-expanded={showForm}
+            className="btn btn-ghost btn-sm"
+          >
+            {loading ? <Loader2 size={13} className="animate-spin" aria-hidden="true" /> : <Sparkles size={13} aria-hidden="true" />}
+            {loading ? 'Generating…' : 'Generate prep guide'}
+          </button>
 
-        {showForm && !loading && (
-        <div style={{ background: 'var(--bg-2)', border: '1px solid var(--line)', borderRadius: 'var(--radius-md)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: 0 }}>
-            Preparing for: <strong style={{ color: 'var(--ink)' }}>{jobTitle}</strong> at <strong style={{ color: 'var(--ink)' }}>{companyName}</strong>
-          </p>
+          {showForm && !loading && (
+            <div className="space-y-3 rounded border border-line bg-raised p-4">
+              <p className="text-[13px] text-ink-2">
+                For <span className="text-ink">{jobTitle}</span> at <span className="text-ink">{companyName}</span>
+                {interviewerName && (
+                  <>, with {interviewerName}{interviewerRole && ` (${interviewerRole})`}</>
+                )}
+                .
+              </p>
+              <label className="block">
+                <span className="field-label">
+                  Interviewer LinkedIn <span className="normal-case tracking-normal">(optional)</span>
+                </span>
+                <input
+                  type="url"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/username"
+                  className="field bg-surface"
+                />
+              </label>
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="button" onClick={handleGenerate} disabled={loading} className="btn btn-primary btn-sm">
+                  <Sparkles size={13} aria-hidden="true" />
+                  Generate now
+                </button>
+                <span className="font-mono text-[11px] text-ink-3">takes about 20 seconds</span>
+              </div>
+            </div>
+          )}
 
-          {interviewerName && (
-            <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: 0 }}>
-              Interviewer: {interviewerName}{interviewerRole && ` — ${interviewerRole}`}
+          {error && (
+            <p role="alert" className="flex items-start gap-2 rounded border border-danger/25 bg-danger/10 px-3 py-2 text-[13px] text-danger">
+              <AlertCircle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {error}
             </p>
           )}
-
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-3)', marginBottom: 6 }}>
-              Interviewer LinkedIn URL <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-            </label>
-            <input type="url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)}
-              placeholder="https://linkedin.com/in/username"
-              className="form-input" style={{ fontSize: 13 }} />
-          </div>
-
-          <button onClick={handleGenerate} disabled={loading} className="btn btn-primary btn-sm">
-            {loading ? <Loader2 size={13} className="btn-spinner" /> : <Sparkles size={13} />}
-            {loading ? 'Generating — this takes ~20 seconds…' : 'Generate Now'}
-          </button>
         </div>
-      )}
-
-        {error && (
-          <div className="rounded-md bg-red-50 border border-red-200 p-3">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        )}
-      </div>
       )}
     </>
   );

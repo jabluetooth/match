@@ -174,10 +174,10 @@ export function FindMatchesButton() {
       disabled={loading}
       className="btn btn-primary"
       type="button"
-      style={loading ? { opacity: 0.65, cursor: "not-allowed" } : undefined}
+      aria-busy={loading}
     >
-      {loading ? <Loader2 size={13} className="btn-spinner" /> : <Sparkles size={13} />}
-      {loading ? "Finding…" : "Find New Matches"}
+      {loading ? <Loader2 size={13} className="animate-spin" aria-hidden="true" /> : <Sparkles size={13} aria-hidden="true" />}
+      {loading ? "Scanning…" : "Find new matches"}
     </button>
   );
 }

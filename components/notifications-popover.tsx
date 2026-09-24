@@ -2,41 +2,41 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Calendar, Mail, Sparkles, type LucideIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bell, CalendarDays, Mail, Target, type LucideIcon } from "lucide-react";
 import type { NotificationItem, NotificationKind } from "@/lib/notifications";
+import { EASE } from "@/components/system/motion";
+import { cn } from "@/lib/utils";
 
 interface NotificationsPopoverProps {
   items: NotificationItem[];
 }
 
-const KIND_STYLE: Record<NotificationKind, { icon: LucideIcon; color: string; bg: string }> = {
-  interview: { icon: Calendar, color: "var(--interview)",   bg: "var(--interview-soft)" },
-  followup:  { icon: Mail,     color: "var(--warning)",     bg: "var(--warning-soft)" },
-  match:     { icon: Sparkles, color: "var(--accent-strong)", bg: "var(--primary-soft)" },
+// Violet only for interviews (its reserved colour); follow-ups are a
+// "waiting" state, so warning; matches are the brand's own news, so amber.
+const KIND_STYLE: Record<NotificationKind, { icon: LucideIcon; className: string }> = {
+  interview: { icon: CalendarDays, className: "bg-interview/15 text-interview-ink" },
+  followup: { icon: Mail, className: "bg-warning/10 text-warning" },
+  match: { icon: Target, className: "bg-accent/10 text-accent-ink" },
 };
 
 function formatRelative(iso: string | null): string {
   if (!iso) return "";
-  const date = new Date(iso);
-  const diff = date.getTime() - Date.now();
-  const absDays = Math.round(Math.abs(diff) / 86_400_000);
-  const isFuture = diff > 0;
-  if (Math.abs(diff) < 3_600_000) {
-    const mins = Math.max(1, Math.round(Math.abs(diff) / 60_000));
-    return isFuture ? `in ${mins}m` : `${mins}m ago`;
-  }
-  if (Math.abs(diff) < 86_400_000) {
-    const hrs = Math.max(1, Math.round(Math.abs(diff) / 3_600_000));
-    return isFuture ? `in ${hrs}h` : `${hrs}h ago`;
-  }
-  return isFuture ? `in ${absDays}d` : `${absDays}d ago`;
+  const diff = new Date(iso).getTime() - Date.now();
+  const abs = Math.abs(diff);
+  const future = diff > 0;
+  let n: string;
+  if (abs < 3_600_000) n = `${Math.max(1, Math.round(abs / 60_000))}m`;
+  else if (abs < 86_400_000) n = `${Math.max(1, Math.round(abs / 3_600_000))}h`;
+  else n = `${Math.round(abs / 86_400_000)}d`;
+  return future ? `in ${n}` : `${n} ago`;
 }
 
 export function NotificationsPopover({ items }: NotificationsPopoverProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const count = items.length;
-  const urgentCount = items.filter((i) => i.urgent).length;
+  const urgent = items.some((i) => i.urgent);
 
   useEffect(() => {
     if (!open) return;
@@ -55,208 +55,86 @@ export function NotificationsPopover({ items }: NotificationsPopoverProps) {
   }, [open]);
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} className="relative">
       <button
         type="button"
-        className="icon-btn"
         onClick={() => setOpen((v) => !v)}
         aria-label={count > 0 ? `Notifications, ${count} pending` : "Notifications, all caught up"}
         aria-expanded={open}
         aria-haspopup="menu"
+        className="relative grid size-9 place-items-center rounded-md border border-line text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
       >
-        <Bell size={16} />
+        <Bell size={15} aria-hidden="true" />
         {count > 0 && (
           <span
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: 6,
-              right: 6,
-              minWidth: 16,
-              height: 16,
-              padding: "0 4px",
-              borderRadius: 999,
-              background: urgentCount > 0 ? "var(--danger)" : "var(--accent-strong)",
-              color: "#fff",
-              fontSize: 10,
-              fontWeight: 700,
-              lineHeight: "16px",
-              textAlign: "center",
-              boxShadow: "0 0 0 2px #fff",
-            }}
+            aria-hidden="true"
+            className={cn(
+              "absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full px-1 font-mono text-[10px] font-medium ring-2 ring-bg",
+              urgent ? "bg-danger text-white" : "bg-accent text-accent-fg",
+            )}
           >
             {count > 9 ? "9+" : count}
           </span>
         )}
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          aria-label="Notifications"
-          style={{
-            position: "absolute",
-            top: "calc(100% + 12px)",
-            right: 0,
-            width: 340,
-            maxWidth: "calc(100vw - 32px)",
-            background: "rgba(20, 22, 30, 0.92)",
-            backdropFilter: "blur(20px) saturate(1.4)",
-            WebkitBackdropFilter: "blur(20px) saturate(1.4)",
-            border: "1px solid var(--line)",
-            borderRadius: 14,
-            boxShadow: "var(--shadow-pop)",
-            zIndex: 30,
-            overflow: "hidden",
-          }}
-        >
-          <header
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "14px 16px",
-              borderBottom: "1px solid var(--line)",
-            }}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="menu"
+            aria-label="Notifications"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="absolute right-0 top-[calc(100%+10px)] z-30 w-[340px] max-w-[calc(100vw-32px)] overflow-hidden rounded-lg border border-line-strong bg-raised shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)]"
           >
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
-              Notifications
-            </p>
-            {count > 0 && (
-              <span style={{ fontSize: 11, color: "var(--ink-3)" }}>
-                {count} pending
-              </span>
-            )}
-          </header>
-
-          {items.length === 0 ? (
-            <div style={{ padding: "32px 16px", textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)", fontWeight: 500 }}>
-                You're all caught up.
-              </p>
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--ink-3)" }}>
-                No upcoming interviews or pending follow-ups.
-              </p>
+            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+              <p className="text-[13px] font-medium text-ink">Notifications</p>
+              {count > 0 && <span className="font-mono text-[11px] text-ink-3">{count} pending</span>}
             </div>
-          ) : (
-            <ul
-              role="list"
-              style={{
-                listStyle: "none",
-                margin: 0,
-                padding: 0,
-                maxHeight: 360,
-                overflowY: "auto",
-              }}
-            >
-              {items.map((item) => {
-                const style = KIND_STYLE[item.kind];
-                const Icon = style.icon;
-                return (
-                  <li key={item.id}>
-                    <Link
-                      href={item.href}
-                      role="menuitem"
-                      onClick={() => setOpen(false)}
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 12,
-                        padding: "12px 16px",
-                        borderBottom: "1px solid var(--line)",
-                        textDecoration: "none",
-                        color: "inherit",
-                        transition: "background .12s ease",
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                    >
-                      <span
-                        aria-hidden
-                        style={{
-                          width: 30,
-                          height: 30,
-                          display: "grid",
-                          placeItems: "center",
-                          borderRadius: 9,
-                          background: style.bg,
-                          color: style.color,
-                          flexShrink: 0,
-                        }}
+
+            {count === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="font-display text-xl text-ink">All caught up.</p>
+                <p className="mt-1 text-xs text-ink-3">No upcoming interviews or follow-ups waiting on a reply.</p>
+              </div>
+            ) : (
+              <ul className="max-h-[360px] overflow-y-auto">
+                {items.map((item) => {
+                  const { icon: Icon, className } = KIND_STYLE[item.kind];
+                  return (
+                    <li key={item.id} className="border-b border-line last:border-b-0">
+                      <Link
+                        href={item.href}
+                        role="menuitem"
+                        onClick={() => setOpen(false)}
+                        className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-surface"
                       >
-                        <Icon size={14} />
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: "var(--ink)",
-                            lineHeight: 1.3,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          {item.urgent && (
-                            <span
-                              aria-label="Urgent"
-                              style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: "50%",
-                                background: "var(--danger)",
-                                flexShrink: 0,
-                              }}
-                            />
-                          )}
-                          <span
-                            style={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.title}
+                        <span aria-hidden="true" className={cn("grid size-7 shrink-0 place-items-center rounded-md", className)}>
+                          <Icon size={13} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-1.5 text-[13px] font-medium leading-snug text-ink">
+                            {item.urgent && <span aria-label="Within 24 hours" className="size-1.5 shrink-0 rounded-full bg-danger" />}
+                            <span className="truncate">{item.title}</span>
                           </span>
-                        </p>
-                        <p
-                          style={{
-                            margin: "2px 0 0",
-                            fontSize: 11.5,
-                            color: "var(--ink-3)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <span
-                            style={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.subtitle}
+                          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-3">
+                            <span className="truncate">{item.subtitle}</span>
+                            {item.timestamp && (
+                              <span className="shrink-0 font-mono text-[11px]">· {formatRelative(item.timestamp)}</span>
+                            )}
                           </span>
-                          {item.timestamp && (
-                            <>
-                              <span aria-hidden style={{ opacity: 0.5 }}>·</span>
-                              <span>{formatRelative(item.timestamp)}</span>
-                            </>
-                          )}
-                        </p>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

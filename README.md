@@ -87,12 +87,12 @@ The solution is a thin Next.js app talking to an n8n workflow backend over signe
 
 | Area | Highlights |
 |---|---|
-| **Dashboard** | Open applications, upcoming interviews, conversion funnel (Applied → Screened → Interview → Offer), onboarding checklist, activity feed. |
-| **Job matches** | AI-scored against the user's profile (Groq), skill chips, URL-state search + filter pills, paged carousel UI. |
+| **Dashboard** | Four readings (matches waiting, active, interviews, offers), the pipeline rail (Applied → Screened → Interview → Offer) with per-stage conversion, a setup checklist that folds away once done, recent applications and an activity ledger. |
+| **Job matches** | AI-scored against the user's profile (Groq). Each card shows the fit score as mono numerals over a tick meter, the model's reasoning, and skills you have or lack. URL-state search with segmented work-type and sort controls, paged grid. |
 | **Resume tailoring** | LLM rewrites content while preserving the original layout. Original PDF stored as BYTEA; tailored copy stored as HTML and rendered to PDF on download. |
 | **Company research** | Scrapes company site + recent news (NewsData.io), produces a brief: overview, mission, why-hiring, talking points, smart questions, red flags. |
 | **Interview prep** | Per-application brief: role analysis, behavioural + technical questions, STAR answer scaffolds, salary guidance. Optional LinkedIn scrape of the interviewer. HTML rendered in a `sandbox=""` iframe for safety. |
-| **Application tracking** | Status pipeline with per-stage conversion rates, segmented status tabs, scheduled-interview modal, follow-up logging with server-side response-rate recompute. |
+| **Application tracking** | Pipeline rail with per-stage conversion, underlined status tabs, a per-row stage indicator, a scheduled-interview dialog, follow-up logging with server-side response-rate recompute. |
 | **Notifications** | Real signals only: interviews within 7 days, follow-ups awaiting reply, fresh matches. |
 | **Settings** | Drag-and-drop resume upload (PDF/DOC/DOCX, 5 MB cap), skills/titles/industries as comma-list chips, salary + work-type preferences. |
 
@@ -181,6 +181,20 @@ Base resumes are stored as BYTEA on `user_profiles` (`base_resume_data` + metada
 
 ---
 
+## Design
+
+Match has its own identity, separate from its sibling projects (Relay, Insight, Mimo). The rules live in [.skills/design/skill.md](.skills/design/skill.md) §4.4; in short:
+
+- **Dark only, amber on near-black.** `--bg #0b0b0d`, one brand colour (`--accent #d9a441`). Tokens are bare RGB channels in [app/globals.css](app/globals.css), so every Tailwind colour takes an `/opacity` modifier.
+- **Violet means interview.** `--interview #9c97d6` appears only on interview UI: the interview stage, the calendar date block, notification icons, status pills.
+- **Type:** Instrument Serif for headlines (one italic amber word per title), Inter for UI, JetBrains Mono for every number, label and path.
+- **Signature pieces** in [components/system/](components/system/): the `match%` wordmark, the fit score (numerals over a 20-tick meter), the pipeline rail and its compact four-tick form on every application row, and the ledger-style section label (`01 —— label`).
+- **Motion:** one easing (`[0.16, 1, 0.3, 1]`), masked line reveals for headlines, count-up numerals, hairlines that draw in, a scroll-driven rail on the landing page. Everything honours `prefers-reduced-motion` through `MotionConfig`.
+- **App shell:** a Linear-style left sidebar with `g` + letter shortcuts (`g d` dashboard, `g j` jobs, `g a` applications, `g i` interviews, `g f` follow-ups, `g s` settings), and a glass topbar, the only blurred surface in the app.
+- **Honesty:** the landing page's match card is labelled illustrative, and every engineering claim links to the file it describes.
+
+---
+
 ## Project layout
 
 ```
@@ -203,12 +217,16 @@ app/
 ├── jobs/                      # match cards, search, filters
 ├── research/[jobId]/          # company research report viewer
 ├── settings/                  # profile, resume upload, preferences
-├── layout.tsx                 # Header + Toaster + NavDock
-├── loading.tsx                # brand "Match…" route loader
+├── layout.tsx                 # Sidebar + Header + Toaster
+├── loading.tsx                # pipeline-rail route loader
 └── page.tsx                   # dashboard
 
-components/                    # client components
-├── ui/                        # toast, dock, brand-loader (shared primitives)
+components/
+├── system/                    # design primitives: wordmark, motion, fit score, stage rail, page head, status pill
+├── app-shell/                 # sidebar (+ g-key shortcuts), mobile drawer, breadcrumb
+├── dashboard/                 # readings, setup checklist, recent applications, activity
+├── marketing/                 # landing page: header, hero ticket, loop, feature rows, footer
+├── ui/                        # toast, brand-loader
 ├── job-match-card.tsx         # one match card - tailor / research / apply
 ├── job-matches-paged.tsx      # paged carousel
 ├── find-matches-button.tsx    # "Find New Matches" trigger + diagnostic toasts
@@ -222,6 +240,7 @@ lib/
 ├── n8n-client.ts              # typed webhook wrapper with timeouts + signing
 ├── notifications.ts           # server fn for the notifications popover
 ├── prisma.ts                  # Prisma client singleton
+├── status.ts                  # one map of status → label, pipeline stage, tone
 ├── utils.ts
 └── validation.ts              # zod schemas + sanitizeString
 
@@ -269,7 +288,6 @@ The app is a plain Node + Postgres app, so it'll also run on Railway, Render, Fl
 npm run dev            # dev server on :3000
 npm run build          # prisma generate + next build
 npm run start          # serve the production build locally
-npm run lint           # next lint
 npm run db:generate    # regenerate the Prisma client
 npm run db:push        # push schema changes to the DB without migrations
 npm run db:studio      # Prisma Studio (DB inspector)
@@ -292,6 +310,13 @@ npm run db:studio      # Prisma Studio (DB inspector)
 ---
 
 ## Changelog
+
+### 2026-09-24
+- Redesigned every page: a new token system, a left sidebar with keyboard navigation in place of the bottom dock, and a rewritten landing page. See [Design](#design).
+- The dashboard's "recent matches" showed scores made up from application status; it now lists recent applications with their real status and stage.
+- Removed the "Add follow-up" button on the follow-ups page, which had no handler.
+- The activity feed names the job for each event (the workflow writes empty metadata) and describes status changes as "Applied → Interview".
+- Pipeline counts now include `final_round` applications in the Applied, Screened and Interview stages.
 
 ### 2026-07-29
 - Fixed interview-prep pipeline: request/response bodies now match Gemini's `generateContent` schema instead of an OpenAI-style payload. The prompt-builder node was also generating the wrong JSON shape (a leftover copy-paste from the company-research prompt) - it now asks for the interview-prep fields the parser actually expects.
